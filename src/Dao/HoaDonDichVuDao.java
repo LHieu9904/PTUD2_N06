@@ -148,7 +148,6 @@ public class HoaDonDichVuDao {
 
         return sb.toString();
     }
-    // THÊM HÀM NÀY VÀO HoaDonDichVuDao.java
 
     public List<Object[]> getDanhSachDichVuDangDung(String maPhong) {
 
@@ -194,10 +193,7 @@ public class HoaDonDichVuDao {
 
         return list;
     }
-    // ===============================
-// THÊM VÀO HoaDonDichVuDao.java
-// Hàm sửa số lượng dịch vụ đang dùng
-// ===============================
+
 
     public boolean updateSoLuongDichVu(String maPhong, String tenDV, int soLuongMoi) {
 
@@ -237,10 +233,9 @@ public class HoaDonDichVuDao {
 
         return false;
     }
-    // ===============================
-// THÊM VÀO HoaDonDichVuDao.java
+
 // Hàm xóa dịch vụ đang dùng
-// ===============================
+
 
     public boolean deleteDichVuDangDung(String maPhong, String tenDV) {
 

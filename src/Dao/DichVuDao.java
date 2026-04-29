@@ -125,9 +125,6 @@ public class DichVuDao {
     }
 
 
-    // =====================================================
-    // THÊM DỊCH VỤ VÀO PHÒNG
-    // =====================================================
 
     public boolean addDichVuPhong(
             String maHoaDonDV,
@@ -197,9 +194,8 @@ public class DichVuDao {
 
 
 
-    // =====================================================
     // TÍNH TỔNG TIỀN DỊCH VỤ THEO PHÒNG
-    // =====================================================
+
 
     public double getTongTienDV(String maPhong) {
 

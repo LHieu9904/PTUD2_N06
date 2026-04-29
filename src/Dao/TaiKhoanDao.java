@@ -12,7 +12,6 @@ import java.util.List;
 public class TaiKhoanDao {
 
     // ================= GET ALL =================
-    // UI chỉ hiển thị:
     // Tên đăng nhập (MaNV)
     // Mật khẩu
     // Trạng thái
@@ -131,7 +130,7 @@ public class TaiKhoanDao {
     // xóa tài khoản -> xóa luôn nhân viên
 
     // Dùng CHUNG cho cả TaiKhoanUI và NhanVienUI
-// Xóa ở đâu cũng mất cả 2 bên
+    // Xóa ở đâu cũng mất cả 2 bên
 
     public boolean delete(String maNV) {
 
@@ -274,10 +273,6 @@ public class TaiKhoanDao {
         return false;
     }
     // ================= RESET PASSWORD =================
-// reset mật khẩu bằng:
-// username + CCCD + mật khẩu mới
-
-    // ================= RESET PASSWORD =================
 // Quên mật khẩu:
 // nhập username + CCCD + mật khẩu mới
 
@@ -358,8 +353,6 @@ public class TaiKhoanDao {
 
         return null;
     }
-    // Thêm 2 hàm này vào cuối TaiKhoanDao.java :contentReference[oaicite:0]{index=0}
-
 // ======================================
 // SEARCH TÀI KHOẢN
 // tìm theo username hoặc mã nhân viên

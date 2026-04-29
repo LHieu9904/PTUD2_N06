@@ -68,8 +68,6 @@ public class NhanVienDao {
     }
 
     // ================= INSERT =================
-    // ================= NhanVienDao.java =================
-// THAY FULL insertNhanVien() bằng hàm này
 // Khi thêm nhân viên -> tự tạo luôn tài khoản
 // Tên đăng nhập = MaNV
 // Mật khẩu = MaNV
@@ -157,11 +155,8 @@ public class NhanVienDao {
     }
 
     // ================= UPDATE =================
-    // ================= NhanVienDao.java =================
 // SỬA updateNhanVien() để khi sửa nhân viên
 // thì bảng TaiKhoan cũng cập nhật Họ tên tương ứng
-
-    // ================= NhanVienDao.java =================
 // CHỨC NĂNG SỬA THÔNG TIN NHÂN VIÊN
 // cho phép sửa:
 // - Họ tên
@@ -264,8 +259,6 @@ public class NhanVienDao {
     }
 
     // ================= DELETE =================
-    // ================= NhanVienDao.java =================
-// THAY FULL deleteNhanVien() bằng hàm này
 // Xóa nhân viên -> xóa luôn tài khoản
 
     public boolean deleteNhanVien(String maNV) {

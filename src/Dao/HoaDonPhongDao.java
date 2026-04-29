@@ -13,9 +13,8 @@ import java.util.ArrayList;
 
 public class HoaDonPhongDao {
 
-    // =========================
     // TẠO HÓA ĐƠN PHÒNG
-    // =========================
+
     public String createHoaDon(
             String maKH,
             String maPhieuDatPhong,
@@ -88,9 +87,8 @@ public class HoaDonPhongDao {
         return null;
     }
 
-    // =========================
     // TỰ PHÁT SINH MÃ HÓA ĐƠN
-    // =========================
+
     public String getNextMaHD() {
 
         String sql = """

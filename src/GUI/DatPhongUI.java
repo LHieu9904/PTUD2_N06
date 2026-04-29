@@ -80,8 +80,6 @@ public class DatPhongUI extends JPanel {
 
         cbbLoaiPhong = new Combobox<>();
         cbbLoaiPhong.setLabeText("Loại phòng");
-
-        // 🔥 load loại phòng từ DB
         for(String lp : new PhongDao().getAllLoaiPhong()){
             cbbLoaiPhong.addItem(lp);
         }
@@ -151,9 +149,6 @@ public class DatPhongUI extends JPanel {
     }
 
     // ================= LOGIC =================
-
-    // ===== SỬA trong DatPhongUI.java =====
-// thay toàn bộ hàm loadPhongTrong() bằng đoạn này :contentReference[oaicite:1]{index=1}
 
     private void loadPhongTrong() {
 
@@ -298,10 +293,8 @@ public class DatPhongUI extends JPanel {
                 return;
             }
 
-            // =====================================================
             // 2. TẠO PHIẾU ĐẶT PHÒNG
-            // NV01 chỉ là test, sau này thay bằng nhân viên login
-            // =====================================================
+
 
             String maPhieu = pdDao.insert(
                     maKH,

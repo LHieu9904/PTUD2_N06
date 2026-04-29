@@ -120,12 +120,9 @@ public class PhongUI extends JPanel {
         for(LoaiPhong lp : loaiDao.getAllLoaiPhong()){
             cbLoaiFilter.addItem(lp);
         }
-
-// add UI
         left.add(createFilter("Trạng thái", cbTrangThaiFilter));
         left.add(createFilter("Tầng", cbTangFilter));
         left.add(createFilter("Loại phòng", cbLoaiFilter));
-        // 🔥 EVENT FILTER (DÁN NGAY DƯỚI left.add(...))
 
         cbTrangThaiFilter.addActionListener(e ->
                 loadData(
@@ -166,7 +163,6 @@ public class PhongUI extends JPanel {
         cbLoaiFilter.setPreferredSize(size);
         cbLoaiFilter.setMaximumSize(size);
 
-// 🔥 QUAN TRỌNG: cho panel cao hơn
         roomPanel.setPreferredSize(new Dimension(800, 1000));
 
         JScrollPane scroll = new JScrollPane(roomPanel);
@@ -214,7 +210,6 @@ public class PhongUI extends JPanel {
         loadData("Tất cả", 0, null);
     }
 
-    // ================= LOAD =================
 
     private void loadLoaiPhong(){
         dsLoai = loaiDao.getAllLoaiPhong();
@@ -251,16 +246,16 @@ public class PhongUI extends JPanel {
 
             // ===== LOGIC TRẠNG THÁI =====
             if ("Đã đặt".equals(p.getTrangThai())) {
-                roomPanel.add(createRoomDaDat(p)); // 🔴 phòng đã đặt
+                roomPanel.add(createRoomDaDat(p));
             }
             else if ("Đang thuê".equals(p.getTrangThai())) {
-                roomPanel.add(createRoomDangThue(p)); // 🟢 đã nhận phòng
+                roomPanel.add(createRoomDangThue(p));
             }
             else if ("Đang dọn dẹp".equals(p.getTrangThai())) {
-                roomPanel.add(createRoomDangDon(p)); // 🟡
+                roomPanel.add(createRoomDangDon(p));
             }
             else {
-                roomPanel.add(createRoomTrong(p)); // ⚪
+                roomPanel.add(createRoomTrong(p));
             }
         }
 
@@ -284,7 +279,6 @@ public class PhongUI extends JPanel {
                 continue;
             }
 
-            // 🔥 FIX CHUẨN: dựa vào có khách hay không
             if (p.getTenKhach() != null) {
                 roomPanel.add(createRoomBusy(p));
             } else {
@@ -292,7 +286,7 @@ public class PhongUI extends JPanel {
             }
         }
 
-        // 🔥 FIX SCROLL (QUAN TRỌNG)
+
         roomPanel.setPreferredSize(
                 new Dimension(800, (roomPanel.getComponentCount()/3 + 1) * 120)
         );
@@ -573,8 +567,6 @@ public class PhongUI extends JPanel {
                     "Xóa phòng thất bại");
         }
     }
-
-    // ================= UI CARD (GIỮ NGUYÊN 100%) =================
 
     private JPanel createRoom(Phong p){
 

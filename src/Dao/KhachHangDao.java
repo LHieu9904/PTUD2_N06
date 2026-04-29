@@ -9,7 +9,6 @@ import java.util.List;
 
 public class KhachHangDao {
 
-    // ===== GET ALL =====
     public List<KhachHang> getAll() {
         List<KhachHang> list = new ArrayList<>();
 
@@ -40,7 +39,7 @@ public class KhachHangDao {
         return list;
     }
 
-    // ===== THÊM =====
+    // ===== Thêm =====
     public boolean create(KhachHang kh){
         String sql = "INSERT INTO KhachHang(MaKH, HoTen, GioiTinh, SDT, CCCD) VALUES(?,?,?,?,?)";
 
@@ -331,15 +330,11 @@ public class KhachHangDao {
 
         return null;
     }
-    // THÊM VÀO CUỐI CLASS KhachHangDao.java
-// (vì class của bạn đã có sẵn create(), getNextMaKH(), getById()...)
-// dùng đúng theo cấu trúc hiện tại của bạn :contentReference[oaicite:0]{index=0}
 
 
-// =====================================================
+
 // KIỂM TRA KHÁCH HÀNG ĐÃ TỒN TẠI CHƯA
 // theo SDT hoặc CCCD
-// =====================================================
 
     public KhachHang timKhachHangTonTai(String sdt, String cccd) {
 

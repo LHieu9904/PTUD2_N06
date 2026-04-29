@@ -49,7 +49,6 @@ public class KhuyenMaiUI extends JPanel {
         ((JTextField) dateBD.getDateEditor().getUiComponent()).setEditable(false);
         ((JTextField) dateKT.getDateEditor().getUiComponent()).setEditable(false);
 
-        // 🔥 WRAP FIX UI
         form.add(label("Mã KM")); form.add(wrap(txtMaKM));
         form.add(label("Tên KM")); form.add(wrap(txtTenKM));
 

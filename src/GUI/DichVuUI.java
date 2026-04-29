@@ -33,8 +33,6 @@ public class DichVuUI extends JPanel {
         txtMa = new JTextField();
         txtTen = new JTextField();
         txtGia = new JTextField();
-
-        // 🔥 FIX đúng DB
         cbTrangThai = new JComboBox<>(new String[]{
                 "Còn",
                 "Hết"
