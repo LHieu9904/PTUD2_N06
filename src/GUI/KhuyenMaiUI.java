@@ -127,6 +127,10 @@ public class KhuyenMaiUI extends JPanel {
         });
 
         btnThem.addActionListener(e -> {
+            if(!validateInput()){
+                return;
+            }
+
             KhuyenMai km = getForm();
             if(km != null && dao.insert(km)){
                 loadData();
@@ -134,6 +138,9 @@ public class KhuyenMaiUI extends JPanel {
         });
 
         btnSua.addActionListener(e -> {
+            if(!validateInput()){
+                return;
+            }
             KhuyenMai km = getForm();
             if(km != null && dao.update(km)){
                 loadData();
@@ -220,5 +227,64 @@ public class KhuyenMaiUI extends JPanel {
                     km.getTrangThai()
             });
         }
+    }
+    private boolean validateInput() {
+
+        String ma = txtMaKM.getText().trim();
+        String ten = txtTenKM.getText().trim();
+        String pt = txtPhanTram.getText().trim();
+        java.util.Date ngayBD = dateBD.getDate();
+        java.util.Date ngayKT = dateKT.getDate();
+
+        // ===== MÃ =====
+        if(!ma.matches("^KM\\d{3}$")){
+
+            JOptionPane.showMessageDialog(this, "Mã KM phải dạng KM001!"
+            );
+
+            return false;
+        }
+
+        // ===== TÊN =====
+        if(ten.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Tên khuyến mãi không được rỗng!"
+            );
+
+            return false;
+        }
+
+        // ===== PHẦN TRĂM =====
+        try{
+
+            double giam = Double.parseDouble(pt);
+            if(giam < 0 || giam > 100){
+                JOptionPane.showMessageDialog(this, "% giảm phải từ 0 - 100!"
+                );
+                return false;
+            }
+        }catch(Exception e){
+            JOptionPane.showMessageDialog(this, "Phần trăm giảm không hợp lệ!"
+            );
+
+            return false;
+        }
+
+        // ===== DATE NULL =====
+        if(ngayBD == null || ngayKT == null){
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày!"
+            );
+            return false;
+        }
+        // ===== NGÀY =====
+        if(ngayBD.after(ngayKT)){
+            JOptionPane.showMessageDialog(this, "Ngày bắt đầu phải <= ngày kết thúc!");
+            return false;
+        }
+        if(ngayKT.before(new java.util.Date())){JOptionPane.showMessageDialog(this, "Ngày kết thúc phải >= ngày hiện tại!");
+
+            return false;
+        }
+
+        return true;
     }
 }

@@ -113,33 +113,48 @@ public class KhachHangDao {
     // ===== SINH MÃ KH =====
     public String getNextMaKH() {
 
-        String sql = """
-        SELECT MAX(
-            CAST(
-                SUBSTRING(MaKH, 3, LEN(MaKH)) AS INT
-            )
-        )
-        FROM KhachHang
-    """;
+        String maKH;
+
+        do {
+
+            maKH = String.format(
+                    "KH%04d",
+                    (int)(Math.random() * 10000)
+            );
+
+        } while (existsMaKH(maKH));
+
+        return maKH;
+    }
+
+    private boolean existsMaKH(String maKH) {
+
+        String sql =
+                "SELECT * FROM KhachHang WHERE MaKH = ?";
 
         try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
+
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+
         ) {
 
-            if (rs.next()) {
+            ps.setString(1, maKH);
 
-                int so = rs.getInt(1) + 1;
+            ResultSet rs =
+                    ps.executeQuery();
 
-                return String.format("KH%03d", so);
-            }
+            return rs.next();
 
         } catch (Exception e) {
+
             e.printStackTrace();
         }
 
-        return "KH001";
+        return false;
     }
 
     // ===== CHECK TRÙNG =====

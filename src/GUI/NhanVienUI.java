@@ -206,17 +206,6 @@ public class NhanVienUI extends JPanel {
         });
 
 
-        // ================= SỬA =================
-
-        // ================= NhanVienUI.java =================
-// NÚT SỬA
-
-        // ================= NhanVienUI.java =================
-// NÚT SỬA
-
-        // ================= NhanVienUI.java =================
-// NÚT SỬA
-
         btnUpdate.addActionListener(e -> {
 
             NhanVien nv = getFormData();
@@ -356,18 +345,56 @@ public class NhanVienUI extends JPanel {
         NhanVien nv = new NhanVien();
 
         nv.setMaNV(txtMa.getText().trim());
-        nv.setHoTen(txtTen.getText());
         nv.setGioiTinh(cbGioiTinh.getSelectedItem().equals("Nam") ? 1 : 0);
+        String hoTen = txtTen.getText().trim();
+
+        if (!validateHoTen(hoTen)) {
+            return null;
+        }
+
+        nv.setHoTen(hoTen);
+
+        java.util.Date d;
 
         try {
-            java.util.Date d = (java.util.Date) spNgaySinh.getValue();
-            nv.setNgaySinh(new Date(d.getTime()));
+
+            d = (java.util.Date) spNgaySinh.getValue();
+
+            if (!validateNgaySinh(d)) {
+                return null;
+            }
+
+            nv.setNgaySinh(
+                    new Date(d.getTime())
+            );
+
         } catch (Exception e){
-            JOptionPane.showMessageDialog(this,"Sai ngày");
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Sai ngày"
+            );
+
+            return null;
         }
 
         nv.setCccd(txtCCCD.getText());
         nv.setSdt(txtSDT.getText());
+        if (!validateSDT(nv.getSdt())) {
+            return null;
+        }
+
+        boolean isNam =
+                cbGioiTinh.getSelectedItem()
+                        .equals("Nam");
+
+        if (!validateCCCD(
+                nv.getCccd(),
+                d,
+                isNam
+        )) {
+            return null;
+        }
 
         ChucVu cv = new ChucVu();
         cv.setMaChucVu(cbChucVu.getSelectedItem().equals("Quản Lý") ? "CV01" : "CV02");
@@ -420,5 +447,193 @@ public class NhanVienUI extends JPanel {
 
         txtAnh.setText(nv.getAnhNhanVien());
         loadImage(nv.getAnhNhanVien());
+    }
+    // =====================================================
+// VALIDATE HỌ TÊN
+// =====================================================
+
+    private boolean validateHoTen(String hoTen) {
+
+        hoTen = hoTen.trim();
+
+        if (hoTen.isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Họ tên không được rỗng!"
+            );
+
+            return false;
+        }
+
+        // Chỉ chữ và khoảng trắng
+        if (!hoTen.matches(
+                "^[\\p{L}]+(\\s[\\p{L}]+)*$"
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Họ tên chỉ được chứa chữ cái!"
+            );
+
+            return false;
+        }
+
+        // Kiểm tra viết hoa đầu từ
+        String[] arr = hoTen.split("\\s+");
+
+        for (String s : arr) {
+
+            if (!Character.isUpperCase(s.charAt(0))) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Chữ cái đầu mỗi từ phải viết HOA!"
+                );
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+// =====================================================
+// VALIDATE TUỔI >= 18
+// =====================================================
+
+    private boolean validateNgaySinh(
+            java.util.Date ngaySinh
+    ) {
+
+        java.util.Calendar cal =
+                java.util.Calendar.getInstance();
+
+        cal.add(java.util.Calendar.YEAR, -18);
+
+        java.util.Date minDate = cal.getTime();
+
+        if (ngaySinh.after(minDate)) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Nhân viên phải đủ 18 tuổi!"
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+// =====================================================
+// VALIDATE SĐT
+// =====================================================
+
+    private boolean validateSDT(String sdt) {
+
+        if (!sdt.matches("^0\\d{9}$")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "SĐT phải gồm 10 số và bắt đầu bằng 0!"
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+// =====================================================
+// VALIDATE CCCD
+// =====================================================
+
+    private boolean validateCCCD(
+            String cccd,
+            java.util.Date ngaySinh,
+            boolean isNam
+    ) {
+
+        // 12 số
+        if (!cccd.matches("^\\d{12}$")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "CCCD phải gồm đúng 12 số!"
+            );
+
+            return false;
+        }
+
+        java.util.Calendar cal =
+                java.util.Calendar.getInstance();
+
+        cal.setTime(ngaySinh);
+
+        int year =
+                cal.get(java.util.Calendar.YEAR);
+
+        int yy = year % 100;
+
+        // YY trong CCCD
+        int yyCCCD =
+                Integer.parseInt(
+                        cccd.substring(4, 6)
+                );
+
+        if (yy != yyCCCD) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "CCCD không đúng năm sinh!"
+            );
+
+            return false;
+        }
+
+        // mã giới tính + thế kỷ
+        int genderCode =
+                Integer.parseInt(
+                        cccd.substring(3,4)
+                );
+
+        boolean hopLe = false;
+
+        // thế kỷ 20
+        if (year >= 1900 && year <= 1999) {
+
+            if (isNam && genderCode == 0) {
+                hopLe = true;
+            }
+
+            if (!isNam && genderCode == 1) {
+                hopLe = true;
+            }
+        }
+
+        // thế kỷ 21
+        else {
+
+            if (isNam && genderCode == 2) {
+                hopLe = true;
+            }
+
+            if (!isNam && genderCode == 3) {
+                hopLe = true;
+            }
+        }
+
+        if (!hopLe) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "CCCD không đúng giới tính/thế kỷ!"
+            );
+
+            return false;
+        }
+
+        return true;
     }
 }

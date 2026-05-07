@@ -322,31 +322,33 @@ public class NhanVienDao {
     // ================= AUTO ID =================
     public String getNextMaNV() {
 
+        int year = java.time.LocalDate.now().getYear() % 100;
+        String prefix = "NV1" + String.format("%02d", year);
         String sql = """
-        SELECT MAX(
-            CAST(SUBSTRING(MaNV, 3, LEN(MaNV)) AS INT)
-        )
+        SELECT TOP 1 MaNV
         FROM NhanVien
+        WHERE LEN(MaNV) >= 9
+          AND MaNV LIKE ?
+        ORDER BY MaNV DESC
     """;
 
         try (
                 Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
+                PreparedStatement ps = con.prepareStatement(sql)
         ) {
+            ps.setString(1, prefix + "%");
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
-                int so = rs.getInt(1) + 1;
-
-                return String.format("NV%03d", so);
+                String lastMa = rs.getString("MaNV");
+                int number = Integer.parseInt(lastMa.substring(5));
+                number++;
+                return prefix + String.format("%04d", number);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return "NV001";
+        return prefix + "0001";
     }
     public List<NhanVien> searchNhanVien(String keyword) {
 

@@ -141,6 +141,7 @@ public class DatPhongUI extends JPanel {
 
         // ================= LOGIC =================
 
+
         btnDat.addActionListener(e -> handleDatPhong());
         btnHuy.addActionListener(e -> clearForm());
 
@@ -241,6 +242,9 @@ public class DatPhongUI extends JPanel {
     }
 
     private void handleDatPhong() {
+        if (!validateInput()) {
+            return;
+        }
 
         // ================= KIỂM TRA CHỌN PHÒNG =================
         if (selectedMaPhong == null) {
@@ -629,6 +633,75 @@ public class DatPhongUI extends JPanel {
         panel.add(scroll, BorderLayout.CENTER);
 
         return panel;
+    }
+    private boolean validateInput() {
+
+        String ten = tfHoTen.getText().trim();
+        String sdt = tfSDT.getText().trim();
+        String cccd = tfCCCD.getText().trim();
+        String soNguoi = tfSoLuongNguoi.getText().trim();
+
+        // ===== RỖNG =====
+        if (ten.isEmpty()
+                || sdt.isEmpty()
+                || cccd.isEmpty()
+                || soNguoi.isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng nhập đầy đủ thông tin!"
+            );
+
+            return false;
+        }
+
+        // ===== HỌ TÊN =====
+        if (!ten.matches(
+                "^([A-ZÀ-Ỹ][a-zà-ỹ]+\\s?)+$"
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Tên không hợp lệ!"
+            );
+
+            return false;
+        }
+
+        // ===== SĐT =====
+        if (!sdt.matches("^0\\d{9}$")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "SĐT phải gồm 10 số và bắt đầu bằng 0!"
+            );
+
+            return false;
+        }
+
+        // ===== CCCD =====
+        if (!cccd.matches("^\\d{12}$")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "CCCD phải gồm đúng 12 số!"
+            );
+
+            return false;
+        }
+
+        // ===== SỐ NGƯỜI =====
+        if (!soNguoi.matches("^\\d+$")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Số lượng người không hợp lệ!"
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
 }

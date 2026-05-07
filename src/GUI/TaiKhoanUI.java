@@ -212,9 +212,7 @@ public class TaiKhoanUI extends JPanel {
         String maTK = txtUser.getText().trim();
         String pass = new String(txtPass.getPassword()).trim();
 
-        if (maTK.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Không được để trống");
+        if (!validateMatKhau(pass)) {
             return null;
         }
 
@@ -290,12 +288,72 @@ public class TaiKhoanUI extends JPanel {
         );
     }
 
+
     // ===== CLEAR =====
     private void clearForm() {
         txtUser.setText("");
         txtPass.setText("");
         cbRole.setSelectedIndex(0);
         cbTrangThai.setSelectedIndex(0);
+    }
+    private boolean validateMatKhau(String matKhau) {
+
+        // 8 - 12 ký tự
+        if (matKhau.length() < 8 || matKhau.length() > 12) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mật khẩu phải từ 8 - 12 ký tự!"
+            );
+
+            return false;
+        }
+
+        // ít nhất 1 chữ hoa
+        if (!matKhau.matches(".*[A-Z].*")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mật khẩu phải có ít nhất 1 chữ HOA!"
+            );
+
+            return false;
+        }
+
+        // ít nhất 1 chữ thường
+        if (!matKhau.matches(".*[a-z].*")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mật khẩu phải có ít nhất 1 chữ thường!"
+            );
+
+            return false;
+        }
+
+        // ít nhất 1 số
+        if (!matKhau.matches(".*\\d.*")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mật khẩu phải có ít nhất 1 số!"
+            );
+
+            return false;
+        }
+
+        // ít nhất 1 ký tự đặc biệt
+        if (!matKhau.matches(".*[@#$%^&+=!*?_\\-].*")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mật khẩu phải có ít nhất 1 ký tự đặc biệt!"
+            );
+
+            return false;
+        }
+
+        return true;
     }
 
     private JLabel label(String t) {

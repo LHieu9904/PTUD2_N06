@@ -213,24 +213,34 @@ public class DichVuUI extends JPanel {
 
     private boolean validateInput(){
 
-        if(txtMa.getText().isEmpty() ||
-                txtTen.getText().isEmpty() ||
-                txtGia.getText().isEmpty()){
-            JOptionPane.showMessageDialog(this,"Không được để trống");
+        String ma = txtMa.getText().trim();
+        String ten = txtTen.getText().trim();
+        String gia = txtGia.getText().trim();
+
+        if(!ma.matches("^DV\\d{3}$")){
+            JOptionPane.showMessageDialog(this, "Mã DV phải dạng DV001!");
+
+            return false;
+        }
+        if(ten.isEmpty()){
+            JOptionPane.showMessageDialog(this, "Tên dịch vụ không được rỗng!"
+            );
+
             return false;
         }
 
         try{
-            double gia = Double.parseDouble(txtGia.getText());
-            if(gia < 0){
-                JOptionPane.showMessageDialog(this,"Giá phải >= 0");
+            double dg = Double.parseDouble(gia);
+            if(dg <= 0){
+                JOptionPane.showMessageDialog(this, "Đơn giá phải > 0!"
+                );
                 return false;
             }
         }catch(Exception e){
-            JOptionPane.showMessageDialog(this,"Giá không hợp lệ");
+            JOptionPane.showMessageDialog(this, "Đơn giá không hợp lệ!"
+            );
             return false;
         }
-
         return true;
     }
 }
