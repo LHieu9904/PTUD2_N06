@@ -4,6 +4,8 @@ import Dao.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class NhanPhongUI extends JPanel {
@@ -11,72 +13,48 @@ public class NhanPhongUI extends JPanel {
     private JTable table;
     private DefaultTableModel model;
 
-    private JTextField txtSearch;
-    private JTextField txtTen, txtSDT, txtMa, txtSoNguoi, txtNhan, txtTra;
-    private JComboBox<String> cbLoai;
+    private JTextField txtTen, txtSDT, txtMa, txtSoNguoi;
+    private JTextField txtNhan, txtTra;
 
-    private PhongDao phongDao = new PhongDao();
+    private JButton btnTra;
+
     private KhachHangDao khDao = new KhachHangDao();
     private HoaDonPhongDao hdDao = new HoaDonPhongDao();
     private ChiTietHoaDonPhongDao ctDao = new ChiTietHoaDonPhongDao();
 
-    // lấy mã nhân viên đăng nhập
     private String maNV;
 
     public NhanPhongUI(String maNV) {
 
         this.maNV = maNV;
+        setLayout(new BorderLayout(10,10));
+        setBackground(new Color(245,245,245));
 
-        setLayout(new BorderLayout());
-        setBackground(new Color(235, 245, 255));
-
-        // ===== TOP =====
-        JPanel top = new JPanel(new BorderLayout());
-        top.setBackground(new Color(220, 240, 255));
-
+        // ===== TITLE =====
         JLabel title = new JLabel("NHẬN PHÒNG", JLabel.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
-
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBackground(new Color(220, 240, 255));
-
-        txtSearch = new JTextField();
-        txtSearch.setPreferredSize(new Dimension(300, 35));
-        txtSearch.setBorder(
-                BorderFactory.createTitledBorder("Tìm khách hàng")
-        );
-
-        JButton btnSearch = new JButton("🔍");
-
-        searchPanel.add(txtSearch);
-        searchPanel.add(btnSearch);
-
-        top.add(title, BorderLayout.NORTH);
-        top.add(searchPanel, BorderLayout.CENTER);
-
-        add(top, BorderLayout.NORTH);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
+        add(title, BorderLayout.NORTH);
 
         // ===== TABLE =====
         model = new DefaultTableModel(
-                new String[]{
-                        "Mã phòng",
-                        "Loại phòng",
-                        "Tên KH",
-                        "SĐT"
-                }, 0
+                new String[]{"Mã phòng","Loại","Khách","SĐT"},0
         );
 
         table = new JTable(model);
-        table.setRowHeight(25);
+        table.setRowHeight(28);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createTitledBorder("Danh sách phòng đã đặt"));
 
         // ===== FORM =====
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(new Color(235, 245, 255));
+        form.setBackground(Color.WHITE);
+        form.setBorder(BorderFactory.createTitledBorder("Thông tin nhận phòng"));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 20, 12, 20);
+        gbc.insets = new Insets(8,10,8,10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         txtTen = new JTextField();
@@ -86,93 +64,59 @@ public class NhanPhongUI extends JPanel {
         txtNhan = new JTextField();
         txtTra = new JTextField();
 
-        cbLoai = new JComboBox<>(
-                new String[]{"Phòng đơn", "Phòng đôi", "VIP"}
-        );
-
-        Dimension size = new Dimension(250, 35);
-
-        JTextField[] fields = {
-                txtTen, txtSDT, txtMa,
-                txtSoNguoi, txtNhan, txtTra
-        };
-
-        for (JTextField f : fields) {
-            f.setPreferredSize(size);
-        }
-
-        cbLoai.setPreferredSize(size);
-
-        // khóa field
         txtMa.setEditable(false);
         txtNhan.setEditable(false);
-        txtTra.setEditable(false);
-        cbLoai.setEnabled(false);
 
-        // ===== FORM UI =====
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        form.add(new JLabel("Họ tên"), gbc);
+        btnTra = new JButton("⏱");
 
-        gbc.gridx = 1;
-        form.add(txtTen, gbc);
+        int y = 0;
 
-        gbc.gridx = 2;
-        form.add(new JLabel("SĐT"), gbc);
+        addRow(form, gbc, y++, "Họ tên", txtTen);
+        addRow(form, gbc, y++, "SĐT", txtSDT);
+        addRow(form, gbc, y++, "Mã phòng", txtMa);
+        addRow(form, gbc, y++, "Số người", txtSoNguoi);
+        addRow(form, gbc, y++, "Giờ nhận", txtNhan);
 
-        gbc.gridx = 3;
-        form.add(txtSDT, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        form.add(new JLabel("Mã phòng"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtMa, gbc);
-
-        gbc.gridx = 2;
-        form.add(new JLabel("Loại phòng"), gbc);
-
-        gbc.gridx = 3;
-        form.add(cbLoai, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        form.add(new JLabel("Số người"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtSoNguoi, gbc);
-
-        gbc.gridx = 2;
-        form.add(new JLabel("Giờ nhận"), gbc);
-
-        gbc.gridx = 3;
-        form.add(txtNhan, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridy = 3;
+        // ===== giờ trả =====
+        gbc.gridx = 0; gbc.gridy = y;
         form.add(new JLabel("Giờ trả"), gbc);
 
-        gbc.gridx = 3;
-        form.add(txtTra, gbc);
+        JPanel pTra = new JPanel(new BorderLayout(5,0));
+        pTra.setBackground(Color.WHITE);
+        pTra.add(txtTra, BorderLayout.CENTER);
+        pTra.add(btnTra, BorderLayout.EAST);
 
-        JPanel btnPanel = new JPanel();
+        gbc.gridx = 1;
+        form.add(pTra, gbc);
 
+        // ===== BUTTON =====
         JButton btnOK = new JButton("Xác nhận");
         JButton btnCancel = new JButton("Hủy");
 
+        btnOK.setBackground(new Color(0,153,255));
+        btnOK.setForeground(Color.WHITE);
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.setBackground(Color.WHITE);
         btnPanel.add(btnOK);
         btnPanel.add(btnCancel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 4;
+        JPanel right = new JPanel(new BorderLayout());
+        right.setBackground(Color.WHITE);
+        right.add(form, BorderLayout.CENTER);
+        right.add(btnPanel, BorderLayout.SOUTH);
 
-        form.add(btnPanel, gbc);
+        // ===== SPLIT =====
+        JSplitPane split = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                scroll,
+                right
+        );
+        split.setDividerLocation(450);
 
-        add(form, BorderLayout.SOUTH);
+        add(split, BorderLayout.CENTER);
 
-        // ===== LOAD DATA =====
+        // ===== LOAD =====
         loadPhongDat();
 
         // ===== CLICK TABLE =====
@@ -180,248 +124,147 @@ public class NhanPhongUI extends JPanel {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
 
                 int row = table.getSelectedRow();
-                if (row == -1) return;
+                if(row == -1) return;
 
-                String maPhong =
-                        model.getValueAt(row, 0).toString();
+                String maPhong = model.getValueAt(row,0).toString();
 
                 txtMa.setText(maPhong);
+                txtTen.setText(model.getValueAt(row,2).toString());
+                txtSDT.setText(model.getValueAt(row,3).toString());
 
-                cbLoai.setSelectedItem(
-                        model.getValueAt(row, 1).toString()
-                );
+                Object[] info = new PhieuDatPhongDao().getThongTinNhanPhong(maPhong);
 
-                txtTen.setText(
-                        model.getValueAt(row, 2).toString()
-                );
+                if(info == null){
+                    info = hdDao.getThongTinThanhToan(maPhong);
+                }
 
-                txtSDT.setText(
-                        model.getValueAt(row, 3).toString()
-                );
+                txtNhan.setText(info != null && info[0] != null
+                        ? format(info[0]) : formatNow());
 
-                Object[] info =
-                        new PhieuDatPhongDao()
-                                .getThongTinNhanPhong(maPhong);
-
-                if (info != null) {
-
-                    txtNhan.setText(
-                            info[0] != null
-                                    ? info[0].toString()
-                                    : ""
-                    );
-
-                    txtTra.setText(
-                            info[1] != null
-                                    ? info[1].toString()
-                                    : ""
-                    );
+                if(info != null && info[1] != null){
+                    txtTra.setText(format(info[1]));
+                    txtTra.setEditable(false);
+                    btnTra.setEnabled(false);
+                }else{
+                    txtTra.setText("");
+                    txtTra.setEditable(true);
+                    btnTra.setEnabled(true);
                 }
             }
         });
 
-        // ===== VALIDATE SĐT =====
-        txtSDT.addKeyListener(
-                new java.awt.event.KeyAdapter() {
-                    public void keyTyped(
-                            java.awt.event.KeyEvent evt
-                    ) {
-                        if (!Character.isDigit(
-                                evt.getKeyChar()
-                        )) {
-                            evt.consume();
-                        }
-                    }
-                }
-        );
-
-        // ===== BUTTON =====
+        btnTra.addActionListener(e -> txtTra.setText(pickDate()));
         btnOK.addActionListener(e -> handleNhanPhong());
         btnCancel.addActionListener(e -> clearForm());
     }
+    private void addRow(JPanel form, GridBagConstraints gbc,
+                        int y, String label, JComponent field){
 
-    // =================================================
-    // LOAD DANH SÁCH PHÒNG ĐÃ ĐẶT
-    // =================================================
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        gbc.weightx = 0;
+        form.add(new JLabel(label), gbc);
 
-    private void loadPhongDat() {
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        form.add(field, gbc);
+    }
+
+    // ================= LOAD =================
+    private void loadPhongDat(){
 
         model.setRowCount(0);
 
-        List<Object[]> list =
-                new PhieuDatPhongDao()
-                        .getAllDatPhong();
+        // 🔥 CHỈ LẤY PHÒNG CHƯA NHẬN
+        List<Object[]> list = new PhieuDatPhongDao().getAllDatPhong();
 
-        for (Object[] row : list) {
-
-            model.addRow(new Object[]{
-                    row[0],
-                    row[1],
-                    row[2],
-                    row[3]
-            });
+        for(Object[] r : list){
+            model.addRow(r);
         }
     }
 
-    // =================================================
-    // VALIDATE
-    // =================================================
+    // ================= HANDLE =================
+    private void handleNhanPhong(){
 
-    private boolean validateForm() {
+        try{
 
-        if (txtMa.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Chưa chọn phòng!"
-            );
-            return false;
-        }
+            String maPhong = txtMa.getText().trim();
+            String ten = txtTen.getText().trim();
+            String sdt = txtSDT.getText().trim();
 
-        if (txtTen.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Nhập tên!"
-            );
-            return false;
-        }
-
-        if (!txtSDT.getText().matches("\\d{10}")) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "SĐT sai!"
-            );
-            return false;
-        }
-
-        try {
-            int soNguoi =
-                    Integer.parseInt(
-                            txtSoNguoi.getText()
-                    );
-
-            if (soNguoi <= 0) {
-                throw new Exception();
+            if(maPhong.isEmpty()){
+                JOptionPane.showMessageDialog(this, "Chưa chọn phòng!");
+                return;
             }
 
-        } catch (Exception e) {
+            LocalDateTime nhan = parse(txtNhan.getText());
+            LocalDateTime tra = txtTra.getText().isEmpty() ? null : parse(txtTra.getText());
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Số người sai!"
-            );
+            String maKH = khDao.getMaKHBySDT(sdt);
+            if(maKH == null){
+                maKH = khDao.insertKhach(ten, sdt);
+            }
 
-            return false;
+            String maPhieu = new PhieuDatPhongDao().getMaPhieuDatPhongByMaPhong(maPhong);
+
+            String maHD = hdDao.getMaHDByMaPhieu(maPhieu);
+
+            if(maHD == null){
+                maHD = hdDao.getNextMaHD();
+                hdDao.insertCoPhieuDatPhong(maHD, maNV, maKH, maPhieu);
+            }
+
+            if(!ctDao.exists(maHD, maPhong)){
+                ctDao.insert(maHD, maPhong, java.sql.Timestamp.valueOf(nhan));
+            }
+
+            ctDao.updateThoiGianNhanTraHoaDon(maHD, maPhong, nhan, tra);
+            ctDao.updateTrangThai(maHD, maPhong, "Đang dùng");
+
+            JOptionPane.showMessageDialog(this, "Nhận phòng thành công!");
+
+            loadPhongDat(); // 🔥 giờ sẽ biến mất
+            clearForm();
+
+        }catch(Exception e){
+            e.printStackTrace();
         }
-
-        return true;
     }
 
-    // =================================================
-    // CLEAR FORM
-    // =================================================
+    // ================= UTIL =================
+    private String pickDate(){
+        JSpinner sp = new JSpinner(new SpinnerDateModel());
+        sp.setEditor(new JSpinner.DateEditor(sp,"dd/MM/yyyy HH:mm"));
 
-    private void clearForm() {
+        if(JOptionPane.showConfirmDialog(this, sp,"Chọn giờ",
+                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION){
+            return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm")
+                    .format((java.util.Date) sp.getValue());
+        }
+        return "";
+    }
 
+    private String format(Object o){
+        return ((java.sql.Timestamp)o)
+                .toLocalDateTime()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    private String formatNow(){
+        return LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    private LocalDateTime parse(String s){
+        return LocalDateTime.parse(s,
+                DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    private void clearForm(){
         txtTen.setText("");
         txtSDT.setText("");
         txtMa.setText("");
-        txtSoNguoi.setText("");
         txtNhan.setText("");
         txtTra.setText("");
-    }
-
-    // =================================================
-    // NHẬN PHÒNG
-    // =================================================
-
-    private void handleNhanPhong() {
-
-        if (!validateForm()) return;
-
-        try {
-
-            String ten = txtTen.getText().trim();
-            String sdt = txtSDT.getText().trim();
-            String maPhong = txtMa.getText().trim();
-
-            // kiểm tra khách
-            String maKH =
-                    khDao.getMaKHBySDT(sdt);
-
-            if (maKH == null) {
-                maKH = khDao.insertKhach(
-                        ten,
-                        sdt
-                );
-            }
-
-            if (maKH == null) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tạo được khách hàng!"
-                );
-                return;
-            }
-
-            // lấy mã phiếu đặt phòng
-            String maPhieuDatPhong =
-                    new PhieuDatPhongDao()
-                            .getMaPhieuDatPhongByMaPhong(
-                                    maPhong
-                            );
-
-            // tạo hóa đơn bằng mã NV đăng nhập
-            String maHD =
-                    hdDao.createHoaDon(
-                            maKH,
-                            maPhieuDatPhong,
-                            maNV
-                    );
-
-            if (maHD == null) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tạo được hóa đơn!"
-                );
-                return;
-            }
-
-            // thêm chi tiết hóa đơn
-            boolean ok =
-                    ctDao.addChiTiet(
-                            maHD,
-                            maPhong
-                    );
-
-            if (!ok) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tạo được chi tiết hóa đơn!"
-                );
-                return;
-            }
-
-            // cập nhật trạng thái phòng
-            phongDao.updateTrangThai(
-                    maPhong,
-                    "Đang thuê"
-            );
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Nhận phòng thành công!"
-            );
-
-            loadPhongDat();
-            clearForm();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Lỗi nhận phòng!"
-            );
-        }
     }
 }

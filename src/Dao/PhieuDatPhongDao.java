@@ -87,23 +87,26 @@ public class PhieuDatPhongDao {
         List<Object[]> list = new ArrayList<>();
 
         String sql = """
-        SELECT
-            p.MaPhong,
-            lp.TenLP,
-            kh.HoTen,
-            kh.SDT,
-            ct.ThoiGianNhan,
-            ct.ThoiGianTra
-        FROM PhieuDatPhong pd
-        JOIN KhachHang kh
-            ON pd.MaKH = kh.MaKH
-        JOIN ChiTietPhieuDatPhong ct
-            ON pd.MaPhieuDatPhong = ct.MaPhieuDatPhong
-        JOIN Phong p
-            ON ct.MaPhong = p.MaPhong
-        JOIN LoaiPhong lp
-            ON p.MaLP = lp.MaLP
-        WHERE p.TrangThai = N'Đã đặt'
+    SELECT
+        p.MaPhong,
+        lp.TenLP,
+        kh.HoTen,
+        kh.SDT,
+        ct.ThoiGianNhan,
+        ct.ThoiGianTra
+    FROM PhieuDatPhong pd
+    JOIN KhachHang kh
+        ON pd.MaKH = kh.MaKH
+    JOIN ChiTietPhieuDatPhong ct
+        ON pd.MaPhieuDatPhong = ct.MaPhieuDatPhong
+    JOIN Phong p
+        ON ct.MaPhong = p.MaPhong
+    JOIN LoaiPhong lp
+        ON p.MaLP = lp.MaLP
+
+    LEFT JOIN ChiTietHoaDonPhong cthd
+        ON p.MaPhong = cthd.MaPhong
+    WHERE cthd.MaPhong IS NULL
     """;
 
         try (
@@ -184,6 +187,54 @@ public class PhieuDatPhongDao {
                         rs.getTimestamp("ThoiGianTra")
                 };
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    public String taoPhieuDatPhongTuDong(
+            String maKH,
+            String maNV
+    ) {
+
+        String maPDP = getNextMaPhieu();
+
+        String sql = """
+        INSERT INTO PhieuDatPhong
+        (
+            MaPhieuDatPhong,
+            ThoiGianDat,
+            MaKH,
+            MaNV
+        )
+        VALUES (?, ?, ?, ?)
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, maPDP);
+
+            ps.setTimestamp(
+                    2,
+                    new Timestamp(
+                            System.currentTimeMillis()
+                    )
+            );
+
+            ps.setString(3, maKH);
+            ps.setString(4, maNV);
+
+            ps.executeUpdate();
+
+            return maPDP;
 
         } catch (Exception e) {
             e.printStackTrace();

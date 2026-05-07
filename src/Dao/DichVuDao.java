@@ -1,3 +1,4 @@
+
 package Dao;
 
 import ConnectDB.Database;
@@ -229,5 +230,101 @@ public class DichVuDao {
         }
 
         return 0;
+    }
+    public String createHDDV(String maHD){
+
+        String maHDDV = "HDDV" + System.currentTimeMillis();
+
+        String sql = "INSERT INTO HoaDonDichVu VALUES (?, ?)";
+
+        try(
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ){
+            ps.setString(1, maHDDV);
+            ps.setString(2, maHD);
+
+            ps.executeUpdate();
+            return maHDDV;
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    public boolean addOrUpdateDichVu(
+            String maHDDV,
+            String maDichVu,
+            double donGia
+    ) {
+
+        try (Connection con = Database.getInstance().getConnection()) {
+
+            // ===== CHECK EXIST =====
+            String checkSql = """
+            SELECT SoLuong
+            FROM ChiTietHoaDonDichVu
+            WHERE MaHoaDonDichVu = ?
+            AND MaDichVu = ?
+        """;
+
+            try (PreparedStatement ps = con.prepareStatement(checkSql)) {
+
+                ps.setString(1, maHDDV);
+                ps.setString(2, maDichVu);
+
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+
+                    int soLuong = rs.getInt(1) + 1;
+                    double thanhTien = soLuong * donGia;
+
+                    String updateSql = """
+                    UPDATE ChiTietHoaDonDichVu
+                    SET SoLuong = ?, ThanhTien = ?
+                    WHERE MaHoaDonDichVu = ?
+                    AND MaDichVu = ?
+                """;
+
+                    try (PreparedStatement psUpdate = con.prepareStatement(updateSql)) {
+
+                        psUpdate.setInt(1, soLuong);
+                        psUpdate.setDouble(2, thanhTien);
+                        psUpdate.setString(3, maHDDV);
+                        psUpdate.setString(4, maDichVu);
+
+                        return psUpdate.executeUpdate() > 0;
+                    }
+                }
+            }
+
+            // ===== INSERT =====
+            String insertSql = """
+            INSERT INTO ChiTietHoaDonDichVu
+            (MaHoaDonDichVu, MaDichVu, ThoiDiemSuDung, SoLuong, DonGia, ThanhTien)
+            VALUES (?, ?, GETDATE(), ?, ?, ?)
+        """;
+
+            try (PreparedStatement psInsert = con.prepareStatement(insertSql)) {
+
+                int soLuong = 1;
+                double thanhTien = donGia;
+
+                psInsert.setString(1, maHDDV);
+                psInsert.setString(2, maDichVu);
+                psInsert.setInt(3, soLuong);
+                psInsert.setDouble(4, donGia);
+                psInsert.setDouble(5, thanhTien);
+
+                return psInsert.executeUpdate() > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

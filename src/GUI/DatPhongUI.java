@@ -309,9 +309,46 @@ public class DatPhongUI extends JPanel {
                     tfSoLuongNguoi.getText().trim()
             );
 
-            LocalDateTime tu = LocalDateTime.now();
+            String ngayTu = tfNgayTu.getText().trim();
+            String gioTu = tfGioTu.getText().trim();
 
-            LocalDateTime den = tu.plusHours(2);
+            String ngayDen = tfNgayDen.getText().trim();
+            String gioDen = tfGioDen.getText().trim();
+
+            if (ngayTu.isEmpty() || gioTu.isEmpty()
+                    || ngayDen.isEmpty() || gioDen.isEmpty()) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Vui lòng chọn đầy đủ thời gian nhận và trả phòng!"
+                );
+                return;
+            }
+
+            java.time.format.DateTimeFormatter formatter =
+                    java.time.format.DateTimeFormatter.ofPattern(
+                            "dd/MM/yyyy HH:mm"
+                    );
+
+            LocalDateTime tu =
+                    LocalDateTime.parse(
+                            ngayTu + " " + gioTu,
+                            formatter
+                    );
+
+            LocalDateTime den =
+                    LocalDateTime.parse(
+                            ngayDen + " " + gioDen,
+                            formatter
+                    );
+
+            if (den.isBefore(tu)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Thời gian trả phải lớn hơn thời gian nhận!"
+                );
+                return;
+            }
 
             boolean ok = ctDao.insert(
                     maPhieu,
@@ -338,6 +375,46 @@ public class DatPhongUI extends JPanel {
                     selectedMaPhong,
                     "Đã đặt"
             );
+            // =====================================================
+// 5. TẠO HÓA ĐƠN + HỎI DỊCH VỤ
+// =====================================================
+
+            HoaDonPhongDao hdDao = new HoaDonPhongDao();
+            DichVuDao dvDao = new DichVuDao();
+
+// tạo mã hóa đơn
+            String maHD = hdDao.getNextMaHD();
+
+// tạo hóa đơn phòng (gắn với phiếu)
+            hdDao.insertCoPhieuDatPhong(
+                    maHD,
+                    maNV,
+                    maKH,
+                    maPhieu
+            );
+
+// tạo chi tiết hóa đơn phòng
+            String maHDDV = dvDao.createHDDV(maHD);
+
+
+// tạo hóa đơn dịch vụ
+
+
+// ===== HỎI THÊM DV =====
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Bạn có muốn thêm dịch vụ không?",
+                    "Thêm dịch vụ",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if(confirm == JOptionPane.YES_OPTION){
+                new ChonDichVuDialog(
+                        (Frame) SwingUtilities.getWindowAncestor(this),
+                        selectedMaPhong,
+                        maHDDV
+                ).setVisible(true);
+            }
 
             // =====================================================
             // 5. THÔNG BÁO

@@ -170,7 +170,7 @@ CREATE TABLE ChiTietHoaDonPhong (
 
 -- ================= HOADONDICHVU =================
 CREATE TABLE HoaDonDichVu (
-    MaHoaDonDichVu NVARCHAR(10) PRIMARY KEY,
+    MaHoaDonDichVu NVARCHAR(20) PRIMARY KEY,
     MaHoaDonPhong NVARCHAR(10),
 
     FOREIGN KEY (MaHoaDonPhong) REFERENCES HoaDonPhong(MaHoaDonPhong)
@@ -178,7 +178,7 @@ CREATE TABLE HoaDonDichVu (
 
 -- ================= CHITIETHOADONDICHVU =================
 CREATE TABLE ChiTietHoaDonDichVu (
-    MaHoaDonDichVu NVARCHAR(10),
+    MaHoaDonDichVu NVARCHAR(20),
     MaDichVu NVARCHAR(10),
     ThoiDiemSuDung DATETIME,
     SoLuong INT,
@@ -242,21 +242,17 @@ INSERT INTO LoaiPhong VALUES
 -- =====================================================
 
 INSERT INTO Phong VALUES
--- đang thuê
-('P101', N'Đang thuê', 1, 'LP01'),
-('P201', N'Đang thuê', 2, 'LP02'),
-('P301', N'Đang thuê', 3, 'LP03'),
+                      ('P101', N'Đang thuê', 1, 'LP01'),
+                      ('P201', N'Đang thuê', 2, 'LP02'),
+                      ('P301', N'Đang thuê', 3, 'LP03'),
 
--- đã đặt
-('P102', N'Đã đặt', 1, 'LP01'),
-('P202', N'Đã đặt', 2, 'LP02'),
-('P302', N'Đã đặt', 3, 'LP03'),
+                      ('P102', N'Đã đặt', 1, 'LP01'),
+                      ('P202', N'Đã đặt', 2, 'LP02'),
+                      ('P302', N'Đã đặt', 3, 'LP03'),
 
--- trống
-('P103', N'Trống', 1, 'LP01'),
-('P203', N'Trống', 2, 'LP02'),
-('P303', N'Trống', 3, 'LP03');
-
+                      ('P103', N'Trống', 1, 'LP01'),
+                      ('P203', N'Trống', 2, 'LP02'),
+                      ('P303', N'Trống', 3, 'LP03');
 -- =====================================================
 -- DỊCH VỤ
 -- =====================================================
@@ -273,31 +269,28 @@ INSERT INTO DichVu VALUES
 -- =====================================================
 
 INSERT INTO PhieuDatPhong VALUES
--- phòng đang thuê
-('DP01',GETDATE(),'KH01','NV02'),
-('DP02',GETDATE(),'KH02','NV03'),
-('DP03',GETDATE(),'KH03','NV02'),
+                              ('DP01',GETDATE(),'KH01','NV02'),
+                              ('DP02',GETDATE(),'KH02','NV03'),
+                              ('DP03',GETDATE(),'KH03','NV02'),
 
--- phòng đã đặt
-('DP04',GETDATE(),'KH04','NV01'),
-('DP05',GETDATE(),'KH05','NV02'),
-('DP06',GETDATE(),'KH06','NV03');
+                              ('DP04',GETDATE(),'KH04','NV01'),
+                              ('DP05',GETDATE(),'KH05','NV02'),
+                              ('DP06',GETDATE(),'KH06','NV03');
 
 -- =====================================================
 -- CHI TIẾT PHIẾU ĐẶT PHÒNG
 -- =====================================================
 
 INSERT INTO ChiTietPhieuDatPhong VALUES
--- phòng đang thuê (đã nhận phòng)
+-- đang thuê
 ('DP01','P101',GETDATE(),DATEADD(HOUR,5,GETDATE()),2),
 ('DP02','P201',GETDATE(),DATEADD(HOUR,6,GETDATE()),2),
 ('DP03','P301',GETDATE(),DATEADD(HOUR,24,GETDATE()),3),
 
--- phòng đã đặt (chưa nhận phòng → thời gian nhận ở tương lai)
+-- đã đặt (chưa nhận)
 ('DP04','P102',DATEADD(HOUR,3,GETDATE()),NULL,2),
 ('DP05','P202',DATEADD(HOUR,5,GETDATE()),NULL,2),
 ('DP06','P302',DATEADD(HOUR,8,GETDATE()),NULL,3);
-
 -- =====================================================
 -- KHUYẾN MÃI
 -- =====================================================
@@ -319,9 +312,9 @@ INSERT INTO Thue VALUES
 -- =====================================================
 
 INSERT INTO HoaDonPhong VALUES
-('HD01',GETDATE(),'DP01','NV02','KH01','KM01','T01',500000,40000,N'Chưa thanh toán'),
-('HD02',GETDATE(),'DP02','NV03','KH02','KM01','T01',700000,56000,N'Chưa thanh toán'),
-('HD03',GETDATE(),'DP03','NV02','KH03','KM01','T01',1200000,96000,N'Chưa thanh toán');
+                            ('HD01',GETDATE(),'DP01','NV02','KH01','KM01','T01',500000,40000,N'Chưa thanh toán'),
+                            ('HD02',GETDATE(),'DP02','NV03','KH02','KM01','T01',700000,56000,N'Chưa thanh toán'),
+                            ('HD03',GETDATE(),'DP03','NV02','KH03','KM01','T01',1200000,96000,N'Chưa thanh toán');
 
 -- =====================================================
 -- CHI TIẾT HÓA ĐƠN PHÒNG
@@ -329,10 +322,9 @@ INSERT INTO HoaDonPhong VALUES
 -- =====================================================
 
 INSERT INTO ChiTietHoaDonPhong VALUES
-('HD01','P101',GETDATE(),DATEADD(HOUR,5,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
-('HD02','P201',GETDATE(),DATEADD(HOUR,6,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
-('HD03','P301',GETDATE(),DATEADD(HOUR,24,GETDATE()),N'Ngày',3,N'Đang dùng',N'Chưa TT');
-
+                                   ('HD01','P101',GETDATE(),DATEADD(HOUR,5,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
+                                   ('HD02','P201',GETDATE(),DATEADD(HOUR,6,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
+                                   ('HD03','P301',GETDATE(),DATEADD(HOUR,24,GETDATE()),N'Ngày',3,N'Đang dùng',N'Chưa TT');
 -- =====================================================
 -- HÓA ĐƠN DỊCH VỤ
 -- =====================================================

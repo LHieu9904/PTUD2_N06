@@ -296,7 +296,9 @@ public class DichVuPhong_UI extends JPanel {
                     modelPopup.getValueAt(rowDV, 2).toString()
             );
 
-            String maHDDV = hoaDonDichVuDao.getMaHoaDonDVByMaPhong(maPhong);
+            String maHDDV =
+                    hoaDonDichVuDao
+                            .getOrCreateHoaDonDVByMaPhong(maPhong);
 
             if (maHDDV == null) {
                 JOptionPane.showMessageDialog(dialog, "Phòng chưa có hóa đơn dịch vụ!");

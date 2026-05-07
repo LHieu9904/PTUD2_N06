@@ -12,23 +12,19 @@ import java.util.List;
 
 public class Search_HoaDon_UI extends JPanel {
 
-    // ===== GLOBAL =====
+    // =========================
+    // TABLE
+    // =========================
+
     private DefaultTableModel model;
     private JTable table;
 
+    // =========================
+    // SEARCH
+    // =========================
+
     private TextField tfNgay;
     private TextField tfMa;
-
-    private TextField txtMaHD;
-    private TextField txtNgayLap;
-    private TextField txtNhanVien;
-    private TextField txtKhachHang;
-    private TextField txtTienPhong;
-    private TextField txtTienDV;
-    private TextField txtTongTien;
-
-    private JTextArea taPhong;
-    private JTextArea taDichVu;
 
     private JRadioButton rHoaDon;
     private JRadioButton rPhieu;
@@ -36,51 +32,105 @@ public class Search_HoaDon_UI extends JPanel {
     private Button btnSearch;
     private Button btnSearchNgay;
 
+    // =========================
+    // DETAIL
+    // =========================
+
+    private TextField txtMaHD;
+    private TextField txtNgayLap;
+    private TextField txtNhanVien;
+    private TextField txtKhachHang;
+    private TextField txtTienPhong;
+    private TextField txtTienDV;
+    private TextField txtTienThue;
+    private TextField txtTongTien;
+
+    private JTextArea taPhong;
+    private JTextArea taDichVu;
+
+    // =========================
+    // DAO
+    // =========================
+
+    private final HoaDonPhongDao hoaDonDao =
+            new HoaDonPhongDao();
+
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
+
     public Search_HoaDon_UI() {
 
         setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
 
-        // ===== HEADER =====
+        initUI();
+        loadData();
+        if (model.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+            loadChiTietHoaDon(model.getValueAt(0, 0).toString());
+        }
+        initEvent();
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
+
+    private void initUI() {
+
+        // HEADER
+
         JPanel header = new JPanel();
+        header.setBackground(Color.WHITE);
+
         JLabel title = new JLabel("TRA CỨU HÓA ĐƠN");
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
+        title.setFont(new Font("Tahoma", Font.BOLD, 24));
         title.setForeground(new Color(0, 153, 255));
+
         header.add(title);
         add(header, BorderLayout.NORTH);
 
-        // ===== BODY =====
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // BODY
+
+        JPanel body = new JPanel(new BorderLayout(0, 10));
         body.setBackground(Color.WHITE);
+        body.setBorder(new EmptyBorder(10, 10, 10, 10));
+
         add(body, BorderLayout.CENTER);
 
-        // ===== SEARCH =====
+        // =================================================
+        // SEARCH PANEL
+        // =================================================
+
         JPanel search = new JPanel();
         search.setBackground(Color.WHITE);
         search.setLayout(new BoxLayout(search, BoxLayout.X_AXIS));
 
-        // ===== TÌM THEO NGÀY =====
-        search.add(new JLabel("Ngày:"));
+        // tìm theo ngày
+
+        search.add(new JLabel("Ngày: "));
 
         tfNgay = new TextField();
-        tfNgay.setPreferredSize(new Dimension(200, 40));
+        tfNgay.setPreferredSize(new Dimension(180, 40));
         tfNgay.setHint("dd/MM/yyyy");
 
-        Button btnCalendar = new Button();
-        btnCalendar.setText("📅");
-
         btnSearchNgay = new Button();
-        btnSearchNgay.setText("Tìm");
+        btnSearchNgay.setText("Tìm ngày");
 
         search.add(tfNgay);
-        search.add(btnCalendar);
+        search.add(Box.createHorizontalStrut(10));
         search.add(btnSearchNgay);
 
         search.add(Box.createHorizontalStrut(30));
 
-        // ===== TÌM THEO MÃ =====
+        // tìm theo mã
+
         rHoaDon = new JRadioButton("Hóa đơn", true);
         rPhieu = new JRadioButton("Phiếu đặt");
+
+        rHoaDon.setBackground(Color.WHITE);
+        rPhieu.setBackground(Color.WHITE);
 
         ButtonGroup group = new ButtonGroup();
         group.add(rHoaDon);
@@ -95,56 +145,81 @@ public class Search_HoaDon_UI extends JPanel {
 
         search.add(rHoaDon);
         search.add(rPhieu);
+        rHoaDon.addActionListener(e -> loadData());
+        rPhieu.addActionListener(e -> loadData());
+        search.add(Box.createHorizontalStrut(10));
         search.add(tfMa);
+        search.add(Box.createHorizontalStrut(10));
         search.add(btnSearch);
 
         body.add(search, BorderLayout.NORTH);
 
-        // ===== MAIN =====
+        // =================================================
+        // MAIN
+        // =================================================
+
         JPanel main = new JPanel(new GridLayout(1, 2, 10, 0));
+        main.setBackground(Color.WHITE);
+
         body.add(main, BorderLayout.CENTER);
 
-        // ===== LEFT TABLE =====
+        // =================================================
+        // LEFT - TABLE
+        // =================================================
+
         JPanel left = new JPanel(new BorderLayout());
+        left.setBackground(Color.WHITE);
 
-        JLabel lbl = new JLabel("KẾT QUẢ");
-        lbl.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel lblLeft = new JLabel("DANH SÁCH HÓA ĐƠN");
+        lblLeft.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLeft.setFont(new Font("Tahoma", Font.BOLD, 16));
 
-        left.add(lbl, BorderLayout.NORTH);
+        left.add(lblLeft, BorderLayout.NORTH);
 
         model = new DefaultTableModel(
                 new String[]{
                         "Mã HĐ",
-                        "Khách",
+                        "Khách hàng",
                         "Trạng thái",
                         "Tổng tiền"
-                }, 0
+                },
+                0
         );
 
-        table = new JTable(model);
+        table = new JTable(model) {
+            public boolean isCellEditable(int row, int column) {
+                return false; // ❌ KHÔNG CHO SỬA
+            }
+        };
         table.setRowHeight(35);
 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
+        JScrollPane scroll =
+                new JScrollPane(table);
 
         left.add(scroll, BorderLayout.CENTER);
+
         main.add(left);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // ===== RIGHT DETAIL =====
+        // =================================================
+        // RIGHT - DETAIL
+        // =================================================
+
         JPanel right = new JPanel(new BorderLayout());
+        right.setBackground(Color.WHITE);
 
-        JLabel lbl2 = new JLabel("CHI TIẾT");
-        lbl2.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl2.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel lblRight = new JLabel("CHI TIẾT HÓA ĐƠN");
+        lblRight.setHorizontalAlignment(SwingConstants.CENTER);
+        lblRight.setFont(new Font("Tahoma", Font.BOLD, 16));
 
-        right.add(lbl2, BorderLayout.NORTH);
+        right.add(lblRight, BorderLayout.NORTH);
 
-        JPanel form = new JPanel(new GridLayout(0, 2, 10, 10));
-        form.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel form = new JPanel(
+                new GridLayout(0, 2, 10, 10)
+        );
+
         form.setBackground(Color.WHITE);
+        form.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         txtMaHD = createField();
         txtNgayLap = createField();
@@ -152,12 +227,13 @@ public class Search_HoaDon_UI extends JPanel {
         txtKhachHang = createField();
         txtTienPhong = createField();
         txtTienDV = createField();
+        txtTienThue = createField();
         txtTongTien = createField();
 
-        taPhong = new JTextArea();
+        taPhong = new JTextArea(4, 20);
         taPhong.setEditable(false);
 
-        taDichVu = new JTextArea();
+        taDichVu = new JTextArea(4, 20);
         taDichVu.setEditable(false);
 
         form.add(new JLabel("Mã hóa đơn"));
@@ -184,93 +260,89 @@ public class Search_HoaDon_UI extends JPanel {
         form.add(new JLabel("Tiền dịch vụ"));
         form.add(txtTienDV);
 
+        form.add(new JLabel("Tiền thuế"));
+        form.add(txtTienThue);
+
         form.add(new JLabel("Tổng tiền"));
         form.add(txtTongTien);
 
         right.add(form, BorderLayout.CENTER);
-        main.add(right);
 
-        // ===== LOAD =====
-        loadData();
-        addEvent();
+        main.add(right);
     }
 
-    // ===================================================
+    // =====================================================
     // LOAD DATA
-    // ===================================================
+    // =====================================================
 
     private void loadData() {
 
         model.setRowCount(0);
 
-        List<Object[]> list =
-                new HoaDonPhongDao().getAllHoaDon();
+        List<Object[]> list;
+
+        if (rHoaDon.isSelected()) {
+            list = hoaDonDao.getAllHoaDon();
+        } else {
+            list = hoaDonDao.getAllPhieuDat(); // 🔥 thêm hàm này
+        }
 
         for (Object[] row : list) {
             model.addRow(row);
         }
     }
+    private void loadChiTietPhieuDat(String maPhieu){
 
-    // ===================================================
+        Object[] ct = hoaDonDao.getChiTietPhieuDat(maPhieu);
+
+        if(ct == null) return;
+
+        txtMaHD.setText(ct[0].toString());
+        txtNgayLap.setText(ct[1].toString());
+        txtNhanVien.setText(ct[2].toString());
+        txtKhachHang.setText(ct[3].toString());
+
+        txtTienPhong.setText("0");
+        txtTienDV.setText("0");
+        txtTienThue.setText("0");
+        txtTongTien.setText("0");
+
+        taPhong.setText(
+                hoaDonDao.getPhongPhieuDat(maPhieu)
+        );
+
+        taDichVu.setText(
+                hoaDonDao.getDVPhieuDat(maPhieu)
+        );
+    }
+
+    // =====================================================
     // EVENT
-    // ===================================================
+    // =====================================================
 
-    private void addEvent() {
+    private void initEvent() {
 
-        // click row -> đổ chi tiết
         table.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
 
                 int row = table.getSelectedRow();
                 if (row == -1) return;
 
-                String maHD =
-                        model.getValueAt(row, 0).toString();
+                String ma = model.getValueAt(row, 0).toString();
 
-                Object[] ct =
-                        new HoaDonPhongDao()
-                                .getChiTietHoaDon(maHD);
-
-                if (ct != null) {
-
-                    txtMaHD.setText(
-                            ct[0] != null ? ct[0].toString() : ""
-                    );
-
-                    txtNgayLap.setText(
-                            ct[1] != null ? ct[1].toString() : ""
-                    );
-
-                    txtNhanVien.setText(
-                            ct[2] != null ? ct[2].toString() : ""
-                    );
-
-                    txtKhachHang.setText(
-                            ct[3] != null ? ct[3].toString() : ""
-                    );
-
-                    txtTienPhong.setText(
-                            ct[4] != null ? ct[4].toString() : "0"
-                    );
-
-                    txtTienDV.setText(
-                            ct[5] != null ? ct[5].toString() : "0"
-                    );
-
-                    txtTongTien.setText(
-                            ct[6] != null ? ct[6].toString() : "0"
-                    );
-
-                    taPhong.setText("Danh sách phòng");
-                    taDichVu.setText("Danh sách dịch vụ");
+                if (rHoaDon.isSelected()) {
+                    loadChiTietHoaDon(ma);
+                } else {
+                    loadChiTietPhieuDat(ma); // 🔥 thêm
                 }
             }
         });
 
-        // tìm kiếm đơn giản theo mã
         btnSearch.addActionListener(e -> {
 
-            String keyword = tfMa.getText().trim();
+            String keyword =
+                    tfMa.getText().trim();
 
             if (keyword.isEmpty()) {
                 loadData();
@@ -283,10 +355,14 @@ public class Search_HoaDon_UI extends JPanel {
                         model.getValueAt(i, 0).toString();
 
                 if (ma.equalsIgnoreCase(keyword)) {
+
                     table.setRowSelectionInterval(i, i);
+
                     table.scrollRectToVisible(
                             table.getCellRect(i, 0, true)
                     );
+
+                    loadChiTietHoaDon(ma);
                     return;
                 }
             }
@@ -297,7 +373,6 @@ public class Search_HoaDon_UI extends JPanel {
             );
         });
 
-        // tìm theo ngày (demo)
         btnSearchNgay.addActionListener(e -> {
             JOptionPane.showMessageDialog(
                     this,
@@ -306,28 +381,69 @@ public class Search_HoaDon_UI extends JPanel {
         });
     }
 
-    // ===================================================
+    // =====================================================
+    // LOAD CHI TIẾT
+    // =====================================================
+
+    private void loadChiTietHoaDon(String maHD) {
+
+        Object[] ct =
+                hoaDonDao.getChiTietHoaDon(maHD);
+
+        if (ct == null) return;
+
+        txtMaHD.setText(
+                ct[0] != null ? ct[0].toString() : ""
+        );
+
+        txtNgayLap.setText(
+                ct[1] != null ? ct[1].toString() : ""
+        );
+
+        txtNhanVien.setText(
+                ct[2] != null ? ct[2].toString() : ""
+        );
+
+        txtKhachHang.setText(
+                ct[3] != null ? ct[3].toString() : ""
+        );
+
+        txtTienPhong.setText(
+                ct[4] != null ? ct[4].toString() : "0"
+        );
+
+        txtTienDV.setText(
+                ct[5] != null ? ct[5].toString() : "0"
+        );
+
+        txtTienThue.setText(
+                ct[6] != null ? ct[6].toString() : "0"
+        );
+
+        txtTongTien.setText(
+                ct[7] != null ? ct[7].toString() : "0"
+        );
+
+        taPhong.setText(
+                hoaDonDao.getDanhSachPhong(maHD)
+        );
+
+        taDichVu.setText(
+                hoaDonDao.getDanhSachDichVu(maHD)
+        );
+    }
+
+    // =====================================================
     // COMPONENT
-    // ===================================================
+    // =====================================================
 
     private TextField createField() {
+
         TextField tf = new TextField();
         tf.setPreferredSize(new Dimension(200, 35));
         tf.setEditable(false);
         tf.setBackground(new Color(245, 245, 245));
+
         return tf;
-    }
-
-    // ===================================================
-    // TEST
-    // ===================================================
-
-    public static void main(String[] args) {
-        JFrame f = new JFrame();
-        f.setSize(1100, 650);
-        f.setLocationRelativeTo(null);
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new Search_HoaDon_UI());
-        f.setVisible(true);
     }
 }

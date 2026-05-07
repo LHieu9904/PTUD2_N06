@@ -33,4 +33,40 @@ public class ChiTietPhieuDatPhongDao {
 
         return false;
     }
+    public boolean updateThoiGianNhanTra(
+            String maPhong,
+            java.time.LocalDateTime thoiGianNhan,
+            java.time.LocalDateTime thoiGianTra
+    ) {
+
+        String sql = """
+        UPDATE ChiTietPhieuDatPhong
+        SET ThoiGianNhan = ?, ThoiGianTra = ?
+        WHERE MaPhieuDatPhong = (
+            SELECT TOP 1 MaPhieuDatPhong
+            FROM ChiTietPhieuDatPhong
+            WHERE MaPhong = ?
+            ORDER BY ThoiGianNhan DESC
+        )
+        AND MaPhong = ?
+    """;
+
+        try (
+                java.sql.Connection con = ConnectDB.Database.getInstance().getConnection();
+                java.sql.PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+
+            ps.setTimestamp(1, java.sql.Timestamp.valueOf(thoiGianNhan));
+            ps.setTimestamp(2, java.sql.Timestamp.valueOf(thoiGianTra));
+            ps.setString(3, maPhong);
+            ps.setString(4, maPhong);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

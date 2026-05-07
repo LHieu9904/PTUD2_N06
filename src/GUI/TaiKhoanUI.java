@@ -65,7 +65,7 @@ public class TaiKhoanUI extends JPanel {
 
         JButton btnUpdate = new JButton("Sửa");
         JButton btnDelete = new JButton("Xóa");
-        JButton btnReload = new JButton("Reload");
+        JButton btnReload = new JButton("Làm mới");
 
         btnPanel.add(btnUpdate);
         btnPanel.add(btnDelete);

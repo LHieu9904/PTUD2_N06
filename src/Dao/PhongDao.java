@@ -15,45 +15,48 @@ public class PhongDao {
         List<Phong> list = new ArrayList<>();
 
         String sql = """
-        SELECT
-            p.MaPhong,
-            p.Tang,
-            p.TrangThai,
+    SELECT
+        p.MaPhong,
+        p.Tang,
+        p.TrangThai,
 
-            lp.MaLP,
-            lp.TenLP,
-            lp.GiaGioDau,
-            lp.GiaGioTiepTheo,
-            lp.GiaCaNgay,
+        lp.MaLP,
+        lp.TenLP,
+        lp.GiaGioDau,
+        lp.GiaGioTiepTheo,
+        lp.GiaCaNgay,
 
-            kh.HoTen,
-            kh.SDT,
-                              
-            pd.MaPhieuDatPhong,
-                              
-            hd.TrangThai AS TrangThaiHD,
-            ctHD.TrangThaiSuDung,
-            ctHD.TrangThaiThanhToan
+        kh.HoTen,
+        kh.SDT,
 
-        FROM Phong p
+        pd.MaPhieuDatPhong,
 
-        JOIN LoaiPhong lp
-            ON p.MaLP = lp.MaLP
+        hd.TrangThai AS TrangThaiHD,
+        ctHD.TrangThaiSuDung,
+        ctHD.TrangThaiThanhToan,
 
-       LEFT JOIN ChiTietPhieuDatPhong ct
-                                    ON p.MaPhong = ct.MaPhong
-                                
-                                LEFT JOIN PhieuDatPhong pd
-                                    ON ct.MaPhieuDatPhong = pd.MaPhieuDatPhong
-                                
-                                LEFT JOIN KhachHang kh
-                                    ON pd.MaKH = kh.MaKH
-                                
-                                LEFT JOIN ChiTietHoaDonPhong ctHD
-                                    ON p.MaPhong = ctHD.MaPhong
-                                
-                                LEFT JOIN HoaDonPhong hd
-                                    ON ctHD.MaHoaDonPhong = hd.MaHoaDonPhong
+        ctHD.ThoiGianNhan,
+        ctHD.ThoiGianTra
+
+    FROM Phong p
+
+    JOIN LoaiPhong lp
+        ON p.MaLP = lp.MaLP
+
+    LEFT JOIN ChiTietPhieuDatPhong ct
+        ON p.MaPhong = ct.MaPhong
+
+    LEFT JOIN PhieuDatPhong pd
+        ON ct.MaPhieuDatPhong = pd.MaPhieuDatPhong
+
+    LEFT JOIN KhachHang kh
+        ON pd.MaKH = kh.MaKH
+
+    LEFT JOIN ChiTietHoaDonPhong ctHD
+        ON p.MaPhong = ctHD.MaPhong
+
+    LEFT JOIN HoaDonPhong hd
+        ON ctHD.MaHoaDonPhong = hd.MaHoaDonPhong
     """;
 
         try (
@@ -64,6 +67,7 @@ public class PhongDao {
 
             while (rs.next()) {
 
+                // ===== LOẠI PHÒNG =====
                 LoaiPhong lp = new LoaiPhong();
                 lp.setMaLP(rs.getString("MaLP"));
                 lp.setTenLP(rs.getString("TenLP"));
@@ -71,6 +75,7 @@ public class PhongDao {
                 lp.setGiaGioTiepTheo(rs.getBigDecimal("GiaGioTiepTheo"));
                 lp.setGiaCaNgay(rs.getBigDecimal("GiaCaNgay"));
 
+                // ===== PHÒNG =====
                 Phong p = new Phong(
                         rs.getString("MaPhong"),
                         rs.getInt("Tang"),
@@ -78,34 +83,43 @@ public class PhongDao {
                         lp
                 );
 
-                // lấy thông tin khách
                 p.setTenKhach(rs.getString("HoTen"));
                 p.setSdt(rs.getString("SDT"));
 
-                // nếu có phiếu đặt phòng -> phòng đã đặt
-                // 1. ĐẶT PHÒNG -> MÀU ĐỎ
-                // 1. NHẬN PHÒNG -> MÀU XANH (ưu tiên trước)
-                if (
-                        "Chưa thanh toán".equals(rs.getString("TrangThaiHD"))
-                                || "Đang dùng".equals(rs.getString("TrangThaiSuDung"))
-                ) {
+                // ===== LẤY DỮ LIỆU =====
+                String maPhieu = rs.getString("MaPhieuDatPhong");
+                String trangThaiSuDung = rs.getString("TrangThaiSuDung");
+                String trangThaiHD = rs.getString("TrangThaiHD");
+                String trangThaiTT = rs.getString("TrangThaiThanhToan");
+
+                Timestamp tgNhan = rs.getTimestamp("ThoiGianNhan");
+
+                // =====================================================
+                // LOGIC TRẠNG THÁI CHUẨN
+                // =====================================================
+
+                // 1. ĐANG THUÊ → chỉ khi thực sự đã nhận phòng
+                // 1. ĐANG THUÊ → chỉ khi có hóa đơn + chưa thanh toán
+                if ("Đang dùng".equals(trangThaiSuDung)
+                        && "Chưa thanh toán".equals(trangThaiHD)) {
+
                     p.setTrangThai("Đang thuê");
                 }
 
-// 2. CHỈ ĐẶT PHÒNG -> MÀU ĐỎ
-                else if (rs.getString("MaPhieuDatPhong") != null) {
+// 2. ĐÃ ĐẶT → có phiếu nhưng chưa có sử dụng
+                else if (maPhieu != null && trangThaiSuDung == null) {
+
                     p.setTrangThai("Đã đặt");
                 }
 
-// 3. THANH TOÁN XONG -> MÀU VÀNG
-                else if (
-                        "Đã thanh toán".equals(rs.getString("TrangThaiHD"))
-                                || "Đã TT".equals(rs.getString("TrangThaiThanhToan"))
-                ) {
+// 3. ĐANG DỌN
+                else if ("Đã thanh toán".equals(trangThaiHD)
+                        || "Đã TT".equals(trangThaiTT)) {
+
                     p.setTrangThai("Đang dọn dẹp");
                 }
 
-// 4. CÒN LẠI -> TRỐNG
+// 4. TRỐNG
                 else {
                     p.setTrangThai("Trống");
                 }
@@ -468,10 +482,7 @@ public class PhongDao {
 
         return null;
     }
-    // ===== THÊM vào PhongDao.java =====
-// load phòng trống theo loại phòng (Đơn / Đôi / VIP) :contentReference[oaicite:0]{index=0}
 
-    // =====================================================
 // SỬA HÀM getPhongTrongTheoLoai()
 // =====================================================
 
@@ -714,8 +725,292 @@ public class PhongDao {
 
         return list;
     }
+    public Object[] getThongTinGiaHanPhong(
+            String keyword
+    ) {
+
+        String sql = """
+        SELECT TOP 1
+            p.MaPhong,
+            kh.HoTen,
+            kh.SDT,
+            ct.ThoiGianNhan,
+            ct.ThoiGianTra
+        FROM Phong p
+        JOIN ChiTietHoaDonPhong ct
+            ON p.MaPhong = ct.MaPhong
+        JOIN HoaDonPhong hd
+            ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        JOIN KhachHang kh
+            ON hd.MaKH = kh.MaKH
+        WHERE
+            p.TrangThai = N'Đang thuê'
+            AND (
+                p.MaPhong = ?
+                OR kh.SDT = ?
+            )
+        ORDER BY ct.ThoiGianNhan DESC
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, keyword);
+            ps.setString(2, keyword);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                return new Object[]{
+                        rs.getString("MaPhong"),
+                        rs.getString("HoTen"),
+                        rs.getString("SDT"),
+                        rs.getTimestamp("ThoiGianNhan"),
+                        rs.getTimestamp("ThoiGianTra")
+                };
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+// =====================================================
+// 1. LOAD DANH SÁCH PHÒNG TRẢ PHÒNG
+// =====================================================
+
+    public List<Object[]> getDanhSachTraPhong() {
+
+        List<Object[]> list = new ArrayList<>();
+
+        String sql = """
+        SELECT TOP 100
+            p.MaPhong,
+            kh.HoTen,
+            kh.SDT,
+            ct.ThoiGianNhan,
+            ct.ThoiGianTra,
+            hd.TrangThai
+        FROM Phong p
+        JOIN ChiTietHoaDonPhong ct
+            ON p.MaPhong = ct.MaPhong
+        JOIN HoaDonPhong hd
+            ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        JOIN KhachHang kh
+            ON hd.MaKH = kh.MaKH
+        WHERE
+            p.TrangThai IN (
+                N'Đang thuê',
+                N'Đang dọn dẹp'
+            )
+        ORDER BY ct.ThoiGianNhan DESC
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance()
+                                .getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql);
+
+                ResultSet rs =
+                        ps.executeQuery()
+        ) {
+
+            while (rs.next()) {
+
+                list.add(new Object[]{
+                        rs.getString("MaPhong"),
+                        rs.getString("HoTen"),
+                        rs.getString("SDT"),
+                        rs.getTimestamp("ThoiGianNhan"),
+                        rs.getTimestamp("ThoiGianTra"),
+                        rs.getString("TrangThai")
+                });
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 
 
+// =====================================================
+// 2. CHI TIẾT TRẢ PHÒNG
+// QUAN TRỌNG:
+// KHÔNG dùng hd.TienThue làm tiền phòng
+// =====================================================
 
+    public Object[] getChiTietTraPhong(String maPhong){
+
+        String sql = """
+    SELECT TOP 1
+        p.MaPhong,
+        kh.HoTen,
+        kh.SDT,
+        ct.ThoiGianNhan,
+        ct.ThoiGianTra,
+        ISNULL(
+            DATEDIFF(HOUR, ct.ThoiGianNhan, ISNULL(ct.ThoiGianTra, GETDATE()))
+            * lp.GiaGioDau
+        ,0) AS TienPhong,
+        ISNULL((
+            SELECT SUM(ctdv.ThanhTien)
+            FROM HoaDonDichVu hddv
+            JOIN ChiTietHoaDonDichVu ctdv
+                ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
+            WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
+        ),0) AS TienDichVu,
+        ISNULL(
+            (
+                DATEDIFF(HOUR, ct.ThoiGianNhan, ISNULL(ct.ThoiGianTra, GETDATE()))
+                * lp.GiaGioDau
+            )
+            +
+            ISNULL((
+                SELECT SUM(ctdv.ThanhTien)
+                FROM HoaDonDichVu hddv
+                JOIN ChiTietHoaDonDichVu ctdv
+                    ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
+                WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
+            ),0)
+        ,0) AS TongTien
+
+    FROM ChiTietHoaDonPhong ct
+    JOIN HoaDonPhong hd
+        ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+    JOIN KhachHang kh
+        ON hd.MaKH = kh.MaKH
+    JOIN Phong p
+        ON ct.MaPhong = p.MaPhong
+    JOIN LoaiPhong lp
+        ON p.MaLP = lp.MaLP
+
+    WHERE ct.MaPhong = ?
+    ORDER BY ct.ThoiGianNhan DESC
+    """;
+
+        try(Connection con = Database.getInstance().getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)){
+
+            ps.setString(1, maPhong);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                return new Object[]{
+                        rs.getString("MaPhong"),
+                        rs.getString("HoTen"),
+                        rs.getString("SDT"),
+                        rs.getTimestamp("ThoiGianNhan"),
+                        rs.getTimestamp("ThoiGianTra"),
+                        rs.getDouble("TienPhong"),
+                        rs.getDouble("TienDichVu"),
+                        rs.getDouble("TongTien")
+                };
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+
+// =====================================================
+// 3. LOAD DỊCH VỤ ĐÃ SỬ DỤNG
+// =====================================================
+
+    public List<Object[]> getDichVuDaSuDung(String maPhong){
+
+        List<Object[]> list = new ArrayList<>();
+
+        String sql = """
+        SELECT 
+            dv.TenDichVu,
+            ctdv.SoLuong,
+            ctdv.DonGia,
+            ctdv.ThanhTien
+        FROM HoaDonDichVu hddv
+        JOIN ChiTietHoaDonDichVu ctdv
+            ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
+        JOIN DichVu dv
+            ON ctdv.MaDichVu = dv.MaDichVu
+        JOIN ChiTietHoaDonPhong ct
+            ON hddv.MaHoaDonPhong = ct.MaHoaDonPhong
+        WHERE ct.MaPhong = ?
+    """;
+
+        try(
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ){
+            ps.setString(1, maPhong);
+
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()){
+                list.add(new Object[]{
+                        rs.getString("TenDichVu"),
+                        rs.getInt("SoLuong"),
+                        rs.getDouble("DonGia"),
+                        rs.getDouble("ThanhTien")
+                });
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    public Object[] getGiaPhong(String maPhong){
+
+        String sql = """
+        SELECT 
+            lp.GiaGioDau,
+            lp.GiaGioTiepTheo,
+            lp.GiaCaNgay
+        FROM Phong p
+        JOIN LoaiPhong lp ON p.MaLP = lp.MaLP
+        WHERE p.MaPhong = ?
+    """;
+
+        try(
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ){
+            ps.setString(1, maPhong);
+
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                return new Object[]{
+                        rs.getDouble("GiaGioDau"),
+                        rs.getDouble("GiaGioTiepTheo"),
+                        rs.getDouble("GiaCaNgay")
+                };
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return new Object[]{0.0,0.0,0.0};
+    }
+    public String getDVPhieuDat(String maPhieu){
+        return "Chưa phát sinh dịch vụ";
+    }
 
 }

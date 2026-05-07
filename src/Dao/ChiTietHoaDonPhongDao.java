@@ -47,7 +47,7 @@ public class ChiTietHoaDonPhongDao {
 
             ps.setString(
                     5,
-                    "Đang dùng"
+                    "null"
             );
 
             ps.setString(
@@ -144,12 +144,151 @@ public class ChiTietHoaDonPhongDao {
             ps.setString(1, maHD);
             ps.setString(2, maPhong);
             ps.setTimestamp(3, thoiGianNhan);
-            ps.setString(4, "Đang dùng");
+            ps.setString(4, "null");
             ps.setString(5, "Chưa TT");
 
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public boolean exists(String maHD, String maPhong){
+
+        String sql = """
+        SELECT 1
+        FROM ChiTietHoaDonPhong
+        WHERE MaHoaDonPhong = ? AND MaPhong = ?
+    """;
+
+        try(
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ){
+            ps.setString(1, maHD);
+            ps.setString(2, maPhong);
+
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public boolean insert(
+            String maHD,
+            String maPhong,
+            Timestamp thoiGianNhan,
+            Timestamp thoiGianTra
+    ) {
+
+        String sql = """
+        INSERT INTO ChiTietHoaDonPhong
+        (
+            MaHoaDonPhong,
+            MaPhong,
+            ThoiGianNhan,
+            ThoiGianTra,
+            CachThue,
+            SoLuongNguoi,
+            TrangThaiSuDung,
+            TrangThaiThanhToan
+        )
+        VALUES
+        (
+            ?, ?, ?, ?,
+            N'Giờ',
+            1,
+            N'Đang dùng',
+            N'Chưa TT'
+        )
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, maHD);
+            ps.setString(2, maPhong);
+            ps.setTimestamp(3, thoiGianNhan);
+            ps.setTimestamp(4, thoiGianTra);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public boolean updateThoiGianTra(
+            String maPhong,
+            Timestamp thoiGianTraMoi
+    ) {
+
+        String sql = """
+        UPDATE ChiTietHoaDonPhong
+        SET ThoiGianTra = ?
+        WHERE MaPhong = ?
+        AND ThoiGianTra = (
+            SELECT MAX(ThoiGianTra)
+            FROM ChiTietHoaDonPhong
+            WHERE MaPhong = ?
+        )
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setTimestamp(1, thoiGianTraMoi);
+            ps.setString(2, maPhong);
+            ps.setString(3, maPhong);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public boolean updateThoiGianNhanTraHoaDon(
+            String maHD,
+            String maPhong,
+            LocalDateTime nhan,
+            LocalDateTime tra
+    ) {
+
+        String sql = """
+        UPDATE ChiTietHoaDonPhong
+        SET ThoiGianNhan = ?, ThoiGianTra = ?
+        WHERE MaHoaDonPhong = ? AND MaPhong = ?
+    """;
+
+        try(Connection con = Database.getInstance().getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)){
+
+            ps.setTimestamp(1, Timestamp.valueOf(nhan));
+            ps.setTimestamp(2, Timestamp.valueOf(tra));
+            ps.setString(3, maHD);
+            ps.setString(4, maPhong);
+
+            return ps.executeUpdate() > 0;
+
+        }catch(Exception e){
             e.printStackTrace();
         }
 

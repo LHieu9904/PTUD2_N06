@@ -55,7 +55,7 @@ public class KhachHangUI extends JPanel {
         btnThem = new JButton("Thêm");
         btnSua = new JButton("Sửa");
         btnXoa = new JButton("Xóa");
-        btnReload = new JButton("Reload");
+        btnReload = new JButton("Làm mới");
 
         btnPanel.add(btnThem);
         btnPanel.add(btnSua);

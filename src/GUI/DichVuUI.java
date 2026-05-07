@@ -51,7 +51,7 @@ public class DichVuUI extends JPanel {
         JButton btnThem = new JButton("Thêm");
         JButton btnSua = new JButton("Sửa");
         JButton btnXoa = new JButton("Xóa");
-        JButton btnReload = new JButton("Reload");
+        JButton btnReload = new JButton("Làm mới");
 
         btnPanel.add(btnThem);
         btnPanel.add(btnSua);

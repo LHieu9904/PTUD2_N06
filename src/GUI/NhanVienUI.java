@@ -112,7 +112,7 @@ public class NhanVienUI extends JPanel {
 
         JButton btnAdd = new JButton("Thêm");
         JButton btnUpdate = new JButton("Sửa");
-        JButton btnReload = new JButton("Reload");
+        JButton btnReload = new JButton("Làm mới");
 
         btnPanel.add(btnAdd);
         btnPanel.add(btnUpdate);

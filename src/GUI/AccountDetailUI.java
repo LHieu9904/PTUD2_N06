@@ -765,7 +765,7 @@ public class AccountDetailUI extends JFrame {
 
         JMenuItem thanhToan = new JMenuItem("Thanh toán - Trả Phòng");
         thanhToan.addActionListener(e ->
-                loadPanel(new TraPhong_UI())
+                loadPanel(new TraPhong_UI(nhanVien.getMaNV()))
         );
         JMenuItem dichVuPhong = new JMenuItem("Dịch Vụ Phòng");
         dichVuPhong.addActionListener(e ->loadPanel(new DichVuPhong_UI()));

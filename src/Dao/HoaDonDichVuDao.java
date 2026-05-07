@@ -270,5 +270,153 @@ public class HoaDonDichVuDao {
 
         return false;
     }
+    // =====================================================
+// THÊM FULL CÁC HÀM NÀY VÀO HoaDonDichVuDao.java
+// FIX LỖI:
+// "Phòng chưa có hóa đơn dịch vụ"
+// =====================================================
+
+
+// =====================================================
+// TẠO MÃ HÓA ĐƠN DỊCH VỤ TỰ ĐỘNG
+// =====================================================
+
+
+
+
+// =====================================================
+// TẠO HÓA ĐƠN DỊCH VỤ CHO PHÒNG
+// =====================================================
+
+    public boolean taoHoaDonDichVu(String maHoaDonPhong) {
+
+        String checkSql = """
+        SELECT TOP 1 MaHoaDonDichVu
+        FROM HoaDonDichVu
+        WHERE MaHoaDonPhong = ?
+    """;
+
+        String insertSql = """
+        INSERT INTO HoaDonDichVu
+        (MaHoaDonDichVu, MaHoaDonPhong)
+        VALUES (?, ?)
+    """;
+
+        try (
+                Connection con = Database.getInstance().getConnection()
+        ) {
+
+            // =====================================
+            // 1. CHECK ĐÃ CÓ CHƯA
+            // =====================================
+            PreparedStatement psCheck = con.prepareStatement(checkSql);
+            psCheck.setString(1, maHoaDonPhong);
+
+            ResultSet rsCheck = psCheck.executeQuery();
+
+            if (rsCheck.next()) {
+                return true; // đã tồn tại
+            }
+
+            // =====================================
+            // 2. TẠO MÃ AN TOÀN (KHÔNG PARSE INT)
+            // =====================================
+
+            String maHDDV = "HDDV" + System.currentTimeMillis();
+
+            // =====================================
+            // 3. INSERT
+            // =====================================
+            PreparedStatement psInsert = con.prepareStatement(insertSql);
+            psInsert.setString(1, maHDDV);
+            psInsert.setString(2, maHoaDonPhong);
+
+            return psInsert.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+
+// =====================================================
+// LẤY / TỰ TẠO HÓA ĐƠN DỊCH VỤ THEO PHÒNG
+// =====================================================
+
+    public String getOrCreateHoaDonDVByMaPhong(
+            String maPhong
+    ) {
+
+        // lấy mã hiện tại trước
+
+        String maHDDV =
+                getMaHoaDonDVByMaPhong(
+                        maPhong
+                );
+
+        if (maHDDV != null) {
+            return maHDDV;
+        }
+
+        // chưa có -> lấy mã hóa đơn phòng
+
+        String sql = """
+        SELECT TOP 1
+            ct.MaHoaDonPhong
+        FROM ChiTietHoaDonPhong ct
+        JOIN HoaDonPhong hd
+            ON ct.MaHoaDonPhong =
+               hd.MaHoaDonPhong
+        WHERE
+            ct.MaPhong = ?
+            AND hd.TrangThai = N'Chưa thanh toán'
+        ORDER BY ct.ThoiGianNhan DESC
+    """;
+
+        try (
+                Connection con =
+                        Database.getInstance()
+                                .getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setString(
+                    1,
+                    maPhong
+            );
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            if (rs.next()) {
+
+                String maHoaDonPhong =
+                        rs.getString(
+                                "MaHoaDonPhong"
+                        );
+
+                boolean created =
+                        taoHoaDonDichVu(
+                                maHoaDonPhong
+                        );
+
+                if (created) {
+
+                    return getMaHoaDonDVByMaPhong(
+                            maPhong
+                    );
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
 }
