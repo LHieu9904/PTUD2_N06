@@ -300,6 +300,15 @@ public class DatPhongUI extends JPanel {
                     maKH,
                     maNV
             );
+            if(maPhieu == null){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không tạo được phiếu đặt!"
+                );
+
+                return;
+            }
 
             // =====================================================
             // 3. THÊM CHI TIẾT ĐẶT PHÒNG
@@ -371,10 +380,21 @@ public class DatPhongUI extends JPanel {
             // (PHÒNG SẼ HIỆN MÀU ĐỎ)
             // =====================================================
 
-            phongDao.updateTrangThai(
-                    selectedMaPhong,
-                    "Đã đặt"
-            );
+            boolean updated =
+                    phongDao.updateTrangThai(
+                            selectedMaPhong,
+                            "Đã đặt"
+                    );
+
+            if(!updated){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không cập nhật được trạng thái phòng!"
+                );
+
+                return;
+            }
             // =====================================================
 // 5. TẠO HÓA ĐƠN + HỎI DỊCH VỤ
 // =====================================================

@@ -16,6 +16,7 @@ public class PhongUI extends JPanel {
 
     private JTextField txtMaPhong, txtTang;
     private JComboBox<String> cbTrangThai, cbLoai;
+    private JComboBox<Integer> cbTangFilter;
 
     private PhongDao phongDao = new PhongDao();
     private LoaiPhongDao loaiDao = new LoaiPhongDao();
@@ -99,7 +100,7 @@ public class PhongUI extends JPanel {
                 });
 
 
-        JComboBox<Integer> cbTangFilter = new JComboBox<>();
+        cbTangFilter = new JComboBox<>();
         cbTangFilter.addItem(0); // 0 = tất cả
         cbTangFilter.removeAllItems();
         cbTangFilter.addItem(0); // tất cả
@@ -234,16 +235,22 @@ public class PhongUI extends JPanel {
             }
 
             // lọc tầng
-            if (tangFilter != 0 && p.getTang() != tangFilter) {
+            if (tangFilter != null
+                    && tangFilter != 0
+                    && p.getTang() != tangFilter.intValue()) {
+
                 continue;
             }
 
             // lọc loại phòng
-            if (loaiFilter != null &&
-                    !p.getLoaiPhong().equals(loaiFilter)) {
+            if (loaiFilter != null
+                    && p.getLoaiPhong() != null
+                    && !p.getLoaiPhong()
+                    .getMaLP()
+                    .equals(loaiFilter.getMaLP())) {
+
                 continue;
             }
-
             // ===== LOGIC TRẠNG THÁI =====
             if ("Đã đặt".equals(p.getTrangThai())) {
                 roomPanel.add(createRoomDaDat(p));
@@ -266,34 +273,28 @@ public class PhongUI extends JPanel {
         roomPanel.revalidate();
         roomPanel.repaint();
     }
+    private void reloadTangFilter(){
 
-    private void loadData(String filter){
+        cbTangFilter.removeAllItems();
 
-        roomPanel.removeAll();
+        cbTangFilter.addItem(0);
 
-        List<Phong> list = phongDao.getAllPhong();
+        List<Phong> dsPhong =
+                phongDao.getAllPhong();
 
-        for (Phong p : list) {
+        java.util.Set<Integer> tangSet =
+                new java.util.TreeSet<>();
 
-            if (!filter.equals("Tất cả") && !p.getTrangThai().equals(filter)) {
-                continue;
-            }
-
-            if (p.getTenKhach() != null) {
-                roomPanel.add(createRoomBusy(p));
-            } else {
-                roomPanel.add(createRoom(p));
-            }
+        for(Phong p : dsPhong){
+            tangSet.add(p.getTang());
         }
 
-
-        roomPanel.setPreferredSize(
-                new Dimension(800, (roomPanel.getComponentCount()/3 + 1) * 120)
-        );
-
-        roomPanel.revalidate();
-        roomPanel.repaint();
+        for(Integer t : tangSet){
+            cbTangFilter.addItem(t);
+        }
     }
+
+
 
     // ================= CRUD =================
     private JPanel createRoomTrong(Phong p){
@@ -443,6 +444,45 @@ public class PhongUI extends JPanel {
                         );
                     }
                 }
+                // ===== CLICK PHÒNG ĐANG DỌN =====
+
+                if ("Đang dọn dẹp".equals(p.getTrangThai())) {
+
+                    int confirm = JOptionPane.showConfirmDialog(
+                            null,
+                            "Đã dọn phòng xong chưa?",
+                            "Xác nhận dọn phòng",
+                            JOptionPane.YES_NO_OPTION
+                    );
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+
+                        boolean updated =
+                                phongDao.updateTrangThai(
+                                        p.getMaPhong(),
+                                        "Trống"
+                                );
+
+                        if (updated) {
+
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    "Phòng đã chuyển sang trạng thái trống"
+                            );
+
+                            loadData("Tất cả", 0, null);
+
+                        } else {
+
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    "Cập nhật thất bại"
+                            );
+                        }
+                    }
+
+                    return;
+                }
             }
 
             @Override
@@ -493,11 +533,15 @@ public class PhongUI extends JPanel {
 
             if (phongDao.insert(p)) {
 
-                JOptionPane.showMessageDialog(this,
-                        "Thêm phòng thành công");
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Thêm phòng thành công"
+                );
+
+                clearForm();
+                reloadTangFilter();
 
                 loadData("Tất cả", 0, null);
-                clearForm();
 
             } else {
                 JOptionPane.showMessageDialog(this,

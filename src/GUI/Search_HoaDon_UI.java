@@ -9,6 +9,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import com.toedter.calendar.JDateChooser;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Search_HoaDon_UI extends JPanel {
 
@@ -23,7 +26,7 @@ public class Search_HoaDon_UI extends JPanel {
     // SEARCH
     // =========================
 
-    private TextField tfNgay;
+    private JDateChooser dcNgay;
     private TextField tfMa;
 
     private JRadioButton rHoaDon;
@@ -111,14 +114,15 @@ public class Search_HoaDon_UI extends JPanel {
 
         search.add(new JLabel("Ngày: "));
 
-        tfNgay = new TextField();
-        tfNgay.setPreferredSize(new Dimension(180, 40));
-        tfNgay.setHint("dd/MM/yyyy");
+        dcNgay = new JDateChooser();
+
+        dcNgay.setDateFormatString("dd/MM/yyyy");
+        dcNgay.setPreferredSize(new Dimension(180, 40));
 
         btnSearchNgay = new Button();
         btnSearchNgay.setText("Tìm ngày");
 
-        search.add(tfNgay);
+        search.add(dcNgay);
         search.add(Box.createHorizontalStrut(10));
         search.add(btnSearchNgay);
 
@@ -284,11 +288,26 @@ public class Search_HoaDon_UI extends JPanel {
         if (rHoaDon.isSelected()) {
             list = hoaDonDao.getAllHoaDon();
         } else {
-            list = hoaDonDao.getAllPhieuDat(); // 🔥 thêm hàm này
+            list = hoaDonDao.getAllPhieuDat();
         }
 
         for (Object[] row : list) {
             model.addRow(row);
+        }
+
+        // AUTO SELECT DÒNG ĐẦU
+        if (model.getRowCount() > 0) {
+
+            table.setRowSelectionInterval(0, 0);
+
+            String ma =
+                    model.getValueAt(0, 0).toString();
+
+            if (rHoaDon.isSelected()) {
+                loadChiTietHoaDon(ma);
+            } else {
+                loadChiTietPhieuDat(ma);
+            }
         }
     }
     private void loadChiTietPhieuDat(String maPhieu){
@@ -374,10 +393,48 @@ public class Search_HoaDon_UI extends JPanel {
         });
 
         btnSearchNgay.addActionListener(e -> {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Chức năng tìm theo ngày sẽ mở rộng sau"
-            );
+
+            Date date = dcNgay.getDate();
+
+            if (date == null) {
+
+                loadData();
+                return;
+            }
+
+            SimpleDateFormat sdf =
+                    new SimpleDateFormat("dd/MM/yyyy");
+
+            String ngay =
+                    sdf.format(date);
+
+            List<Object[]> list =
+                    hoaDonDao.timHoaDonTheoNgay(ngay);
+
+            model.setRowCount(0);
+
+            for (Object[] row : list) {
+                model.addRow(row);
+            }
+
+            model.fireTableDataChanged();
+
+            if (model.getRowCount() > 0) {
+
+                table.setRowSelectionInterval(0, 0);
+
+                String ma =
+                        model.getValueAt(0,0).toString();
+
+                loadChiTietHoaDon(ma);
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Không tìm thấy hóa đơn!"
+                );
+            }
         });
     }
 

@@ -286,6 +286,7 @@ public class ThuePhong_UI extends JPanel {
     private TextField txtCCCD;
     private TextField txtThoiGianNhan;
 
+
     private JComboBox<String> cbGioiTinh;
     private JComboBox<String> cbLoaiPhong;
 
@@ -341,7 +342,13 @@ public class ThuePhong_UI extends JPanel {
 
         txtThoiGianNhan = createField();
         txtThoiGianNhan.setEditable(false);
-        txtThoiGianNhan.setText("Tự động khi thuê phòng");
+
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
+        txtThoiGianNhan.setText(
+                sdf.format(new Date())
+        );
 
         cbGioiTinh = new JComboBox<>(new String[]{
                 "Nam",
@@ -575,10 +582,12 @@ public class ThuePhong_UI extends JPanel {
         int row = tablePhong.getSelectedRow();
 
         if (row == -1) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Vui lòng chọn phòng!"
             );
+
             return;
         }
 
@@ -586,11 +595,15 @@ public class ThuePhong_UI extends JPanel {
         String sdt = txtSDT.getText().trim();
         String cccd = txtCCCD.getText().trim();
 
-        if (tenKH.isEmpty() || sdt.isEmpty() || cccd.isEmpty()) {
+        if (tenKH.isEmpty()
+                || sdt.isEmpty()
+                || cccd.isEmpty()) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Vui lòng nhập đầy đủ thông tin khách hàng!"
             );
+
             return;
         }
 
@@ -612,12 +625,15 @@ public class ThuePhong_UI extends JPanel {
                 khDao.timKhachHangTonTai(sdt, cccd);
 
         if (kh != null) {
+
             maKH = kh.getMaKH();
+
         } else {
 
             maKH = khDao.getNextMaKH();
 
             KhachHang khMoi = new KhachHang();
+
             khMoi.setMaKH(maKH);
             khMoi.setHoTen(tenKH);
             khMoi.setSdt(sdt);
@@ -625,57 +641,29 @@ public class ThuePhong_UI extends JPanel {
             khMoi.setGioiTinh(gioiTinh);
 
             if (!khDao.create(khMoi)) {
+
                 JOptionPane.showMessageDialog(
                         this,
                         "Không thể thêm khách hàng!"
                 );
+
                 return;
             }
         }
 
         // =====================================================
-        // TẠO PHIẾU ĐẶT PHÒNG GIẢ
-        // =====================================================
-
-        String maPDP =
-                phieuDatPhongDao.taoPhieuDatPhongTuDong(
-                        maKH,
-                        "NV02"
-                );
-
-        if (maPDP == null) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Không thể tạo phiếu đặt phòng!"
-            );
-            return;
-        }
-
-        // =====================================================
-        // TẠO HÓA ĐƠN PHÒNG
-        // =====================================================
-
-        String maHD =
-                hoaDonDao.taoMaHoaDonTuDong();
-
-        if (!hoaDonDao.insertCoPhieuDatPhong(
-                maHD,
-                "NV02",
-                maKH,
-                maPDP
-        )) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Không thể tạo hóa đơn phòng!"
-            );
-            return;
-        }
-        // =====================================================
         // THỜI GIAN NHẬN
         // =====================================================
-        Timestamp thoiGianNhan = new Timestamp(System.currentTimeMillis());
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-        txtThoiGianNhan.setText(sdf.format(thoiGianNhan));
+
+        Timestamp thoiGianNhan =
+                new Timestamp(System.currentTimeMillis());
+
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
+        txtThoiGianNhan.setText(
+                sdf.format(thoiGianNhan)
+        );
 
         // =====================================================
         // THỜI GIAN TRẢ
@@ -689,47 +677,120 @@ public class ThuePhong_UI extends JPanel {
 
         Calendar calGio = Calendar.getInstance();
         calGio.setTime(gio);
-        calNgay.set(Calendar.HOUR_OF_DAY, calGio.get(Calendar.HOUR_OF_DAY));
-        calNgay.set(Calendar.MINUTE, calGio.get(Calendar.MINUTE));
+
+        calNgay.set(
+                Calendar.HOUR_OF_DAY,
+                calGio.get(Calendar.HOUR_OF_DAY)
+        );
+
+        calNgay.set(
+                Calendar.MINUTE,
+                calGio.get(Calendar.MINUTE)
+        );
+
         calNgay.set(Calendar.SECOND, 0);
-        Timestamp thoiGianTra = new Timestamp(calNgay.getTimeInMillis());
+
+        Timestamp thoiGianTra =
+                new Timestamp(calNgay.getTimeInMillis());
+
+        // =====================================================
+        // KIỂM TRA THỜI GIAN
+        // =====================================================
 
         if (thoiGianTra.before(thoiGianNhan)) {
-            JOptionPane.showMessageDialog(this, "Thời gian trả phải lớn hơn thời gian hiện tại!");
-            return;
-        }
 
-
-        if (!ctHoaDonDao.insert(maHD, maPhong, thoiGianNhan, thoiGianTra)) {
             JOptionPane.showMessageDialog(
                     this,
-                    "Không thể tạo chi tiết hóa đơn!"
+                    "Thời gian trả phải lớn hơn thời gian hiện tại!"
             );
+
             return;
         }
 
         // =====================================================
-        // CẬP NHẬT TRẠNG THÁI PHÒNG
+        // TẠO HÓA ĐƠN
+        // =====================================================
+
+        String maHD =
+                hoaDonDao.taoMaHoaDonTuDong();
+
+        // CHECK TRÁNH DOUBLE INSERT
+        if (hoaDonDao.exists(maHD)) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Hóa đơn đã tồn tại!"
+            );
+
+            return;
+        }
+
+        if (!hoaDonDao.insert(
+                maHD,
+                "NV02",
+                maKH
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể tạo hóa đơn phòng!"
+            );
+
+            return;
+        }
+
+        // =====================================================
+        // TẠO CHI TIẾT HÓA ĐƠN
+        // =====================================================
+
+        if (!ctHoaDonDao.insert(
+                maHD,
+                maPhong,
+                thoiGianNhan,
+                thoiGianTra
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Không thể tạo chi tiết hóa đơn!"
+            );
+
+            return;
+        }
+
+        // =====================================================
+        // CẬP NHẬT PHÒNG
         // =====================================================
 
         if (!phongDao.updateTrangThaiPhong(
                 maPhong,
                 "Đang thuê"
         )) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Không thể cập nhật trạng thái phòng!"
             );
+
             return;
         }
+
+        // =====================================================
+        // SUCCESS
+        // =====================================================
 
         JOptionPane.showMessageDialog(
                 this,
                 "Thuê phòng thành công!"
         );
+
         clearForm();
-        loadPhongTheoLoai(cbLoaiPhong.getSelectedItem().toString());
+
+        loadPhongTheoLoai(
+                cbLoaiPhong.getSelectedItem().toString()
+        );
     }
+
 
     // =====================================================
     // CLEAR FORM
@@ -740,7 +801,12 @@ public class ThuePhong_UI extends JPanel {
         txtTenKH.setText("");
         txtSDT.setText("");
         txtCCCD.setText("");
-        txtThoiGianNhan.setText("Tự động khi thuê phòng");
+        SimpleDateFormat sdf =
+                new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
+        txtThoiGianNhan.setText(
+                sdf.format(new Date())
+        );
         cbGioiTinh.setSelectedIndex(0);
         cbLoaiPhong.setSelectedIndex(0);
 

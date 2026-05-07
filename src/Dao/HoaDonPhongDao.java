@@ -131,27 +131,29 @@ public class HoaDonPhongDao {
 
         List<Object[]> list = new ArrayList<>();
 
-        String sql = """
-        SELECT
-            hd.MaHoaDonPhong,
-            kh.HoTen,
-            hd.TrangThai,
-            hd.TongTien
-        FROM HoaDonPhong hd
-        JOIN KhachHang kh
-            ON hd.MaKH = kh.MaKH
-        ORDER BY hd.MaHoaDonPhong DESC
-    """;
+        try {
 
-        try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
-        ) {
+            Connection con = Database.getInstance().getConnection();
+
+            String sql =
+                    "SELECT hd.MaHoaDonPhong, " +
+                            "kh.HoTen, " +
+                            "hd.TrangThai, " +
+                            "hd.TongTien " +
+                            "FROM HoaDonPhong hd " +
+                            "LEFT JOIN KhachHang kh " +
+                            "ON hd.MaKH = kh.MaKH " +
+                            "ORDER BY hd.NgayLapHoaDon DESC";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
+
+            ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
 
                 list.add(new Object[]{
+
                         rs.getString(1),
                         rs.getString(2),
                         rs.getString(3),
@@ -166,50 +168,40 @@ public class HoaDonPhongDao {
         return list;
     }
 
-    public Object[] getChiTietHoaDon(String maHD){
+    public Object[] getChiTietHoaDon(String maHD) {
 
-        String sql = """
-        SELECT TOP 1
-                                      hd.MaHoaDonPhong,
-                                      hd.NgayLapHoaDon,
-                                      nv.HoTen,
-                                      kh.HoTen,
-                                      ISNULL(
-                                          hd.TongTien
-                                          - hd.TienThue
-                                          - ISNULL((
-                                              SELECT SUM(ctdv.ThanhTien)
-                                              FROM HoaDonDichVu hddv
-                                              JOIN ChiTietHoaDonDichVu ctdv
-                                                  ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
-                                              WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
-                                          ),0)
-                                      ,0) AS TienPhong,
-                                      ISNULL((
-                                          SELECT SUM(ctdv.ThanhTien)
-                                          FROM HoaDonDichVu hddv
-                                          JOIN ChiTietHoaDonDichVu ctdv
-                                              ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
-                                          WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
-                                      ),0) AS TienDichVu,
-                                      ISNULL(hd.TienThue,0),
-                                      ISNULL(hd.TongTien,0)
-                                  
-                                  FROM HoaDonPhong hd
-                                  JOIN NhanVien nv ON hd.MaNV = nv.MaNV
-                                  JOIN KhachHang kh ON hd.MaKH = kh.MaKH
-                                  
-                                  WHERE hd.MaHoaDonPhong = ?
-    """;
+        Object[] obj = null;
 
-        try(Connection con = Database.getInstance().getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)){
+        try {Connection con = Database.getInstance().getConnection();
+
+            String sql =
+                    "SELECT " +
+                            "hd.MaHoaDonPhong, " +
+                            "hd.NgayLapHoaDon, " +
+                            "nv.HoTen, " +
+                            "kh.HoTen, " +
+                            "ISNULL(hd.TongTien - hd.TienThue,0), " +
+                            "0, " +
+                            "ISNULL(hd.TienThue,0), " +
+                            "ISNULL(hd.TongTien,0) " +
+                            "FROM HoaDonPhong hd " +
+                            "LEFT JOIN NhanVien nv " +
+                            "ON hd.MaNV = nv.MaNV " +
+                            "LEFT JOIN KhachHang kh " +
+                            "ON hd.MaKH = kh.MaKH " +
+                            "WHERE hd.MaHoaDonPhong = ?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
 
             ps.setString(1, maHD);
+
             ResultSet rs = ps.executeQuery();
 
-            if(rs.next()){
-                return new Object[]{
+            if (rs.next()) {
+
+                obj = new Object[]{
+
                         rs.getString(1),
                         rs.getTimestamp(2),
                         rs.getString(3),
@@ -221,11 +213,11 @@ public class HoaDonPhongDao {
                 };
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return null;
+        return obj;
     }
 
     public boolean insertCoPhieuDatPhong(
@@ -500,61 +492,71 @@ public class HoaDonPhongDao {
 
         return false;
     }
-    public String getDanhSachDichVu(String maHD){
+    public String getDanhSachDichVu(String maHD) {
 
         StringBuilder sb = new StringBuilder();
 
-        String sql = """
-        SELECT dv.TenDichVu, ctdv.SoLuong
-        FROM HoaDonDichVu hddv
-        JOIN ChiTietHoaDonDichVu ctdv
-            ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
-        JOIN DichVu dv
-            ON ctdv.MaDichVu = dv.MaDichVu
-        WHERE hddv.MaHoaDonPhong = ?
-    """;
+        try {
+            Connection con = Database.getInstance().getConnection();
 
-        try(Connection con = Database.getInstance().getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)){
+            String sql =
+                    "SELECT dv.TenDichVu, ct.SoLuong " +
+                            "FROM ChiTietHoaDonDichVu ct " +
+                            "JOIN HoaDonDichVu hdv " +
+                            "ON ct.MaHoaDonDichVu = hdv.MaHoaDonDichVu " +
+                            "JOIN DichVu dv " +
+                            "ON ct.MaDichVu = dv.MaDichVu " +
+                            "WHERE hdv.MaHoaDonPhong = ?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
 
             ps.setString(1, maHD);
+
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
+            while (rs.next()) {
+
                 sb.append(rs.getString(1))
                         .append(" x")
                         .append(rs.getInt(2))
                         .append("\n");
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return sb.toString();
     }
 
-    public String getDanhSachPhong(String maHD){
+    public String getDanhSachPhong(String maHD) {
 
         StringBuilder sb = new StringBuilder();
 
-        String sql = """
-        SELECT MaPhong
-        FROM ChiTietHoaDonPhong
-        WHERE MaHoaDonPhong = ?
-    """;
+        try {
 
-        try(Connection con = Database.getInstance().getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)){
+            Connection con = Database.getInstance().getConnection();
+
+            String sql =
+                    "SELECT MaPhong " +
+                            "FROM ChiTietHoaDonPhong " +
+                            "WHERE MaHoaDonPhong = ?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
 
             ps.setString(1, maHD);
+
             ResultSet rs = ps.executeQuery();
 
-            while(rs.next()){
-                sb.append(rs.getString(1)).append("\n");
+            while (rs.next()) {
+
+                sb.append(rs.getString(1))
+                        .append("\n");
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -842,8 +844,116 @@ public class HoaDonPhongDao {
 
         return list;
     }
+    public boolean insert(
+            String maHD,
+            String maNV,
+            String maKH
+    ) {
 
+        String sql = """
+        INSERT INTO HoaDonPhong
+        (
+            MaHoaDonPhong,
+            MaNV,
+            MaKH,
+            NgayLapHoaDon,
+            TrangThai,
+            TongTien,
+            TienThue
+        )
+        VALUES (?, ?, ?, GETDATE(),
+                N'Chưa thanh toán', 0, 0)
+    """;
 
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, maHD);
+            ps.setString(2, maNV);
+            ps.setString(3, maKH);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public boolean exists(String maHD){
+
+        String sql = """
+        SELECT 1
+        FROM HoaDonPhong
+        WHERE MaHoaDonPhong = ?
+    """;
+
+        try(
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ){
+
+            ps.setString(1, maHD);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    public List<Object[]> timHoaDonTheoNgay(String ngay) {
+
+        List<Object[]> list = new ArrayList<>();
+
+        try {
+            Connection con = Database.getInstance().getConnection();
+
+            String sql =
+                    "SELECT hd.MaHoaDonPhong, " +
+                            "kh.HoTen, " +
+                            "hd.TrangThai, " +
+                            "hd.TongTien " +
+                            "FROM HoaDonPhong hd " +
+                            "LEFT JOIN KhachHang kh " +
+                            "ON hd.MaKH = kh.MaKH " +
+                            "WHERE CONVERT(VARCHAR, hd.NgayLapHoaDon, 103) = ?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
+
+            ps.setString(1, ngay);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                list.add(new Object[]{
+
+                        rs.getString(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getDouble(4)
+                });
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 
     public String taoMaHoaDonTuDong() {
         return getNextMaHD();

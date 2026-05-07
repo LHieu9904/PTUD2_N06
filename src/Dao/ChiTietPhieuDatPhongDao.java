@@ -6,28 +6,57 @@ import java.time.LocalDateTime;
 
 public class ChiTietPhieuDatPhongDao {
 
-    public boolean insert(String maPhieu, String maPhong,
-                          LocalDateTime tu, LocalDateTime den,
-                          int soNguoi){
+    public boolean insert(
+            String maPhieu,
+            String maPhong,
+            LocalDateTime tgNhan,
+            LocalDateTime tgTra,
+            int soNguoi
+    ) {
 
         String sql = """
-            INSERT INTO ChiTietPhieuDatPhong
-            (MaPhieuDatPhong, MaPhong, ThoiGianNhan, ThoiGianTra, SoLuong)
-            VALUES (?, ?, ?, ?, ?)
-        """;
+    INSERT INTO ChiTietPhieuDatPhong
+    (
+        MaPhieuDatPhong,
+        MaPhong,
+        ThoiGianNhan,
+        ThoiGianTra
+    )
+    VALUES (?, ?, ?, ?)
+""";
 
-        try(Connection con = Database.getInstance().getConnection();
-            PreparedStatement ps = con.prepareStatement(sql)){
+        try (
+                Connection con =
+                        Database.getInstance().getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+        ) {
 
             ps.setString(1, maPhieu);
+
             ps.setString(2, maPhong);
-            ps.setTimestamp(3, Timestamp.valueOf(tu));
-            ps.setTimestamp(4, Timestamp.valueOf(den));
-            ps.setInt(5, soNguoi);
 
-            return ps.executeUpdate() > 0;
+            ps.setTimestamp(
+                    3,
+                    Timestamp.valueOf(tgNhan)
+            );
 
-        }catch(Exception e){
+            ps.setTimestamp(
+                    4,
+                    Timestamp.valueOf(tgTra)
+            );
+
+
+            int rs = ps.executeUpdate();
+
+            System.out.println(
+                    "INSERT CT PDP = " + rs
+            );
+
+            return rs > 0;
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

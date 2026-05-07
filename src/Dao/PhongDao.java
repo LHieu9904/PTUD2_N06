@@ -10,7 +10,7 @@ import java.util.List;
 
 public class PhongDao {
 
-    public List<Phong> getAllPhong() {
+   /* public List<Phong> getAllPhong() {
 
         List<Phong> list = new ArrayList<>();
 
@@ -132,7 +132,179 @@ public class PhongDao {
         }
 
         return list;
-    }
+    }*/
+   public List<Phong> getAllPhong() {
+
+       List<Phong> list = new ArrayList<>();
+
+       String sql = """
+    SELECT DISTINCT
+
+        p.MaPhong,
+        p.Tang,
+
+        p.TrangThai AS TrangThaiPhong,
+
+        lp.MaLP,
+        lp.TenLP,
+        lp.GiaGioDau,
+        lp.GiaGioTiepTheo,
+        lp.GiaCaNgay,
+
+        -- KHÁCH HÀNG
+        COALESCE(kh1.HoTen, kh2.HoTen) AS HoTen,
+        COALESCE(kh1.SDT, kh2.SDT) AS SDT,
+
+        hd.TrangThai AS TrangThaiHD
+
+    FROM Phong p
+
+    JOIN LoaiPhong lp
+        ON p.MaLP = lp.MaLP
+
+    -- =================================================
+    -- PHÒNG ĐANG THUÊ
+    -- =================================================
+
+    LEFT JOIN ChiTietHoaDonPhong cthd
+        ON p.MaPhong = cthd.MaPhong
+
+    LEFT JOIN HoaDonPhong hd
+        ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
+        AND hd.TrangThai = N'Chưa thanh toán'
+
+    LEFT JOIN KhachHang kh1
+        ON hd.MaKH = kh1.MaKH
+
+    -- =================================================
+    -- PHÒNG ĐÃ ĐẶT
+    -- =================================================
+
+    LEFT JOIN ChiTietPhieuDatPhong ctpdp
+        ON p.MaPhong = ctpdp.MaPhong
+
+    LEFT JOIN PhieuDatPhong pdp
+        ON ctpdp.MaPhieuDatPhong = pdp.MaPhieuDatPhong
+
+    LEFT JOIN KhachHang kh2
+        ON pdp.MaKH = kh2.MaKH
+
+    ORDER BY p.MaPhong
+""";
+
+       try (
+
+               Connection con =
+                       Database.getInstance().getConnection();
+
+               PreparedStatement ps =
+                       con.prepareStatement(sql);
+
+               ResultSet rs =
+                       ps.executeQuery()
+
+       ) {
+
+           while (rs.next()) {
+
+               // =====================================================
+               // LOẠI PHÒNG
+               // =====================================================
+
+               LoaiPhong lp = new LoaiPhong();
+
+               lp.setMaLP(
+                       rs.getString("MaLP")
+               );
+
+               lp.setTenLP(
+                       rs.getString("TenLP")
+               );
+
+               lp.setGiaGioDau(
+                       rs.getBigDecimal("GiaGioDau")
+               );
+
+               lp.setGiaGioTiepTheo(
+                       rs.getBigDecimal("GiaGioTiepTheo")
+               );
+
+               lp.setGiaCaNgay(
+                       rs.getBigDecimal("GiaCaNgay")
+               );
+
+               // =====================================================
+               // PHÒNG
+               // =====================================================
+
+               Phong p = new Phong();
+
+               p.setMaPhong(
+                       rs.getString("MaPhong")
+               );
+
+               p.setTang(
+                       rs.getInt("Tang")
+               );
+
+               p.setLoaiPhong(lp);
+
+               // =====================================================
+               // KHÁCH HÀNG
+               // =====================================================
+
+               p.setTenKhach(
+                       rs.getString("HoTen")
+               );
+
+               p.setSdt(
+                       rs.getString("SDT")
+               );
+
+               // =====================================================
+               // TRẠNG THÁI
+               // =====================================================
+
+               String trangThaiHD =
+                       rs.getString("TrangThaiHD");
+
+               String trangThaiPhong =
+                       rs.getString("TrangThaiPhong");
+
+               // ĐANG THUÊ
+               if ("Chưa thanh toán".equals(trangThaiHD)) {
+
+                   p.setTrangThai("Đang thuê");
+               }
+
+               // ĐANG DỌN DẸP
+               else if ("Đang dọn dẹp".equals(trangThaiPhong)) {
+
+                   p.setTrangThai("Đang dọn dẹp");
+               }
+
+               // ĐÃ ĐẶT
+               else if ("Đã đặt".equals(trangThaiPhong)) {
+
+                   p.setTrangThai("Đã đặt");
+               }
+
+               // TRỐNG
+               else {
+
+                   p.setTrangThai("Trống");
+               }
+
+               list.add(p);
+           }
+
+       } catch (Exception e) {
+
+           e.printStackTrace();
+       }
+
+       return list;
+   }
 
     public boolean insert(Phong p){
 
@@ -417,35 +589,40 @@ public class PhongDao {
     public Object[] getThongTinPhongDangThue(String maPhong) {
 
         String sql = """
-        SELECT TOP 1
-            kh.HoTen,
-            kh.SDT,
-            kh.CCCD,
+    SELECT TOP 1
 
-            p.MaPhong,
-            lp.TenLP,
+        kh.HoTen,
+        kh.SDT,
+        kh.CCCD,
 
-            cthd.ThoiGianNhan,
-            cthd.ThoiGianTra
+        p.MaPhong,
+        lp.TenLP,
 
-        FROM Phong p
+        cthd.ThoiGianNhan,
+        cthd.ThoiGianTra
 
-        JOIN LoaiPhong lp
-            ON p.MaLP = lp.MaLP
+    FROM Phong p
 
-        JOIN ChiTietHoaDonPhong cthd
-            ON p.MaPhong = cthd.MaPhong
+    JOIN LoaiPhong lp
+        ON p.MaLP = lp.MaLP
 
-        JOIN HoaDonPhong hd
-            ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
+    JOIN ChiTietHoaDonPhong cthd
+        ON p.MaPhong = cthd.MaPhong
 
-        JOIN KhachHang kh
-            ON hd.MaKH = kh.MaKH
+    JOIN HoaDonPhong hd
+        ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
 
-        WHERE p.MaPhong = ?
-          AND p.TrangThai = N'Đang thuê'
+    LEFT JOIN PhieuDatPhong pd
+        ON hd.MaPhieuDatPhong = pd.MaPhieuDatPhong
 
-        ORDER BY cthd.ThoiGianNhan DESC
+    JOIN KhachHang kh
+        ON kh.MaKH =
+            COALESCE(pd.MaKH, hd.MaKH)
+
+    WHERE p.MaPhong = ?
+      AND hd.TrangThai = N'Chưa thanh toán'
+
+    ORDER BY cthd.ThoiGianNhan DESC
     """;
 
         try (
@@ -464,12 +641,12 @@ public class PhongDao {
 
                 return new Object[]{
 
-                        rs.getString("HoTen"),       // tên khách
-                        rs.getString("SDT"),         // sdt
-                        rs.getString("CCCD"),        // cccd
+                        rs.getString("HoTen"),
+                        rs.getString("SDT"),
+                        rs.getString("CCCD"),
 
-                        rs.getString("MaPhong"),     // mã phòng
-                        rs.getString("TenLP"),       // loại phòng
+                        rs.getString("MaPhong"),
+                        rs.getString("TenLP"),
 
                         rs.getTimestamp("ThoiGianNhan"),
                         rs.getTimestamp("ThoiGianTra")
@@ -730,27 +907,35 @@ public class PhongDao {
     ) {
 
         String sql = """
-        SELECT TOP 1
-            p.MaPhong,
-            kh.HoTen,
-            kh.SDT,
-            ct.ThoiGianNhan,
-            ct.ThoiGianTra
-        FROM Phong p
-        JOIN ChiTietHoaDonPhong ct
-            ON p.MaPhong = ct.MaPhong
-        JOIN HoaDonPhong hd
-            ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
-        JOIN KhachHang kh
-            ON hd.MaKH = kh.MaKH
-        WHERE
-            p.TrangThai = N'Đang thuê'
-            AND (
-                p.MaPhong = ?
-                OR kh.SDT = ?
-            )
-        ORDER BY ct.ThoiGianNhan DESC
-    """;
+    SELECT TOP 1
+
+        p.MaPhong,
+        kh.HoTen,
+        kh.SDT,
+
+        cthd.ThoiGianNhan,
+        cthd.ThoiGianTra
+
+    FROM ChiTietHoaDonPhong cthd
+
+    JOIN HoaDonPhong hd
+        ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
+
+    JOIN KhachHang kh
+        ON hd.MaKH = kh.MaKH
+
+    JOIN Phong p
+        ON cthd.MaPhong = p.MaPhong
+
+    WHERE hd.TrangThai = N'Chưa thanh toán'
+
+      AND (
+            p.MaPhong = ?
+            OR kh.SDT = ?
+      )
+
+    ORDER BY cthd.ThoiGianNhan DESC
+""";
 
         try (
                 Connection con =
@@ -765,13 +950,18 @@ public class PhongDao {
 
             ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
+            if(rs.next()){
 
                 return new Object[]{
+
                         rs.getString("MaPhong"),
+
                         rs.getString("HoTen"),
+
                         rs.getString("SDT"),
+
                         rs.getTimestamp("ThoiGianNhan"),
+
                         rs.getTimestamp("ThoiGianTra")
                 };
             }

@@ -114,12 +114,20 @@ public class Search_Phong_UI extends JPanel {
                         "Mã phòng",
                         "Tầng",
                         "Loại",
-                        "Trạng thái",
-
+                        "Trạng thái"
                 }, 0
-        );
+        ) {
+            @Override
+            public boolean isCellEditable(
+                    int row,
+                    int column
+            ) {
+                return false;
+            }
+        };
 
         table = new JTable(model);
+        table.setDefaultEditor(Object.class, null);
         table.setRowHeight(35);
 
         // ===== THANH CUỘN TABLE =====
@@ -191,10 +199,19 @@ public class Search_Phong_UI extends JPanel {
 
         // ===== CLICK TABLE → ĐỔ DỮ LIỆU =====
         table.addMouseListener(new java.awt.event.MouseAdapter() {
+
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
 
                 int row = table.getSelectedRow();
-                if (row == -1) return;
+
+                if (row == -1) {
+                    return;
+                }
+
+                // =====================================================
+                // THÔNG TIN PHÒNG
+                // =====================================================
 
                 txtMaPhong.setText(
                         model.getValueAt(row, 0).toString()
@@ -212,32 +229,57 @@ public class Search_Phong_UI extends JPanel {
                         model.getValueAt(row, 3).toString()
                 );
 
-                // tạm thời chưa lấy từ DB
-                String maPhong = model.getValueAt(row, 0).toString();
+                // =====================================================
+                // LẤY THÔNG TIN KHÁCH ĐANG THUÊ
+                // =====================================================
 
-                Object[] info = new PhongDao()
-                        .getThongTinPhongDangThue(maPhong);
+                String maPhong =
+                        model.getValueAt(row, 0).toString();
+
+                Object[] info =
+                        new PhongDao()
+                                .getThongTinPhongDangThue(maPhong);
 
                 if (info != null) {
 
                     txtTenKhach.setText(
-                            info[0] != null ? info[0].toString() : ""
+                            info[0] != null
+                                    ? info[0].toString()
+                                    : ""
                     );
 
                     txtSDT.setText(
-                            info[1] != null ? info[1].toString() : ""
+                            info[1] != null
+                                    ? info[1].toString()
+                                    : ""
                     );
 
                     txtCCCD.setText(
-                            info[2] != null ? info[2].toString() : ""
+                            info[2] != null
+                                    ? info[2].toString()
+                                    : ""
                     );
+
+                    // =================================================
+                    // THỜI GIAN NHẬN
+                    // index 5
+                    // =================================================
 
                     txtNgayNhan.setText(
-                            info[4] != null ? info[4].toString() : ""
+                            info[5] != null
+                                    ? info[5].toString()
+                                    : ""
                     );
 
+                    // =================================================
+                    // THỜI GIAN TRẢ
+                    // index 6
+                    // =================================================
+
                     txtNgayTra.setText(
-                            info[5] != null ? info[5].toString() : ""
+                            info[6] != null
+                                    ? info[6].toString()
+                                    : ""
                     );
 
                 } else {
