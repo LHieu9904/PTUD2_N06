@@ -82,52 +82,74 @@ public class PhieuDatPhongDao {
 
         return null;
     }
-    public List<Object[]> getAllDatPhong() {
+    public List<Object[]> getAllDatPhong(){
 
-        List<Object[]> list = new ArrayList<>();
+        List<Object[]> list =
+                new ArrayList<>();
 
         String sql = """
-    SELECT
-        p.MaPhong,
-        lp.TenLP,
-        kh.HoTen,
-        kh.SDT,
-        ct.ThoiGianNhan,
-        ct.ThoiGianTra
-    FROM PhieuDatPhong pd
-    JOIN KhachHang kh
-        ON pd.MaKH = kh.MaKH
-    JOIN ChiTietPhieuDatPhong ct
-        ON pd.MaPhieuDatPhong = ct.MaPhieuDatPhong
-    JOIN Phong p
-        ON ct.MaPhong = p.MaPhong
-    JOIN LoaiPhong lp
-        ON p.MaLP = lp.MaLP
+        SELECT DISTINCT
 
-    LEFT JOIN ChiTietHoaDonPhong cthd
-        ON p.MaPhong = cthd.MaPhong
-    WHERE cthd.MaPhong IS NULL
+            p.MaPhong,
+            lp.TenLP,
+            kh.HoTen,
+            kh.SDT
+
+        FROM ChiTietPhieuDatPhong ctp
+
+        JOIN PhieuDatPhong pdp
+            ON ctp.MaPhieuDatPhong =
+               pdp.MaPhieuDatPhong
+
+        JOIN KhachHang kh
+            ON pdp.MaKH = kh.MaKH
+
+        JOIN Phong p
+            ON ctp.MaPhong = p.MaPhong
+
+        JOIN LoaiPhong lp
+            ON p.MaLP = lp.MaLP
+
+        WHERE p.TrangThai = N'Đã đặt'
+
+        AND NOT EXISTS(
+
+            SELECT 1
+            FROM ChiTietHoaDonPhong cthd
+
+            WHERE cthd.MaPhong = p.MaPhong
+            AND cthd.TrangThaiSuDung =
+                N'Đang dùng'
+        )
     """;
 
-        try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
-        ) {
+        try(
 
-            while (rs.next()) {
+                Connection con =
+                        Database.getInstance()
+                                .getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql);
+
+                ResultSet rs =
+                        ps.executeQuery()
+
+        ){
+
+            while(rs.next()){
 
                 list.add(new Object[]{
-                        rs.getString("MaPhong"),
-                        rs.getString("TenLP"),
-                        rs.getString("HoTen"),
-                        rs.getString("SDT"),
-                        rs.getTimestamp("ThoiGianNhan"),
-                        rs.getTimestamp("ThoiGianTra")
+
+                        rs.getString(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getString(4)
                 });
             }
 
-        } catch (Exception e) {
+        }catch(Exception e){
+
             e.printStackTrace();
         }
 

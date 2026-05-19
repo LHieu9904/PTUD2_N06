@@ -137,72 +137,55 @@ public class PhongDao {
 
        List<Phong> list = new ArrayList<>();
 
+       // ĐÃ SỬA LỖI CHÍNH TẢ: Viết liền mạch ThongTinThueMoiNhat (không có dấu cách)
        String sql = """
-    SELECT DISTINCT
+        WITH ThongTinThueMoiNhat AS (
+            SELECT 
+                cthd.MaPhong,
+                kh.HoTen,
+                kh.SDT,
+                hd.TrangThai AS TrangThaiHD,
+                ROW_NUMBER() OVER (PARTITION BY cthd.MaPhong ORDER BY hd.NgayLapHoaDon DESC) AS rn
+            FROM ChiTietHoaDonPhong cthd
+            JOIN HoaDonPhong hd ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
+            JOIN KhachHang kh ON hd.MaKH = kh.MaKH
+            WHERE hd.TrangThai = N'Chưa thanh toán'
+        ),
+        ThongTinDatMoiNhat AS (
+            SELECT 
+                ctpdp.MaPhong,
+                kh.HoTen,
+                kh.SDT,
+                ROW_NUMBER() OVER (PARTITION BY ctpdp.MaPhong ORDER BY pdp.ThoiGianDat DESC) AS rn
+            FROM ChiTietPhieuDatPhong ctpdp
+            JOIN PhieuDatPhong pdp ON ctpdp.MaPhieuDatPhong = pdp.MaPhieuDatPhong
+            JOIN KhachHang kh ON pdp.MaKH = kh.MaKH
+        )
+        SELECT 
+            p.MaPhong,
+            p.Tang,
+            p.TrangThai AS TrangThaiPhong,
+            lp.MaLP,
+            lp.TenLP,
+            lp.GiaGioDau,
+            lp.GiaGioTiepTheo,
+            lp.GiaCaNgay,
+            -- Ưu tiên lấy thông tin khách đang thuê trước, nếu trống thì lấy khách đặt phòng
+            COALESCE(t.HoTen, d.HoTen) AS HoTen,
+            COALESCE(t.SDT, d.SDT) AS SDT,
+            t.TrangThaiHD
 
-        p.MaPhong,
-        p.Tang,
-
-        p.TrangThai AS TrangThaiPhong,
-
-        lp.MaLP,
-        lp.TenLP,
-        lp.GiaGioDau,
-        lp.GiaGioTiepTheo,
-        lp.GiaCaNgay,
-
-        -- KHÁCH HÀNG
-        COALESCE(kh1.HoTen, kh2.HoTen) AS HoTen,
-        COALESCE(kh1.SDT, kh2.SDT) AS SDT,
-
-        hd.TrangThai AS TrangThaiHD
-
-    FROM Phong p
-
-    JOIN LoaiPhong lp
-        ON p.MaLP = lp.MaLP
-
-    -- =================================================
-    -- PHÒNG ĐANG THUÊ
-    -- =================================================
-
-    LEFT JOIN ChiTietHoaDonPhong cthd
-        ON p.MaPhong = cthd.MaPhong
-
-    LEFT JOIN HoaDonPhong hd
-        ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
-        AND hd.TrangThai = N'Chưa thanh toán'
-
-    LEFT JOIN KhachHang kh1
-        ON hd.MaKH = kh1.MaKH
-
-    -- =================================================
-    -- PHÒNG ĐÃ ĐẶT
-    -- =================================================
-
-    LEFT JOIN ChiTietPhieuDatPhong ctpdp
-        ON p.MaPhong = ctpdp.MaPhong
-
-    LEFT JOIN PhieuDatPhong pdp
-        ON ctpdp.MaPhieuDatPhong = pdp.MaPhieuDatPhong
-
-    LEFT JOIN KhachHang kh2
-        ON pdp.MaKH = kh2.MaKH
-
-    ORDER BY p.MaPhong
-""";
+        FROM Phong p
+        JOIN LoaiPhong lp ON p.MaLP = lp.MaLP
+        LEFT JOIN ThongTinThueMoiNhat t ON p.MaPhong = t.MaPhong AND t.rn = 1
+        LEFT JOIN ThongTinDatMoiNhat d ON p.MaPhong = d.MaPhong AND d.rn = 1
+        ORDER BY p.MaPhong
+    """;
 
        try (
-
-               Connection con =
-                       Database.getInstance().getConnection();
-
-               PreparedStatement ps =
-                       con.prepareStatement(sql);
-
-               ResultSet rs =
-                       ps.executeQuery()
-
+               Connection con = Database.getInstance().getConnection();
+               PreparedStatement ps = con.prepareStatement(sql);
+               ResultSet rs = ps.executeQuery()
        ) {
 
            while (rs.next()) {
@@ -210,88 +193,47 @@ public class PhongDao {
                // =====================================================
                // LOẠI PHÒNG
                // =====================================================
-
                LoaiPhong lp = new LoaiPhong();
-
-               lp.setMaLP(
-                       rs.getString("MaLP")
-               );
-
-               lp.setTenLP(
-                       rs.getString("TenLP")
-               );
-
-               lp.setGiaGioDau(
-                       rs.getBigDecimal("GiaGioDau")
-               );
-
-               lp.setGiaGioTiepTheo(
-                       rs.getBigDecimal("GiaGioTiepTheo")
-               );
-
-               lp.setGiaCaNgay(
-                       rs.getBigDecimal("GiaCaNgay")
-               );
+               lp.setMaLP(rs.getString("MaLP"));
+               lp.setTenLP(rs.getString("TenLP"));
+               lp.setGiaGioDau(rs.getBigDecimal("GiaGioDau"));
+               lp.setGiaGioTiepTheo(rs.getBigDecimal("GiaGioTiepTheo"));
+               lp.setGiaCaNgay(rs.getBigDecimal("GiaCaNgay"));
 
                // =====================================================
                // PHÒNG
                // =====================================================
-
                Phong p = new Phong();
-
-               p.setMaPhong(
-                       rs.getString("MaPhong")
-               );
-
-               p.setTang(
-                       rs.getInt("Tang")
-               );
-
+               p.setMaPhong(rs.getString("MaPhong"));
+               p.setTang(rs.getInt("Tang"));
                p.setLoaiPhong(lp);
 
                // =====================================================
                // KHÁCH HÀNG
                // =====================================================
-
-               p.setTenKhach(
-                       rs.getString("HoTen")
-               );
-
-               p.setSdt(
-                       rs.getString("SDT")
-               );
+               p.setTenKhach(rs.getString("HoTen"));
+               p.setSdt(rs.getString("SDT"));
 
                // =====================================================
-               // TRẠNG THÁI
+               // TRẠNG THÁI HIỂN THỊ ĐỒNG BỘ
                // =====================================================
+               String trangThaiHD = rs.getString("TrangThaiHD");
+               String trangThaiPhong = rs.getString("TrangThaiPhong");
 
-               String trangThaiHD =
-                       rs.getString("TrangThaiHD");
-
-               String trangThaiPhong =
-                       rs.getString("TrangThaiPhong");
-
-               // ĐANG THUÊ
+               // 1. ĐANG THUÊ
                if ("Chưa thanh toán".equals(trangThaiHD)) {
-
                    p.setTrangThai("Đang thuê");
                }
-
-               // ĐANG DỌN DẸP
+               // 2. ĐANG DỌN DẸP
                else if ("Đang dọn dẹp".equals(trangThaiPhong)) {
-
                    p.setTrangThai("Đang dọn dẹp");
                }
-
-               // ĐÃ ĐẶT
+               // 3. ĐÃ ĐẶT
                else if ("Đã đặt".equals(trangThaiPhong)) {
-
                    p.setTrangThai("Đã đặt");
                }
-
-               // TRỐNG
+               // 4. TRỐNG
                else {
-
                    p.setTrangThai("Trống");
                }
 
@@ -299,7 +241,6 @@ public class PhongDao {
            }
 
        } catch (Exception e) {
-
            e.printStackTrace();
        }
 

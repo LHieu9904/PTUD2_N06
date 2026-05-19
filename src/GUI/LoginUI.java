@@ -83,13 +83,14 @@ public class LoginUI extends JFrame {
         formPanel.add(lbUser);
 
         formPanel.add(Box.createVerticalStrut(8));
-        TextField txtUser = new TextField();
+        PasswordField txtUser = new PasswordField();
+        txtUser.setEchoChar((char)0);
         txtUser.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         txtUser.setMaximumSize(new Dimension(440, 50));
         txtUser.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(txtUser);
 
-        formPanel.add(Box.createVerticalStrut(22));
+        formPanel.add(Box.createVerticalStrut(30));
 
         JLabel lbPass = new JLabel("Mật khẩu");
         lbPass.setForeground(Color.WHITE);
@@ -226,9 +227,10 @@ public class LoginUI extends JFrame {
                 }
                 else if ("CV02".equalsIgnoreCase(maChucVu)) {
 
-                    // LỄ TÂN
-                    new MainUI_LeTan(tk).setVisible(true);
+                    NhanVien nv = new NhanVienDao()
+                            .getById(tk.getMaNV());
 
+                    new AccountDetailUI(nv).setVisible(true);
                 }
                 else {
 

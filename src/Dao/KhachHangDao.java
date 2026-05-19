@@ -156,6 +156,70 @@ public class KhachHangDao {
 
         return false;
     }
+    // =========================================================================
+    // 1. LẤY DANH SÁCH SĐT VÀ TÊN ĐỂ GỢI Ý KHI GÕ CHỮ (ĐÃ FIX LỖI SQL SERVER)
+    // =========================================================================
+    public List<String> getDanhSachSDTGoiY(String input) {
+        List<String> list = new ArrayList<>();
+
+        // Sử dụng TOP 5 chuẩn cú pháp SQL Server (T-SQL)
+        String sql = "SELECT TOP 5 SDT, HoTen FROM KhachHang WHERE SDT LIKE ?";
+
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            // Khớp các SĐT bắt đầu bằng chuỗi nhập vào (Ví dụ: "09" -> "09%")
+            ps.setString(1, input.trim() + "%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String sdt = rs.getString("SDT");
+                    String hoTen = rs.getString("HoTen");
+
+                    // Ghép chuỗi hiển thị lên giao diện Popup: "0912345678 - Nguyễn Văn A"
+                    list.add(sdt + " - " + hoTen);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // =========================================================================
+    // 2. LẤY CHI TIẾT MẢNG THÔNG TIN KHÁCH HÀNG THEO SĐT (ĐỒNG BỘ CHUẨN ĐỔ DATA)
+    // =========================================================================
+    public Object[] getKhachHangBySDT(String sdt) {
+        String sql = "SELECT MaKH, HoTen, GioiTinh, CCCD FROM KhachHang WHERE SDT = ?";
+
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, sdt.trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Object[] khData = new Object[4];
+                    khData[0] = rs.getString("MaKH");
+                    khData[1] = rs.getString("HoTen");
+
+                    // Xử lý cột GioiTinh (Dạng số INT trong DB của bạn) sang String gán vào JComboBox
+                    // DB quy ước: 1 là "Nam", các giá trị khác (0) là "Nữ" (Khớp với logic hàm getAll của bạn)
+                    int gioiTinhInt = rs.getInt("GioiTinh");
+                    khData[2] = (gioiTinhInt == 1) ? "Nam" : "Nữ";
+
+                    khData[3] = rs.getString("CCCD");
+
+                    return khData;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     // ===== CHECK TRÙNG =====
     public boolean isDuplicate(String sdt, String cccd){
@@ -177,6 +241,66 @@ public class KhachHangDao {
         }
 
         return false;
+    }
+    // =========================================================================
+    // THỐNG KÊ KHÁCH HÀNG CÓ LƯỢT ĐẶT/THUÊ PHÒNG NHIỀU NHẤT
+    // =========================================================================
+    // =========================================================================
+    // THỐNG KÊ CHÍNH XÁC TỔNG LƯỢT ĐẶT + THUÊ PHÒNG TRỰC TIẾP CỦA KHÁCH HÀNG
+    // =========================================================================
+    public List<Object[]> getThongKeTongLuotDenKhachHang(java.util.Date tuNgay, java.util.Date denNgay) {
+        List<Object[]> list = new ArrayList<>();
+
+        String sql = """
+            WITH TongHopLuotDen AS (
+                -- Luồng 1: Khách hàng đặt phòng trước thông qua phiếu đặt
+                SELECT MaKH, ThoiGianDat AS NgayGiaoDich 
+                FROM PhieuDatPhong
+                
+                UNION ALL
+                
+                -- Luồng 2: Khách hàng vãng lai đến thuê phòng trực tiếp tại quầy
+                SELECT MaKH, NgayLapHoaDon AS NgayGiaoDich 
+                FROM HoaDonPhong
+                WHERE MaPhieuDatPhong IS NULL -- Tránh đếm trùng những hóa đơn sinh ra từ phiếu đặt
+            )
+            SELECT 
+                kh.MaKH,
+                kh.HoTen,
+                kh.SDT,
+                kh.CCCD,
+                kh.GioiTinh,
+                COUNT(th.MaKH) AS TongSoLuotDen
+            FROM KhachHang kh
+            JOIN TongHopLuotDen th ON kh.MaKH = th.MaKH
+            WHERE th.NgayGiaoDich BETWEEN ? AND ?
+            GROUP BY kh.MaKH, kh.HoTen, kh.SDT, kh.CCCD, kh.GioiTinh
+            ORDER BY TongSoLuotDen DESC
+        """;
+
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getString("MaKH"),
+                            rs.getString("HoTen"),
+                            rs.getString("SDT"),
+                            rs.getString("CCCD"),
+                            rs.getInt("GioiTinh"),
+                            rs.getInt("TongSoLuotDen")
+                    });
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     // ===== SEARCH =====

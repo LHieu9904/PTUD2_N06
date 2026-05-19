@@ -170,54 +170,195 @@ public class HoaDonPhongDao {
 
     public Object[] getChiTietHoaDon(String maHD) {
 
-        Object[] obj = null;
+        String sql = """
+    SELECT
 
-        try {Connection con = Database.getInstance().getConnection();
+        hd.MaHoaDonPhong,
+        hd.NgayLapHoaDon,
 
-            String sql =
-                    "SELECT " +
-                            "hd.MaHoaDonPhong, " +
-                            "hd.NgayLapHoaDon, " +
-                            "nv.HoTen, " +
-                            "kh.HoTen, " +
-                            "ISNULL(hd.TongTien - hd.TienThue,0), " +
-                            "0, " +
-                            "ISNULL(hd.TienThue,0), " +
-                            "ISNULL(hd.TongTien,0) " +
-                            "FROM HoaDonPhong hd " +
-                            "LEFT JOIN NhanVien nv " +
-                            "ON hd.MaNV = nv.MaNV " +
-                            "LEFT JOIN KhachHang kh " +
-                            "ON hd.MaKH = kh.MaKH " +
-                            "WHERE hd.MaHoaDonPhong = ?";
+        nv.HoTen AS NhanVien,
+        kh.HoTen AS KhachHang,
+        ISNULL((
+            SELECT SUM(
 
-            PreparedStatement ps =
-                    con.prepareStatement(sql);
+                CASE
+
+                    WHEN cthd.CachThue = N'Ngày'
+                    THEN lp.GiaCaNgay
+
+                    ELSE
+
+                        lp.GiaGioDau +
+
+                        CASE
+                            WHEN DATEDIFF(
+                                    HOUR,
+                                    cthd.ThoiGianNhan,
+                                    cthd.ThoiGianTra
+                                 ) <= 1
+                            THEN 0
+
+                            ELSE
+                                (
+                                    DATEDIFF(
+                                        HOUR,
+                                        cthd.ThoiGianNhan,
+                                        cthd.ThoiGianTra
+                                    ) - 1
+                                ) * lp.GiaGioTiepTheo
+                        END
+                END
+
+            )
+
+            FROM ChiTietHoaDonPhong cthd
+
+            JOIN Phong p
+                ON cthd.MaPhong = p.MaPhong
+
+            JOIN LoaiPhong lp
+                ON p.MaLP = lp.MaLP
+
+            WHERE cthd.MaHoaDonPhong =
+                  hd.MaHoaDonPhong
+
+        ),0) AS TienPhong,
+
+        -- TIỀN DỊCH VỤ
+        ISNULL((
+            SELECT SUM(ct.ThanhTien)
+
+            FROM ChiTietHoaDonDichVu ct
+
+            JOIN HoaDonDichVu dv
+                ON ct.MaHoaDonDichVu =
+                   dv.MaHoaDonDichVu
+
+            WHERE dv.MaHoaDonPhong =
+                  hd.MaHoaDonPhong
+        ),0) AS TienDV,
+
+        -- THUẾ
+        ISNULL(hd.TienThue,0) AS TienThue,
+
+        -- TỔNG TIỀN
+        ISNULL(
+            (
+                SELECT SUM(
+
+                    CASE
+
+                        WHEN cthd.CachThue = N'Ngày'
+                        THEN lp.GiaCaNgay
+
+                        ELSE
+
+                            lp.GiaGioDau +
+
+                            CASE
+                                WHEN DATEDIFF(
+                                        HOUR,
+                                        cthd.ThoiGianNhan,
+                                        cthd.ThoiGianTra
+                                     ) <= 1
+                                THEN 0
+
+                                ELSE
+                                    (
+                                        DATEDIFF(
+                                            HOUR,
+                                            cthd.ThoiGianNhan,
+                                            cthd.ThoiGianTra
+                                        ) - 1
+                                    ) * lp.GiaGioTiepTheo
+                            END
+                    END
+
+                )
+
+                FROM ChiTietHoaDonPhong cthd
+
+                JOIN Phong p
+                    ON cthd.MaPhong = p.MaPhong
+
+                JOIN LoaiPhong lp
+                    ON p.MaLP = lp.MaLP
+
+                WHERE cthd.MaHoaDonPhong =
+                      hd.MaHoaDonPhong
+            )
+
+            +
+
+            ISNULL((
+                SELECT SUM(ct.ThanhTien)
+
+                FROM ChiTietHoaDonDichVu ct
+
+                JOIN HoaDonDichVu dv
+                    ON ct.MaHoaDonDichVu =
+                       dv.MaHoaDonDichVu
+
+                WHERE dv.MaHoaDonPhong =
+                      hd.MaHoaDonPhong
+            ),0)
+
+            +
+
+            ISNULL(hd.TienThue,0)
+
+        ,0) AS TongTien
+
+    FROM HoaDonPhong hd
+
+    JOIN NhanVien nv
+        ON hd.MaNV = nv.MaNV
+
+    JOIN KhachHang kh
+        ON hd.MaKH = kh.MaKH
+
+    WHERE hd.MaHoaDonPhong = ?
+""";
+
+        try (
+
+                Connection con =
+                        Database.getInstance()
+                                .getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+
+        ) {
 
             ps.setString(1, maHD);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                    ps.executeQuery();
 
             if (rs.next()) {
 
-                obj = new Object[]{
+                return new Object[]{
 
                         rs.getString(1),
                         rs.getTimestamp(2),
+
                         rs.getString(3),
                         rs.getString(4),
-                        rs.getDouble(5),
-                        rs.getDouble(6),
-                        rs.getDouble(7),
-                        rs.getDouble(8)
+
+                        rs.getBigDecimal(5), // tiền phòng
+                        rs.getBigDecimal(6), // DV
+                        rs.getBigDecimal(7), // thuế
+                        rs.getBigDecimal(8)  // tổng
                 };
             }
 
         } catch (Exception e) {
+
             e.printStackTrace();
         }
 
-        return obj;
+        return null;
     }
 
     public boolean insertCoPhieuDatPhong(
@@ -274,9 +415,6 @@ public class HoaDonPhongDao {
 
         return false;
     }
-    // ===============================
-// FILE: HoaDonPhongDao.java
-// ===============================
 
     public Object[] getThongTinThanhToan(String maPhong) {
 
@@ -846,8 +984,8 @@ public class HoaDonPhongDao {
     }
     public boolean insert(
             String maHD,
-            String maNV,
-            String maKH
+    String maNV,
+    String maKH
     ) {
 
         String sql = """
@@ -952,6 +1090,141 @@ public class HoaDonPhongDao {
             e.printStackTrace();
         }
 
+        return list;
+    }
+    // =========================================================================
+    // 1. TÌM PHÒNG ĐƯỢC SỬ DỤNG NHIỀU NHẤT TRONG KHOẢNG THỜI GIAN
+    // =========================================================================
+    public Object[] getPhongSuDungNhieuNhat(java.util.Date tuNgay, java.util.Date denNgay) {
+        String sql = """
+            SELECT TOP 1 cthd.MaPhong, COUNT(*) AS SoLuot
+            FROM ChiTietHoaDonPhong cthd
+            JOIN HoaDonPhong hd ON cthd.MaHoaDonPhong = hd.MaHoaDonPhong
+            WHERE hd.NgayLapHoaDon BETWEEN ? AND ?
+            GROUP BY cthd.MaPhong
+            ORDER BY SoLuot DESC
+        """;
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Object[]{ rs.getString("MaPhong"), rs.getInt("SoLuot") };
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Object[]{ "Không có", 0 };
+    }
+
+    // =========================================================================
+    // 2. TÌM LOẠI PHÒNG ĐƯỢC ĐẶT NHIỀU NHẤT TRONG KHOẢNG THỜI GIAN
+    // =========================================================================
+    public Object[] getLoaiPhongDatNhieuNhat(java.util.Date tuNgay, java.util.Date denNgay) {
+        String sql = """
+            SELECT TOP 1 lp.TenLP, COUNT(*) AS SoLuot
+            FROM ChiTietPhieuDatPhong ctpdp
+            JOIN PhieuDatPhong pdp ON ctpdp.MaPhieuDatPhong = pdp.MaPhieuDatPhong
+            JOIN Phong p ON ctpdp.MaPhong = p.MaPhong
+            JOIN LoaiPhong lp ON p.MaLP = lp.MaLP
+            WHERE pdp.ThoiGianDat BETWEEN ? AND ?
+            GROUP BY lp.TenLP
+            ORDER BY SoLuot DESC
+        """;
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Object[]{ rs.getString("TenLP"), rs.getInt("SoLuot") };
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Object[]{ "Không có", 0 };
+    }
+
+    // =========================================================================
+    // 3. LẤY DATASET SỐ LƯỢT ĐẶT CỦA TẤT CẢ LOẠI PHÒNG ĐỂ ĐỔ LÊN BIỂU ĐỒ CỘT
+    // =========================================================================
+    public java.util.Map<String, Integer> getDatasetLoaiPhong(java.util.Date tuNgay, java.util.Date denNgay) {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        String sql = """
+            SELECT lp.TenLP, COUNT(ctpdp.MaPhong) AS SoLuot
+            FROM LoaiPhong lp
+            LEFT JOIN Phong p ON lp.MaLP = p.MaLP
+            LEFT JOIN ChiTietPhieuDatPhong ctpdp ON p.MaPhong = ctpdp.MaPhong
+            LEFT JOIN PhieuDatPhong pdp ON ctpdp.MaPhieuDatPhong = pdp.MaPhieuDatPhong 
+                 AND pdp.ThoiGianDat BETWEEN ? AND ?
+            GROUP BY lp.TenLP
+            ORDER BY lp.TenLP
+        """;
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getString("TenLP"), rs.getInt("SoLuot"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+    // =========================================================================
+    // THỐNG KÊ DOANH THU CỦA TỪNG NHÂN VIÊN TRONG KHOẢNG THỜI GIAN
+    // =========================================================================
+    public List<Object[]> getDoanhThuNhanVienTheoThoiGian(java.util.Date tuNgay, java.util.Date denNgay) {
+        List<Object[]> list = new ArrayList<>();
+
+        // Truy vấn lấy Mã NV, Họ Tên, Số hóa đơn đã lập và Tổng doanh thu mang về
+        String sql = """
+            SELECT 
+                nv.MaNV,
+                nv.HoTen,
+                COUNT(hd.MaHoaDonPhong) AS SoHoaDon,
+                ISNULL(SUM(hd.TongTien), 0) AS TongDoanhThu
+            FROM NhanVien nv
+            LEFT JOIN HoaDonPhong hd ON nv.MaNV = hd.MaNV 
+                 AND hd.TrangThai = N'Đã thanh toán'
+                 AND hd.NgayLapHoaDon BETWEEN ? AND ?
+            GROUP BY nv.MaNV, nv.HoTen
+            ORDER BY TongDoanhThu DESC
+        """;
+
+        try (
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            // Chuyển đổi sang java.sql.Timestamp để giữ độ chính xác giờ phút giây trong DB
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[] {
+                            rs.getString("MaNV"),
+                            rs.getString("HoTen"),
+                            rs.getInt("SoHoaDon"),
+                            rs.getBigDecimal("TongDoanhThu") // Trả về dạng tiền tệ chính xác
+                    });
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 

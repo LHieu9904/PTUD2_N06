@@ -489,11 +489,6 @@ public class Search_HoaDon_UI extends JPanel {
                 hoaDonDao.getDanhSachDichVu(maHD)
         );
     }
-
-    // =====================================================
-    // COMPONENT
-    // =====================================================
-
     private TextField createField() {
 
         TextField tf = new TextField();

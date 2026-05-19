@@ -3,6 +3,7 @@ package Dao;
 import ConnectDB.Database;
 import Entity.*;
 
+import javax.swing.*;
 import java.sql.*;
 import java.util.*;
 
@@ -318,36 +319,150 @@ public class NhanVienDao {
 
         return "TK01";
     }
+    public NhanVien getNhanVienTheoMa(String maNV) {
 
-    // ================= AUTO ID =================
-    public String getNextMaNV() {
+        NhanVien nv = null;
 
-        int year = java.time.LocalDate.now().getYear() % 100;
-        String prefix = "NV1" + String.format("%02d", year);
-        String sql = """
-        SELECT TOP 1 MaNV
-        FROM NhanVien
-        WHERE LEN(MaNV) >= 9
-          AND MaNV LIKE ?
-        ORDER BY MaNV DESC
-    """;
+        try {
 
-        try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
-            ps.setString(1, prefix + "%");
-            ResultSet rs = ps.executeQuery();
+            Connection con = Database.getInstance().getConnection();
+
+            String sql = "SELECT * FROM NhanVien WHERE MaNV = ?";
+
+            PreparedStatement stmt = con.prepareStatement(sql);
+
+            stmt.setString(1, maNV);
+
+            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                String lastMa = rs.getString("MaNV");
-                int number = Integer.parseInt(lastMa.substring(5));
-                number++;
-                return prefix + String.format("%04d", number);
+
+                nv = new NhanVien();
+
+                nv.setMaNV(rs.getString("MaNV"));
+                nv.setHoTen(rs.getString("HoTen"));
+                nv.setGioiTinh(rs.getInt("GioiTinh"));
+                nv.setCccd(rs.getString("CCCD"));
+                nv.setNgaySinh(rs.getDate("NgaySinh"));
+                nv.setAnhNhanVien(rs.getString("AnhNhanVien"));
+                nv.setSdt(rs.getString("SDT"));
+                nv.setEmail(rs.getString("Email"));
+
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return nv;
+    }
+
+    // ================= AUTO ID =================
+    public String getNextMaNV(String chucVu) {
+
+        // ================= X =================
+        // X = 1 -> Quản lý
+        // X = 0 -> Bán vé / Lễ tân
+
+        String roleCode;
+
+        if (chucVu.equalsIgnoreCase("Quản Lý")) {
+
+            roleCode = "1";
+
+        } else {
+
+            roleCode = "0";
+        }
+
+        // ================= YY =================
+        // 2 số cuối năm hiện tại
+
+        int year =
+                java.time.LocalDate.now()
+                        .getYear() % 100;
+
+        String yy =
+                String.format("%02d", year);
+
+        // ================= PREFIX =================
+        // VD:
+        // NV125
+        // NV025
+
+        String prefix =
+                "NV" +
+                        roleCode +
+                        yy;
+
+        // ================= SQL =================
+
+        String sql = """
+        SELECT TOP 1 MaNV
+        FROM NhanVien
+        WHERE MaNV LIKE ?
+        ORDER BY
+        CAST(SUBSTRING(MaNV, 6, LEN(MaNV)) AS INT) DESC
+    """;
+
+        try (
+
+                Connection con =
+                        Database.getInstance()
+                                .getConnection();
+
+                PreparedStatement ps =
+                        con.prepareStatement(sql)
+
+        ) {
+
+            ps.setString(1, prefix + "%");
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            if (rs.next()) {
+
+                String lastMa =
+                        rs.getString("MaNV");
+
+                // VD:
+                // NV1250001
+                // lấy: 0001
+
+                int number =
+                        Integer.parseInt(
+                                lastMa.substring(5)
+                        );
+
+                number++;
+
+                // giới hạn 9999
+
+                if(number > 9999){
+
+                    JOptionPane.showMessageDialog(
+                            null,
+                            "Đã vượt giới hạn mã nhân viên!"
+                    );
+
+                    return null;
+                }
+
+                return prefix +
+                        String.format(
+                                "%04d",
+                                number
+                        );
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        // mặc định đầu tiên
+
         return prefix + "0001";
     }
     public List<NhanVien> searchNhanVien(String keyword) {

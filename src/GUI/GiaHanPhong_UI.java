@@ -4,15 +4,49 @@ import Dao.ChiTietHoaDonPhongDao;
 import Dao.PhongDao;
 import Raven.button.Button;
 import Raven.textfield.TextField;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class GiaHanPhong_UI extends JPanel {
+
+    // =====================================================
+    // COLOR
+    // =====================================================
+
+    private final Color BG =
+            new Color(245,247,250);
+
+    private final Color CARD =
+            Color.WHITE;
+
+    private final Color PRIMARY =
+            new Color(59,130,246);
+
+    private final Color SUCCESS =
+            new Color(16,185,129);
+
+    private final Color DANGER =
+            new Color(239,68,68);
+
+    private final Color TEXT =
+            new Color(15,23,42);
+
+    private final Color SUBTEXT =
+            new Color(100,116,139);
+
+    private final Color BORDER =
+            new Color(226,232,240);
+
+    // =====================================================
+    // COMPONENT
+    // =====================================================
 
     private TextField txtSearch;
 
@@ -34,298 +68,529 @@ public class GiaHanPhong_UI extends JPanel {
     private Button btn2H;
     private Button btn3H;
 
-    private final PhongDao phongDao = new PhongDao();
+    // =====================================================
+    // DAO
+    // =====================================================
+
+    private final PhongDao phongDao =
+            new PhongDao();
+
     private final ChiTietHoaDonPhongDao ctHoaDonDao =
             new ChiTietHoaDonPhongDao();
 
     private Timestamp thoiGianTraHienTai;
+
     private Timestamp thoiGianTraMoi;
+
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
 
     public GiaHanPhong_UI() {
 
+        try {
+
+            UIManager.setLookAndFeel(
+                    new FlatLightLaf()
+            );
+
+        } catch (Exception ignored) {
+        }
+
+        initUI();
+
+        initEvent();
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
+
+    private void initUI(){
+
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+
+        setBackground(BG);
+
+        setBorder(
+                new EmptyBorder(
+                        18,
+                        18,
+                        18,
+                        18
+                )
+        );
 
         // =====================================================
         // HEADER
         // =====================================================
 
-        JPanel header = new JPanel();
-        header.setBackground(new Color(0, 102, 204));
-        header.setPreferredSize(new Dimension(0, 60));
+        JPanel header =
+                new JPanel(
+                        new BorderLayout()
+                );
 
-        JLabel title = new JLabel("GIA HẠN PHÒNG");
-        title.setForeground(Color.WHITE);
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
+        header.setOpaque(false);
 
-        header.add(title);
+        header.setBorder(
+                new EmptyBorder(
+                        0,
+                        0,
+                        12,
+                        0
+                )
+        );
+
+        JLabel title =
+                new JLabel("GIA HẠN PHÒNG");
+
+        title.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        34
+                )
+        );
+
+        title.setForeground(TEXT);
+
+        header.add(
+                title,
+                BorderLayout.WEST
+        );
+
         add(header, BorderLayout.NORTH);
 
         // =====================================================
-        // BODY
+        // MAIN
         // =====================================================
 
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBackground(Color.WHITE);
-        body.setBorder(new EmptyBorder(15, 20, 15, 20));
+        JPanel main =
+                new JPanel();
 
-        add(body, BorderLayout.CENTER);
+        main.setOpaque(false);
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBackground(Color.WHITE);
+        main.setLayout(
+                new BoxLayout(
+                        main,
+                        BoxLayout.Y_AXIS
+                )
+        );
 
-        body.add(mainPanel, BorderLayout.CENTER);
+        add(main, BorderLayout.CENTER);
 
         // =====================================================
-        // SEARCH PANEL
+        // SEARCH CARD
         // =====================================================
 
-        JPanel searchPanel = new JPanel(new GridBagLayout());
-        searchPanel.setBackground(Color.WHITE);
-        searchPanel.setBorder(
-                BorderFactory.createTitledBorder("Tìm kiếm phòng")
+        RoundedPanel searchCard =
+                createCard();
+
+        searchCard.setLayout(
+                new BorderLayout(
+                        12,
+                        0
+                )
         );
 
-        GridBagConstraints searchGbc = new GridBagConstraints();
-        searchGbc.insets = new Insets(10, 10, 10, 10);
-        searchGbc.fill = GridBagConstraints.HORIZONTAL;
-
-        txtSearch = new TextField();
-        txtSearch.setHint("Nhập mã phòng / SĐT khách");
-        txtSearch.setBackground(Color.WHITE);
-        txtSearch.setForeground(Color.BLACK);
-
-        txtSearch.setMinimumSize(
-                new Dimension(300, 40)
-        );
-
-        txtSearch.setPreferredSize(
-                new Dimension(400, 40)
-        );
-
-        txtSearch.setMaximumSize(
+        searchCard.setMaximumSize(
                 new Dimension(
                         Integer.MAX_VALUE,
-                        40
+                        95
                 )
         );
 
-        btnSearch = new Button();
-        btnSearch.setText("Tìm");
-        btnSearch.setPreferredSize(
-                new Dimension(120, 40)
-        );
+        JLabel lbSearch =
+                createSectionTitle(
+                        "TÌM KIẾM"
+                );
 
-        searchGbc.gridx = 0;
-        searchGbc.gridy = 0;
-        searchGbc.weightx = 1;
-        searchPanel.add(txtSearch, searchGbc);
+        txtSearch =
+                createInput(
+                        "Nhập mã phòng hoặc SĐT khách"
+                );
 
-        searchGbc.gridx = 1;
-        searchGbc.weightx = 0;
-        searchPanel.add(btnSearch, searchGbc);
+        btnSearch =
+                createButton(
+                        "TÌM KIẾM",
+                        PRIMARY
+                );
 
-        mainPanel.add(searchPanel);
-        mainPanel.add(Box.createVerticalStrut(15));
+        JPanel searchBottom =
+                new JPanel(
+                        new BorderLayout(
+                                12,
+                                0
+                        )
+                );
 
-        // =====================================================
-        // INFO PANEL
-        // =====================================================
+        searchBottom.setOpaque(false);
 
-        txtMaPhong = createReadOnlyField();
-        txtTenKhach = createReadOnlyField();
-        txtSDT = createReadOnlyField();
-        txtNgayNhan = createReadOnlyField();
-        txtThoiGianTraCu = createReadOnlyField();
-        txtThoiGianTraMoi = createReadOnlyField();
-        txtPhiGiaHan = createReadOnlyField();
-
-        JPanel infoPanel = new JPanel(new GridBagLayout());
-        infoPanel.setBackground(Color.WHITE);
-        infoPanel.setBorder(
-                BorderFactory.createTitledBorder(
-                        "Thông tin phòng đang thuê"
-                )
-        );
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 12, 10, 12);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1;
-
-        // Row 1
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        infoPanel.add(new JLabel("Mã phòng"), gbc);
-
-        gbc.gridx = 1;
-        infoPanel.add(txtMaPhong, gbc);
-
-        gbc.gridx = 2;
-        infoPanel.add(new JLabel("Tên khách"), gbc);
-
-        gbc.gridx = 3;
-        infoPanel.add(txtTenKhach, gbc);
-
-        // Row 2
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        infoPanel.add(new JLabel("Số điện thoại"), gbc);
-
-        gbc.gridx = 1;
-        infoPanel.add(txtSDT, gbc);
-
-        gbc.gridx = 2;
-        infoPanel.add(new JLabel("Thời gian nhận"), gbc);
-
-        gbc.gridx = 3;
-        infoPanel.add(txtNgayNhan, gbc);
-
-        // Row 3
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        infoPanel.add(
-                new JLabel("Thời gian trả hiện tại"),
-                gbc
-        );
-
-        gbc.gridx = 1;
-        infoPanel.add(txtThoiGianTraCu, gbc);
-
-        gbc.gridx = 2;
-        infoPanel.add(
-                new JLabel("Thời gian trả mới"),
-                gbc
-        );
-
-        gbc.gridx = 3;
-        infoPanel.add(txtThoiGianTraMoi, gbc);
-
-        mainPanel.add(infoPanel);
-        mainPanel.add(Box.createVerticalStrut(15));
-
-        // =====================================================
-        // GIA HẠN THỜI GIAN
-        // =====================================================
-
-        JPanel extendPanel = new JPanel(new BorderLayout());
-        extendPanel.setBackground(Color.WHITE);
-        extendPanel.setBorder(
-                BorderFactory.createTitledBorder(
-                        "Gia hạn thêm thời gian"
-                )
-        );
-
-        JPanel btnTimePanel = new JPanel(
-                new GridLayout(1, 4, 12, 0)
-        );
-        btnTimePanel.setBackground(Color.WHITE);
-
-        btn1H = createTimeButton("+1 Giờ");
-        btn2H = createTimeButton("+2 Giờ");
-        btn3H = createTimeButton("+3 Giờ");
-
-        cbThemGio = new JComboBox<>(
-                new String[]{
-                        "Chọn thời gian thêm",
-                        "30 phút",
-                        "1 giờ",
-                        "2 giờ",
-                        "3 giờ",
-                        "5 giờ"
-                }
-        );
-
-        cbThemGio.setPreferredSize(
-                new Dimension(180, 40)
-        );
-
-        btnTimePanel.add(btn1H);
-        btnTimePanel.add(btn2H);
-        btnTimePanel.add(btn3H);
-        btnTimePanel.add(cbThemGio);
-
-        extendPanel.add(
-                btnTimePanel,
+        searchBottom.add(
+                txtSearch,
                 BorderLayout.CENTER
         );
 
-        mainPanel.add(extendPanel);
-        mainPanel.add(Box.createVerticalStrut(15));
+        searchBottom.add(
+                btnSearch,
+                BorderLayout.EAST
+        );
+
+        searchCard.add(
+                lbSearch,
+                BorderLayout.NORTH
+        );
+
+        searchCard.add(
+                searchBottom,
+                BorderLayout.CENTER
+        );
+
+        main.add(searchCard);
+
+        main.add(
+                Box.createVerticalStrut(10)
+        );
 
         // =====================================================
-        // PHÍ GIA HẠN
+        // INFO CARD
         // =====================================================
 
-        JPanel feePanel = new JPanel(new GridBagLayout());
-        feePanel.setBackground(Color.WHITE);
-        feePanel.setBorder(
-                BorderFactory.createTitledBorder(
-                        "Chi phí gia hạn"
+        RoundedPanel infoCard =
+                createCard();
+
+        infoCard.setLayout(
+                new BorderLayout(
+                        0,
+                        12
                 )
         );
 
-        GridBagConstraints fee = new GridBagConstraints();
-        fee.insets = new Insets(10, 12, 10, 12);
-        fee.fill = GridBagConstraints.HORIZONTAL;
-        fee.weightx = 1;
+        JLabel lbInfo =
+                createSectionTitle(
+                        "THÔNG TIN PHÒNG"
+                );
 
-        fee.gridx = 0;
-        fee.gridy = 0;
-        feePanel.add(new JLabel("Phí gia hạn"), fee);
+        infoCard.add(
+                lbInfo,
+                BorderLayout.NORTH
+        );
 
-        fee.gridx = 1;
-        feePanel.add(txtPhiGiaHan, fee);
+        JPanel form =
+                new JPanel(
+                        new GridBagLayout()
+                );
 
-        mainPanel.add(feePanel);
-        mainPanel.add(Box.createVerticalStrut(15));
+        form.setOpaque(false);
+
+        GridBagConstraints gbc =
+                new GridBagConstraints();
+
+        gbc.insets =
+                new Insets(
+                        8,
+                        8,
+                        8,
+                        8
+                );
+
+        gbc.fill =
+                GridBagConstraints.HORIZONTAL;
+
+        gbc.weightx = 1;
+
+        txtMaPhong =
+                createReadOnlyField();
+
+        txtTenKhach =
+                createReadOnlyField();
+
+        txtSDT =
+                createReadOnlyField();
+
+        txtNgayNhan =
+                createReadOnlyField();
+
+        txtThoiGianTraCu =
+                createReadOnlyField();
+
+        txtThoiGianTraMoi =
+                createReadOnlyField();
+
+        txtPhiGiaHan =
+                createReadOnlyField();
+
+        int y = 0;
+
+        addField(
+                form,
+                gbc,
+                y++,
+                "Mã phòng",
+                txtMaPhong,
+                "Tên khách",
+                txtTenKhach
+        );
+
+        addField(
+                form,
+                gbc,
+                y++,
+                "SĐT",
+                txtSDT,
+                "Ngày nhận",
+                txtNgayNhan
+        );
+
+        addField(
+                form,
+                gbc,
+                y++,
+                "Giờ trả",
+                txtThoiGianTraCu,
+                "Giờ mới",
+                txtThoiGianTraMoi
+        );
+
+        infoCard.add(form);
+
+        main.add(infoCard);
+
+        main.add(
+                Box.createVerticalStrut(10)
+        );
+
+        // =====================================================
+        // GIA HẠN CARD
+        // =====================================================
+
+        RoundedPanel extendCard =
+                createCard();
+
+        extendCard.setLayout(
+                new BorderLayout(
+                        0,
+                        8
+                )
+        );
+
+        extendCard.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        88
+                )
+        );
+
+        JLabel lbExtend =
+                createSectionTitle(
+                        "GIA HẠN"
+                );
+
+        extendCard.add(
+                lbExtend,
+                BorderLayout.NORTH
+        );
+
+        JPanel extendContent =
+                new JPanel(
+                        new GridLayout(
+                                1,
+                                4,
+                                8,
+                                0
+                        )
+                );
+
+        extendContent.setOpaque(false);
+
+        btn1H =
+                createButton(
+                        "+1 GIỜ",
+                        PRIMARY
+                );
+
+        btn2H =
+                createButton(
+                        "+2 GIỜ",
+                        PRIMARY
+                );
+
+        btn3H =
+                createButton(
+                        "+3 GIỜ",
+                        PRIMARY
+                );
+
+        cbThemGio =
+                new JComboBox<>(
+                        new String[]{
+                                "Khác",
+                                "30 phút",
+                                "1 giờ",
+                                "2 giờ",
+                                "3 giờ"
+                        }
+                );
+
+        cbThemGio.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        12
+                )
+        );
+
+        extendContent.add(btn1H);
+        extendContent.add(btn2H);
+        extendContent.add(btn3H);
+        extendContent.add(cbThemGio);
+
+        extendCard.add(
+                extendContent,
+                BorderLayout.CENTER
+        );
+
+        main.add(extendCard);
+
+        main.add(
+                Box.createVerticalStrut(10)
+        );
+
+        // =====================================================
+        // FEE CARD
+        // =====================================================
+
+        RoundedPanel feeCard =
+                createCard();
+
+        feeCard.setLayout(
+                new BorderLayout(
+                        0,
+                        10
+                )
+        );
+
+        feeCard.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        88
+                )
+        );
+
+        JLabel lbFee =
+                createSectionTitle(
+                        "CHI PHÍ"
+                );
+
+        feeCard.add(
+                lbFee,
+                BorderLayout.NORTH
+        );
+
+        JPanel feeWrap =
+                new JPanel(
+                        new BorderLayout(
+                                10,
+                                0
+                        )
+                );
+
+        feeWrap.setOpaque(false);
+
+        JLabel lbPhi =
+                createLabel("Phí");
+
+        feeWrap.add(
+                lbPhi,
+                BorderLayout.WEST
+        );
+
+        feeWrap.add(
+                txtPhiGiaHan,
+                BorderLayout.CENTER
+        );
+
+        feeCard.add(
+                feeWrap,
+                BorderLayout.CENTER
+        );
+
+        main.add(feeCard);
+
+        main.add(
+                Box.createVerticalStrut(8)
+        );
 
         // =====================================================
         // FOOTER
         // =====================================================
 
-        JPanel footer = new JPanel(
-                new FlowLayout(
-                        FlowLayout.RIGHT,
-                        12,
-                        10
+        JPanel footer =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.RIGHT,
+                                10,
+                                0
+                        )
+                );
+
+        footer.setOpaque(false);
+
+        footer.setMaximumSize(
+                new Dimension(
+                        Integer.MAX_VALUE,
+                        50
                 )
         );
-        footer.setBackground(Color.WHITE);
 
-        btnHuy = new Button();
-        btnHuy.setText("Hủy");
+        btnHuy =
+                createButton(
+                        "HỦY",
+                        DANGER
+                );
 
-        btnXacNhan = new Button();
-        btnXacNhan.setText("Xác nhận");
+        btnXacNhan =
+                createButton(
+                        "XÁC NHẬN",
+                        SUCCESS
+                );
 
         footer.add(btnHuy);
+
         footer.add(btnXacNhan);
 
-        mainPanel.add(footer);
+        main.add(footer);
+    }
 
-        // =====================================================
-        // EVENT
-        // =====================================================
+    // =====================================================
+    // EVENT
+    // =====================================================
+
+    private void initEvent(){
 
         btnSearch.addActionListener(
                 e -> timPhong()
         );
 
         btn1H.addActionListener(
-                e -> giaHanGio(1, 100000)
+                e -> giaHanGio(
+                        1,
+                        100000
+                )
         );
 
         btn2H.addActionListener(
-                e -> giaHanGio(2, 200000)
+                e -> giaHanGio(
+                        2,
+                        200000
+                )
         );
 
         btn3H.addActionListener(
-                e -> giaHanGio(3, 300000)
+                e -> giaHanGio(
+                        3,
+                        300000
+                )
         );
 
         btnXacNhan.addActionListener(
@@ -335,38 +600,328 @@ public class GiaHanPhong_UI extends JPanel {
         btnHuy.addActionListener(
                 e -> clearForm()
         );
+
+        cbThemGio.addActionListener(e -> {
+
+            if(thoiGianTraHienTai == null){
+                return;
+            }
+
+            String value =
+                    cbThemGio.getSelectedItem()
+                            .toString();
+
+            switch (value){
+
+                case "30 phút":
+                    giaHanPhut(
+                            30,
+                            50000
+                    );
+                    break;
+
+                case "1 giờ":
+                    giaHanGio(
+                            1,
+                            100000
+                    );
+                    break;
+
+                case "2 giờ":
+                    giaHanGio(
+                            2,
+                            200000
+                    );
+                    break;
+
+                case "3 giờ":
+                    giaHanGio(
+                            3,
+                            300000
+                    );
+                    break;
+            }
+        });
     }
 
-    // TÌM PHÒNG
+    // =====================================================
+    // COMPONENT
+    // =====================================================
 
-    private void timPhong() {
+    private RoundedPanel createCard(){
 
-        String keyword = txtSearch.getText().trim();
+        RoundedPanel p =
+                new RoundedPanel();
 
-        if (keyword.isEmpty()) {
+        p.setBackground(CARD);
+
+        p.setBorder(
+                new EmptyBorder(
+                        18,
+                        18,
+                        18,
+                        18
+                )
+        );
+
+        return p;
+    }
+
+    private JLabel createSectionTitle(
+            String text
+    ){
+
+        JLabel lb =
+                new JLabel(text);
+
+        lb.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        17
+                )
+        );
+
+        lb.setForeground(TEXT);
+
+        return lb;
+    }
+
+    private JLabel createLabel(
+            String text
+    ){
+
+        JLabel lb =
+                new JLabel(text);
+
+        lb.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        lb.setForeground(TEXT);
+
+        return lb;
+    }
+
+    private TextField createInput(
+            String hint
+    ){
+
+        TextField tf =
+                new TextField();
+
+        tf.setHint(hint);
+
+        tf.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        tf.setPreferredSize(
+                new Dimension(
+                        300,
+                        40
+                )
+        );
+
+        tf.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER,
+                                1,
+                                true
+                        ),
+                        new EmptyBorder(
+                                8,
+                                12,
+                                8,
+                                12
+                        )
+                )
+        );
+
+        return tf;
+    }
+
+    private TextField createReadOnlyField(){
+
+        TextField tf =
+                new TextField();
+
+        tf.setEditable(false);
+
+        tf.setBackground(
+                new Color(
+                        248,
+                        250,
+                        252
+                )
+        );
+
+        tf.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        13
+                )
+        );
+
+        tf.setPreferredSize(
+                new Dimension(
+                        250,
+                        40
+                )
+        );
+
+        tf.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                BORDER,
+                                1,
+                                true
+                        ),
+                        new EmptyBorder(
+                                8,
+                                12,
+                                8,
+                                12
+                        )
+                )
+        );
+
+        return tf;
+    }
+
+    private Button createButton(
+            String text,
+            Color bg
+    ){
+
+        Button btn =
+                new Button();
+
+        btn.setText(text);
+
+        btn.setBackground(bg);
+
+        btn.setForeground(Color.WHITE);
+
+        btn.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        13
+                )
+        );
+
+        btn.setCursor(
+                new Cursor(
+                        Cursor.HAND_CURSOR
+                )
+        );
+
+        btn.setPreferredSize(
+                new Dimension(
+                        120,
+                        36
+                )
+        );
+
+        btn.setBorder(
+                new EmptyBorder(
+                        6,
+                        14,
+                        6,
+                        14
+                )
+        );
+
+        return btn;
+    }
+
+    private void addField(
+            JPanel form,
+            GridBagConstraints gbc,
+            int y,
+            String lb1,
+            JComponent c1,
+            String lb2,
+            JComponent c2
+    ){
+
+        gbc.gridy = y;
+
+        gbc.gridx = 0;
+
+        form.add(
+                createLabel(lb1),
+                gbc
+        );
+
+        gbc.gridx = 1;
+
+        form.add(
+                c1,
+                gbc
+        );
+
+        gbc.gridx = 2;
+
+        form.add(
+                createLabel(lb2),
+                gbc
+        );
+
+        gbc.gridx = 3;
+
+        form.add(
+                c2,
+                gbc
+        );
+    }
+
+    // =====================================================
+    // LOGIC
+    // =====================================================
+
+    private void timPhong(){
+
+        String keyword =
+                txtSearch.getText().trim();
+
+        if(keyword.isEmpty()){
+
             JOptionPane.showMessageDialog(
                     this,
                     "Vui lòng nhập mã phòng hoặc SĐT khách!"
             );
+
             return;
         }
 
         Object[] data =
-                phongDao.getThongTinGiaHanPhong(keyword);
+                phongDao.getThongTinGiaHanPhong(
+                        keyword
+                );
 
-        if (data == null) {
+        if(data == null){
+
             JOptionPane.showMessageDialog(
                     this,
                     "Không tìm thấy phòng đang thuê!"
             );
 
             clearForm();
+
             return;
         }
-
-        // =====================================================
-        // GÁN DỮ LIỆU LÊN UI
-        // =====================================================
 
         txtMaPhong.setText(
                 data[0].toString()
@@ -392,51 +947,68 @@ public class GiaHanPhong_UI extends JPanel {
                 data[4].toString()
         );
 
-        // lưu thời gian hiện tại để cộng thêm giờ
-
         thoiGianTraHienTai =
                 (Timestamp) data[4];
 
         thoiGianTraMoi =
                 (Timestamp) data[4];
 
-        txtPhiGiaHan.setText("0");
+        txtPhiGiaHan.setText("0 VNĐ");
     }
-
-    // =====================================================
-    // GIA HẠN GIỜ
-    // =====================================================
 
     private void giaHanGio(
             int gio,
             double phi
-    ) {
+    ){
 
-        if (thoiGianTraHienTai == null) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Vui lòng tìm phòng trước!"
-            );
-            return;
-        }
+        Calendar cal =
+                Calendar.getInstance();
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(thoiGianTraHienTai);
-
-        cal.add(Calendar.HOUR_OF_DAY, gio);
-
-        thoiGianTraMoi = new Timestamp(
-                cal.getTimeInMillis()
+        cal.setTime(
+                thoiGianTraHienTai
         );
+
+        cal.add(
+                Calendar.HOUR_OF_DAY,
+                gio
+        );
+
+        thoiGianTraMoi =
+                new Timestamp(
+                        cal.getTimeInMillis()
+                );
 
         hienThiGiaHan(phi);
     }
 
-    // =====================================================
-    // HIỂN THỊ GIA HẠN
-    // =====================================================
+    private void giaHanPhut(
+            int phut,
+            double phi
+    ){
 
-    private void hienThiGiaHan(double phi) {
+        Calendar cal =
+                Calendar.getInstance();
+
+        cal.setTime(
+                thoiGianTraHienTai
+        );
+
+        cal.add(
+                Calendar.MINUTE,
+                phut
+        );
+
+        thoiGianTraMoi =
+                new Timestamp(
+                        cal.getTimeInMillis()
+                );
+
+        hienThiGiaHan(phi);
+    }
+
+    private void hienThiGiaHan(
+            double phi
+    ){
 
         SimpleDateFormat sdf =
                 new SimpleDateFormat(
@@ -444,40 +1016,33 @@ public class GiaHanPhong_UI extends JPanel {
                 );
 
         txtThoiGianTraMoi.setText(
-                sdf.format(thoiGianTraMoi)
+                sdf.format(
+                        thoiGianTraMoi
+                )
         );
 
+        DecimalFormat df =
+                new DecimalFormat(
+                        "#,###"
+                );
+
         txtPhiGiaHan.setText(
-                String.valueOf(phi)
+                df.format(phi) + " VNĐ"
         );
     }
 
-    // =====================================================
-    // XÁC NHẬN
-    // =====================================================
-
-    // =====================================================
-// XÁC NHẬN GIA HẠN
-// =====================================================
-
-    private void xacNhanGiaHan() {
+    private void xacNhanGiaHan(){
 
         String maPhong =
                 txtMaPhong.getText().trim();
 
-        if (maPhong.isEmpty()) {
+        if(maPhong.isEmpty()){
+
             JOptionPane.showMessageDialog(
                     this,
                     "Vui lòng tìm phòng trước!"
             );
-            return;
-        }
 
-        if (thoiGianTraMoi == null) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Vui lòng chọn thời gian gia hạn!"
-            );
             return;
         }
 
@@ -487,20 +1052,20 @@ public class GiaHanPhong_UI extends JPanel {
                         thoiGianTraMoi
                 );
 
-        if (!result) {
+        if(!result){
+
             JOptionPane.showMessageDialog(
                     this,
-                    "Gia hạn phòng thất bại!"
+                    "Gia hạn thất bại!"
             );
+
             return;
         }
 
         JOptionPane.showMessageDialog(
                 this,
-                "Gia hạn phòng thành công!"
+                "Gia hạn thành công!"
         );
-
-        // cập nhật lại thời gian hiện tại
 
         txtThoiGianTraCu.setText(
                 txtThoiGianTraMoi.getText()
@@ -510,75 +1075,101 @@ public class GiaHanPhong_UI extends JPanel {
                 thoiGianTraMoi;
     }
 
-    // =====================================================
-    // CLEAR FORM
-    // =====================================================
-
-    private void clearForm() {
+    private void clearForm(){
 
         txtSearch.setText("");
+
         txtMaPhong.setText("");
+
         txtTenKhach.setText("");
+
         txtSDT.setText("");
+
         txtNgayNhan.setText("");
+
         txtThoiGianTraCu.setText("");
+
         txtThoiGianTraMoi.setText("");
+
         txtPhiGiaHan.setText("");
 
         cbThemGio.setSelectedIndex(0);
 
         thoiGianTraHienTai = null;
+
         thoiGianTraMoi = null;
     }
 
     // =====================================================
-    // COMPONENT
+    // ROUNDED PANEL
     // =====================================================
 
-    private TextField createReadOnlyField() {
+    class RoundedPanel extends JPanel {
 
-        TextField tf = new TextField();
+        private final int radius = 26;
 
-        tf.setEditable(false);
-        tf.setBackground(Color.WHITE);
-        tf.setForeground(Color.BLACK);
+        public RoundedPanel(){
 
-        tf.setPreferredSize(
-                new Dimension(230, 40)
-        );
+            setOpaque(false);
+        }
 
-        return tf;
-    }
+        @Override
+        protected void paintComponent(Graphics g) {
 
-    private Button createTimeButton(String text) {
+            Graphics2D g2 =
+                    (Graphics2D) g.create();
 
-        Button btn = new Button();
+            g2.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
 
-        btn.setText(text);
+            // SHADOW
+            g2.setColor(
+                    new Color(
+                            0,
+                            0,
+                            0,
+                            10
+                    )
+            );
 
-        btn.setPreferredSize(
-                new Dimension(120, 40)
-        );
+            g2.fillRoundRect(
+                    4,
+                    4,
+                    getWidth()-8,
+                    getHeight()-8,
+                    radius,
+                    radius
+            );
 
-        return btn;
-    }
+            // BACKGROUND
+            g2.setColor(getBackground());
 
-    // =====================================================
-    // MAIN TEST
-    // =====================================================
+            g2.fillRoundRect(
+                    0,
+                    0,
+                    getWidth()-5,
+                    getHeight()-5,
+                    radius,
+                    radius
+            );
 
-    public static void main(String[] args) {
+            // BORDER
+            g2.setColor(BORDER);
 
-        JFrame f = new JFrame();
+            g2.drawRoundRect(
+                    0,
+                    0,
+                    getWidth()-5,
+                    getHeight()-5,
+                    radius,
+                    radius
+            );
 
-        f.setTitle("Gia hạn phòng");
-        f.setSize(1100, 750);
-        f.setLocationRelativeTo(null);
-        f.setDefaultCloseOperation(
-                JFrame.EXIT_ON_CLOSE
-        );
+            g2.dispose();
 
-        f.add(new GiaHanPhong_UI());
-        f.setVisible(true);
+            super.paintComponent(g);
+        }
     }
 }

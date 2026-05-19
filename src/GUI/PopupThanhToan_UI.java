@@ -349,7 +349,6 @@ public class PopupThanhToan_UI extends JDialog {
                 double tienDVVal = Double.parseDouble(txtTienDV.getText().replace(",",""));
                 double giam = kmDao.getPhanTramGiamGia(cbKM.getSelectedItem().toString());
 
-                // 🔥 TRUYỀN maNV Ở ĐÂY
                 new GUI.HoaDon_UI(
                         maHD,
                         tenKH,
@@ -358,7 +357,12 @@ public class PopupThanhToan_UI extends JDialog {
                         phongDao.getDichVuDaSuDung(maPhong),
                         java.math.BigDecimal.valueOf(tienPhongVal),
                         java.math.BigDecimal.valueOf(tienDVVal),
-                        java.math.BigDecimal.valueOf(giam)
+                        java.math.BigDecimal.valueOf(giam),
+                        java.math.BigDecimal.valueOf(
+                                thueDao.getPhanTramThue(
+                                        cbThue.getSelectedItem().toString()
+                                )
+                        )
                 ).setVisible(true);
 
                 dispose();

@@ -276,12 +276,4 @@ public class Search_KhachHang_UI extends JPanel {
         return tf;
     }
 
-    public static void main(String[] args) {
-        JFrame f = new JFrame();
-        f.setSize(1100,650);
-        f.setLocationRelativeTo(null);
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new Search_KhachHang_UI());
-        f.setVisible(true);
-    }
 }

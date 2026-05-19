@@ -1,4 +1,4 @@
-package GUI;
+/*package GUI;
 
 import Dao.KhuyenMaiDao;
 import Entity.KhuyenMai;
@@ -281,6 +281,875 @@ public class KhuyenMaiUI extends JPanel {
             return false;
         }
         if(ngayKT.before(new java.util.Date())){JOptionPane.showMessageDialog(this, "Ngày kết thúc phải >= ngày hiện tại!");
+
+            return false;
+        }
+
+        return true;
+    }
+}*/
+package GUI;
+
+import Dao.KhuyenMaiDao;
+import Entity.KhuyenMai;
+import com.toedter.calendar.JDateChooser;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.sql.Date;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+public class KhuyenMaiUI extends JPanel {
+
+    // ================= COLOR =================
+
+    private final Color BACKGROUND =
+            new Color(241,245,249);
+
+    private final Color CARD =
+            Color.WHITE;
+
+    private final Color PRIMARY =
+            new Color(37,99,235);
+
+    private final Color SUCCESS =
+            new Color(16,185,129);
+
+    private final Color WARNING =
+            new Color(245,158,11);
+
+    private final Color DANGER =
+            new Color(239,68,68);
+
+    private final Color BORDER =
+            new Color(226,232,240);
+
+    private final Color TEXT =
+            new Color(30,41,59);
+
+    // ================= COMPONENT =================
+
+    private JTable table;
+    private DefaultTableModel model;
+
+    private JTextField txtMaKM;
+    private JTextField txtTenKM;
+    private JTextField txtPhanTram;
+
+    private JComboBox<String> cbTrangThai;
+
+    private JDateChooser dateBD;
+    private JDateChooser dateKT;
+
+    private KhuyenMaiDao dao =
+            new KhuyenMaiDao();
+
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
+
+    public KhuyenMaiUI() {
+
+        setLayout(new BorderLayout());
+
+        setBackground(BACKGROUND);
+
+        // ================= TITLE =================
+
+        JLabel title = new JLabel(
+                "QUẢN LÝ KHUYẾN MÃI",
+                JLabel.CENTER
+        );
+
+        title.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        32
+                )
+        );
+
+        title.setForeground(TEXT);
+
+        title.setBorder(
+                new EmptyBorder(20,0,10,0)
+        );
+
+        // ================= FORM =================
+
+        JPanel form = new JPanel(
+                new GridLayout(3,4,30,20)
+        );
+
+        form.setBackground(CARD);
+
+        form.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        new EmptyBorder(
+                                25,25,25,25
+                        )
+                )
+        );
+
+        // ================= INPUT =================
+
+        txtMaKM = createTextField();
+
+        txtTenKM = createTextField();
+
+        txtPhanTram = createTextField();
+
+        cbTrangThai = new JComboBox<>(
+                new String[]{
+                        "Áp dụng",
+                        "Ngưng"
+                }
+        );
+
+        styleCombo(cbTrangThai);
+
+        dateBD = new JDateChooser();
+
+        dateKT = new JDateChooser();
+
+        styleDateChooser(dateBD);
+
+        styleDateChooser(dateKT);
+
+        dateBD.setDateFormatString(
+                "dd/MM/yyyy"
+        );
+
+        dateKT.setDateFormatString(
+                "dd/MM/yyyy"
+        );
+
+        ((JTextField)
+                dateBD.getDateEditor()
+                        .getUiComponent())
+                .setEditable(false);
+
+        ((JTextField)
+                dateKT.getDateEditor()
+                        .getUiComponent())
+                .setEditable(false);
+
+        // ================= ADD FORM =================
+
+        form.add(label("Mã KM"));
+        form.add(wrap(txtMaKM));
+
+        form.add(label("Tên KM"));
+        form.add(wrap(txtTenKM));
+
+        form.add(label("% Giảm"));
+        form.add(wrap(txtPhanTram));
+
+        form.add(label("Trạng thái"));
+        form.add(wrap(cbTrangThai));
+
+        form.add(label("Ngày BD"));
+        form.add(wrap(dateBD));
+
+        form.add(label("Ngày KT"));
+        form.add(wrap(dateKT));
+
+        // ================= BUTTON =================
+
+        JPanel btnPanel = new JPanel(
+                new FlowLayout(
+                        FlowLayout.CENTER,
+                        18,
+                        10
+                )
+        );
+
+        btnPanel.setBackground(BACKGROUND);
+
+        JButton btnThem =
+                createButton(
+                        "THÊM",
+                        SUCCESS
+                );
+
+        JButton btnSua =
+                createButton(
+                        "SỬA",
+                        PRIMARY
+                );
+
+        JButton btnXoa =
+                createButton(
+                        "XÓA",
+                        DANGER
+                );
+
+        JButton btnReload =
+                createButton(
+                        "LÀM MỚI",
+                        WARNING
+                );
+
+        btnPanel.add(btnThem);
+        btnPanel.add(btnSua);
+        btnPanel.add(btnXoa);
+        btnPanel.add(btnReload);
+
+        // ================= TABLE =================
+
+        model = new DefaultTableModel(
+                new String[]{
+                        "Mã KM",
+                        "Tên KM",
+                        "%",
+                        "BD",
+                        "KT",
+                        "Trạng thái"
+                },
+                0
+        );
+
+        table = new JTable(model);
+
+        table.setRowHeight(38);
+
+        table.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        table.setGridColor(BORDER);
+
+        table.setSelectionBackground(
+                new Color(191,219,254)
+        );
+
+        table.setSelectionForeground(Color.BLACK);
+
+        JTableHeader header =
+                table.getTableHeader();
+
+        header.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        header.setBackground(TEXT);
+
+        header.setForeground(Color.WHITE);
+
+        header.setPreferredSize(
+                new Dimension(0,42)
+        );
+
+        JScrollPane scroll =
+                new JScrollPane(table);
+
+        scroll.setBorder(
+                BorderFactory.createLineBorder(BORDER)
+        );
+
+        JPanel tableWrapper =
+                new JPanel(new BorderLayout());
+
+        tableWrapper.setBackground(BACKGROUND);
+
+        tableWrapper.setBorder(
+                new EmptyBorder(
+                        20,40,20,40
+                )
+        );
+
+        tableWrapper.add(scroll);
+
+        // ================= MAIN =================
+
+        JPanel main = new JPanel();
+
+        main.setLayout(
+                new BoxLayout(
+                        main,
+                        BoxLayout.Y_AXIS
+                )
+        );
+
+        main.setBackground(BACKGROUND);
+
+        main.add(form);
+
+        main.add(
+                Box.createVerticalStrut(10)
+        );
+
+        main.add(btnPanel);
+
+        main.add(
+                Box.createVerticalStrut(20)
+        );
+
+        main.add(tableWrapper);
+
+        add(title, BorderLayout.NORTH);
+
+        add(main, BorderLayout.CENTER);
+
+        // =====================================================
+        // EVENT TABLE
+        // =====================================================
+
+        table.addMouseListener(
+                new java.awt.event.MouseAdapter() {
+
+                    public void mouseClicked(
+                            java.awt.event.MouseEvent evt
+                    ) {
+
+                        int r =
+                                table.getSelectedRow();
+
+                        txtMaKM.setText(
+                                val(r,0)
+                        );
+
+                        txtTenKM.setText(
+                                val(r,1)
+                        );
+
+                        txtPhanTram.setText(
+                                val(r,2)
+                        );
+
+                        cbTrangThai.setSelectedItem(
+                                val(r,5)
+                        );
+
+                        try {
+
+                            Date bd =
+                                    Date.valueOf(
+                                            val(r,3)
+                                    );
+
+                            Date kt =
+                                    Date.valueOf(
+                                            val(r,4)
+                                    );
+
+                            dateBD.setDate(
+                                    new java.util.Date(
+                                            bd.getTime()
+                                    )
+                            );
+
+                            dateKT.setDate(
+                                    new java.util.Date(
+                                            kt.getTime()
+                                    )
+                            );
+
+                        } catch (Exception e){
+
+                            dateBD.setDate(null);
+
+                            dateKT.setDate(null);
+                        }
+                    }
+                });
+
+        // =====================================================
+        // EVENT ADD
+        // =====================================================
+
+        btnThem.addActionListener(e -> {
+
+            if(!validateInput()){
+
+                return;
+            }
+
+            KhuyenMai km =
+                    getForm();
+
+            if(km != null
+                    && dao.insert(km)){
+
+                loadData();
+
+                clearForm();
+            }
+        });
+
+        // =====================================================
+        // EVENT UPDATE
+        // =====================================================
+
+        btnSua.addActionListener(e -> {
+
+            if(!validateInput()){
+
+                return;
+            }
+
+            KhuyenMai km =
+                    getForm();
+
+            if(km != null
+                    && dao.update(km)){
+
+                loadData();
+
+                clearForm();
+            }
+        });
+
+        // =====================================================
+        // EVENT DELETE
+        // =====================================================
+
+        btnXoa.addActionListener(e -> {
+
+            if(dao.delete(
+                    txtMaKM.getText()
+            )){
+
+                loadData();
+
+                clearForm();
+            }
+        });
+
+        // =====================================================
+        // EVENT RELOAD
+        // =====================================================
+
+        btnReload.addActionListener(e -> {
+
+            loadData();
+
+            clearForm();
+        });
+
+        // ================= LOAD =================
+
+        loadData();
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
+
+    private JTextField createTextField(){
+
+        JTextField txt =
+                new JTextField();
+
+        txt.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        txt.setPreferredSize(
+                new Dimension(200,40)
+        );
+
+        txt.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER),
+                        BorderFactory.createEmptyBorder(
+                                5,10,5,10
+                        )
+                )
+        );
+
+        return txt;
+    }
+
+    private void styleCombo(
+            JComboBox<String> cb
+    ){
+
+        cb.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        cb.setBackground(Color.WHITE);
+
+        cb.setBorder(
+                BorderFactory.createLineBorder(BORDER)
+        );
+    }
+
+    private void styleDateChooser(
+            JDateChooser dc
+    ){
+
+        dc.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        dc.setBorder(
+                BorderFactory.createLineBorder(BORDER)
+        );
+
+        JTextField txt =
+                (JTextField)
+                        dc.getDateEditor()
+                                .getUiComponent();
+
+        txt.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.PLAIN,
+                        14
+                )
+        );
+
+        txt.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5,10,5,10
+                )
+        );
+    }
+
+    private JButton createButton(
+            String text,
+            Color bg
+    ){
+
+        JButton btn =
+                new JButton(text);
+
+        btn.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        btn.setForeground(Color.WHITE);
+
+        btn.setBackground(bg);
+
+        btn.setFocusPainted(false);
+
+        btn.setCursor(
+                new Cursor(Cursor.HAND_CURSOR)
+        );
+
+        btn.setBorder(
+                new EmptyBorder(
+                        12,22,12,22
+                )
+        );
+
+        return btn;
+    }
+
+    private JPanel wrap(
+            JComponent c
+    ){
+
+        JPanel p =
+                new JPanel(
+                        new BorderLayout()
+                );
+
+        p.setBackground(CARD);
+
+        p.add(c);
+
+        return p;
+    }
+
+    private JLabel label(String t){
+
+        JLabel lb =
+                new JLabel(t);
+
+        lb.setFont(
+                new Font(
+                        "Segoe UI",
+                        Font.BOLD,
+                        14
+                )
+        );
+
+        lb.setForeground(TEXT);
+
+        return lb;
+    }
+
+    // =====================================================
+    // SUPPORT
+    // =====================================================
+
+    private String val(int r,int c){
+
+        Object v =
+                model.getValueAt(r,c);
+
+        return v == null
+                ? ""
+                : v.toString();
+    }
+
+    // =====================================================
+    // GET FORM
+    // =====================================================
+
+    private KhuyenMai getForm(){
+
+        try{
+
+            double pt =
+                    Double.parseDouble(
+                            txtPhanTram.getText()
+                    );
+
+            if(pt < 0 || pt > 100){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "% 0-100"
+                );
+
+                return null;
+            }
+
+            Date bd =
+                    new Date(
+                            dateBD.getDate()
+                                    .getTime()
+                    );
+
+            Date kt =
+                    new Date(
+                            dateKT.getDate()
+                                    .getTime()
+                    );
+
+            if(kt.before(bd)){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Sai ngày!"
+                );
+
+                return null;
+            }
+
+            return new KhuyenMai(
+
+                    txtMaKM.getText(),
+
+                    txtTenKM.getText(),
+
+                    pt,
+
+                    bd.toLocalDate(),
+
+                    kt.toLocalDate(),
+
+                    cbTrangThai
+                            .getSelectedItem()
+                            .toString()
+            );
+
+        }catch(Exception e){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Lỗi dữ liệu!"
+            );
+
+            return null;
+        }
+    }
+
+    // =====================================================
+    // LOAD DATA
+    // =====================================================
+
+    private void loadData(){
+
+        model.setRowCount(0);
+
+        DateTimeFormatter f =
+                DateTimeFormatter.ofPattern(
+                        "dd/MM/yyyy"
+                );
+
+        List<KhuyenMai> list =
+                dao.getAll();
+
+        for(KhuyenMai km : list){
+
+            model.addRow(new Object[]{
+
+                    km.getMaKhuyenMai(),
+
+                    km.getTenKhuyenMai(),
+
+                    km.getPhanTramGiam(),
+
+                    km.getNgayBatDau()
+                            .format(f),
+
+                    km.getNgayKetThuc()
+                            .format(f),
+
+                    km.getTrangThai()
+            });
+        }
+    }
+
+    // =====================================================
+    // CLEAR FORM
+    // =====================================================
+
+    private void clearForm(){
+
+        txtMaKM.setText("");
+
+        txtTenKM.setText("");
+
+        txtPhanTram.setText("");
+
+        cbTrangThai.setSelectedIndex(0);
+
+        dateBD.setDate(null);
+
+        dateKT.setDate(null);
+    }
+
+    // =====================================================
+    // VALIDATE
+    // =====================================================
+
+    private boolean validateInput() {
+
+        String ma =
+                txtMaKM.getText().trim();
+
+        String ten =
+                txtTenKM.getText().trim();
+
+        String pt =
+                txtPhanTram.getText().trim();
+
+        java.util.Date ngayBD =
+                dateBD.getDate();
+
+        java.util.Date ngayKT =
+                dateKT.getDate();
+
+        // ===== MÃ =====
+
+        if(!ma.matches("^KM\\d{3}$")){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mã KM phải dạng KM001!"
+            );
+
+            return false;
+        }
+
+        // ===== TÊN =====
+
+        if(ten.isEmpty()){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Tên khuyến mãi không được rỗng!"
+            );
+
+            return false;
+        }
+
+        // ===== PHẦN TRĂM =====
+
+        try{
+
+            double giam =
+                    Double.parseDouble(pt);
+
+            if(giam < 0 || giam > 100){
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "% giảm phải từ 0 - 100!"
+                );
+
+                return false;
+            }
+
+        }catch(Exception e){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Phần trăm giảm không hợp lệ!"
+            );
+
+            return false;
+        }
+
+        // ===== DATE NULL =====
+
+        if(ngayBD == null
+                || ngayKT == null){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Vui lòng chọn ngày!"
+            );
+
+            return false;
+        }
+
+        // ===== NGÀY =====
+
+        if(ngayBD.after(ngayKT)){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ngày bắt đầu phải <= ngày kết thúc!"
+            );
+
+            return false;
+        }
+
+        if(ngayKT.before(
+                new java.util.Date()
+        )){
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ngày kết thúc phải >= ngày hiện tại!"
+            );
 
             return false;
         }

@@ -19,10 +19,11 @@ public class HoaDon_UI extends JFrame {
                      String khachHang,
                      String nhanVien,
                      String tenPhong,
-                     List<Object[]> dsDV,   // 🔥 đổi sang dịch vụ
+                     List<Object[]> dsDV,
                      BigDecimal tienPhong,
                      BigDecimal tienDV,
-                     BigDecimal giamGia) {
+                     BigDecimal giamGia,
+                     BigDecimal vatPercent) {
 
         setTitle("HÓA ĐƠN");
         setSize(700, 800);
@@ -46,7 +47,7 @@ public class HoaDon_UI extends JFrame {
         JPanel pnlTitle = new JPanel();
         pnlTitle.setLayout(new BoxLayout(pnlTitle, BoxLayout.Y_AXIS));
 
-        JLabel lblTen = new JLabel("TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP TP. HCM");
+        JLabel lblTen = new JLabel("Khách sạn Luxury");
         lblTen.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         JLabel lblDiaChi = new JLabel("12 Nguyễn Văn Bảo, Gò Vấp, TP.HCM");
@@ -84,7 +85,6 @@ public class HoaDon_UI extends JFrame {
 
         int stt = 1;
 
-        // 🔥 thêm dòng tiền phòng
         model.addRow(new Object[]{
                 "",
                 "Tiền phòng",
@@ -93,7 +93,6 @@ public class HoaDon_UI extends JFrame {
                 df.format(tienPhong)
         });
 
-        // 🔥 dịch vụ
         for (Object[] dv : dsDV) {
             model.addRow(new Object[]{
                     stt++,
@@ -115,8 +114,14 @@ public class HoaDon_UI extends JFrame {
         pnlBottom.setBorder(new EmptyBorder(10, 20, 20, 20));
 
         BigDecimal tong = tienPhong.add(tienDV);
-        BigDecimal sauGiam = tong.subtract(giamGia);
-        BigDecimal vat = sauGiam.multiply(new BigDecimal("0.1"));
+        BigDecimal sauGiam =
+                tong.subtract(
+                        tong.multiply(giamGia)
+                                .divide(
+                                        new BigDecimal("100")
+                                )
+                );
+        BigDecimal vat = sauGiam.multiply(vatPercent).divide(new BigDecimal("100"));
         BigDecimal tongThanhToan = sauGiam.add(vat);
 
         pnlBottom.add(new JLabel("Tổng cộng: " + df.format(tong), SwingConstants.RIGHT));

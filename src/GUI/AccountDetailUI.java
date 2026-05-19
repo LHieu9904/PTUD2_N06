@@ -655,12 +655,15 @@ public class AccountDetailUI extends JFrame {
 }*/
 package GUI;
 
+import Dao.NhanVienDao;
 import Entity.NhanVien;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import com.toedter.calendar.JDateChooser;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -693,6 +696,9 @@ public class AccountDetailUI extends JFrame {
 
     // ================= NAVBAR =================
     private JPanel createNavbar() {
+        String maCV =
+                nhanVien.getChucVu()
+                        .getMaChucVu();
         JPanel navbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         navbar.setBackground(new Color(0, 90, 200));
         navbar.setPreferredSize(new Dimension(0, 60));
@@ -733,11 +739,14 @@ public class AccountDetailUI extends JFrame {
         phong.addActionListener(e -> loadPanel(new PhongUI()));
 
         danhMucMenu.add(khachHang);
-        danhMucMenu.add(menuNhanVien); // sửa chỗ này
-        danhMucMenu.add(taiKhoan);
         danhMucMenu.add(dichVu);
-        danhMucMenu.add(khuyenMai);
         danhMucMenu.add(phong);
+        if("CV01".equals(maCV)){
+
+            danhMucMenu.add(menuNhanVien);
+            danhMucMenu.add(taiKhoan);
+            danhMucMenu.add(khuyenMai);
+        }
 
         btnDanhMuc.addActionListener(e -> {
             danhMucMenu.show(btnDanhMuc, 0, btnDanhMuc.getHeight());
@@ -773,7 +782,7 @@ public class AccountDetailUI extends JFrame {
         JMenuItem dichVuPhong = new JMenuItem("Dịch Vụ Phòng");
         dichVuPhong.addActionListener(e ->loadPanel(new DichVuPhong_UI()));
         JMenuItem thuePhong = new JMenuItem("Thuê Phòng");
-        thuePhong.addActionListener(e ->loadPanel(new ThuePhong_UI()));
+        thuePhong.addActionListener(e ->loadPanel(new ThuePhong_UI(nhanVien.getMaNV())));
 
         xuLyMenu.add(nhanPhong);
         xuLyMenu.add(giahanPhong);
@@ -811,8 +820,12 @@ public class AccountDetailUI extends JFrame {
 
         timKiemMenu.add(tkHoaDon);
         timKiemMenu.add(tkkhachHang);
-        timKiemMenu.add(tktaiKhoan);
-        timKiemMenu.add(tknhanVien);
+        if("CV01".equals(maCV)){
+
+            timKiemMenu.add(tktaiKhoan);
+            timKiemMenu.add(tknhanVien);
+        }
+
         timKiemMenu.add(tkphongKS);
 
 
@@ -829,14 +842,17 @@ public class AccountDetailUI extends JFrame {
         tkDoanhThu.addActionListener(e -> loadPanel(new Manager_Stastics_UI()));
 
         JMenuItem tkPhong = new JMenuItem("Thống kê phòng");
-        tkPhong.addActionListener(e -> {
-            JPanel panel = new JPanel();
-            panel.add(new JLabel("Thống kê phòng"));
-            loadPanel(panel);
-        });
+        tkPhong.addActionListener(e -> loadPanel(new ThongKePhongUI()));
+        JMenuItem tkDTNV = new JMenuItem("Thống kê doanh thu nhân viên");
+        tkDTNV.addActionListener(e -> loadPanel(new ThongKeDoanhThuNVUI()));
+        JMenuItem tkKH = new JMenuItem("Thống kê khách hàng");
+        tkKH.addActionListener(e -> loadPanel(new ThongKeKhachHangUI()));
+
 
         thongKeMenu.add(tkDoanhThu);
         thongKeMenu.add(tkPhong);
+        thongKeMenu.add(tkDTNV);
+        thongKeMenu.add(tkKH);
 
         btnThongKe.addActionListener(e -> {
             thongKeMenu.show(btnThongKe, 0, btnThongKe.getHeight());
@@ -855,7 +871,9 @@ public class AccountDetailUI extends JFrame {
         navbar.add(btnDanhMuc);
         navbar.add(btnXuLy);
         navbar.add(btnTimKiem);
-        navbar.add(btnThongKe);
+        if("CV01".equals(maCV)){
+            navbar.add(btnThongKe);
+        }
         navbar.add(btnLogout);
 
         return navbar;
@@ -951,6 +969,9 @@ public class AccountDetailUI extends JFrame {
 
     // ================= ACCOUNT =================
     private void showAccountPanel() {
+        NhanVienDao dao = new NhanVienDao();
+
+        nhanVien = dao.getNhanVienTheoMa(nhanVien.getMaNV());
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(245, 245, 245));
@@ -969,23 +990,41 @@ public class AccountDetailUI extends JFrame {
         JPanel left = new JPanel(new BorderLayout());
         left.setPreferredSize(new Dimension(300, 400));
         left.setBackground(Color.WHITE);
-
-        String duongDanAnh = nhanVien.getAnhNhanVien(); // hoặc getHinhAnh()
+        String tenAnh = nhanVien.getAnhNhanVien();
 
         ImageIcon icon;
 
-        if (duongDanAnh != null
-                && !duongDanAnh.trim().isEmpty()) {
+        if (tenAnh != null && !tenAnh.trim().isEmpty()) {
 
-            Image img = new ImageIcon(duongDanAnh)
-                    .getImage()
-                    .getScaledInstance(
-                            250,
-                            300,
-                            Image.SCALE_SMOOTH
-                    );
+            String duongDanAnh =
+                    "photo/" + nhanVien.getAnhNhanVien();
 
-            icon = new ImageIcon(img);
+            File file = new File(duongDanAnh);
+
+            if(file.exists()){
+
+                Image img = new ImageIcon(duongDanAnh)
+                        .getImage()
+                        .getScaledInstance(
+                                250,
+                                300,
+                                Image.SCALE_SMOOTH
+                        );
+
+                icon = new ImageIcon(img);
+
+            }else{
+
+                Image img = new ImageIcon("photo/default.png")
+                        .getImage()
+                        .getScaledInstance(
+                                250,
+                                300,
+                                Image.SCALE_SMOOTH
+                        );
+
+                icon = new ImageIcon(img);
+            }
 
         } else {
 
@@ -1050,12 +1089,5 @@ public class AccountDetailUI extends JFrame {
         panel.add(wrapper, BorderLayout.CENTER);
 
         loadPanel(panel);
-    }
-
-    // ================= MAIN =================
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new AccountDetailUI(new NhanVien()).setVisible(true);
-        });
     }
 }
