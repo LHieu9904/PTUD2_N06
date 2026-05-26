@@ -7,7 +7,9 @@ import Raven.textfield.TextField;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
@@ -25,54 +27,71 @@ public class Search_TaiKhoan_UI extends JPanel {
     private TextField txtTrangThai;
     private TextField txtNgayTao;
 
+    // Hệ màu Material Design Modern UX đồng bộ toàn bộ hệ thống
+    private final Color COLOR_PRIMARY     = new Color(0, 153, 255);   // Xanh thương hiệu
+    private final Color COLOR_DARK        = new Color(30, 41, 59);     // Chữ chính (Charcoal)
+    private final Color COLOR_TEXT_MAIN   = new Color(71, 85, 105);    // Chữ phụ / Nhãn
+    private final Color COLOR_BG_CARD     = new Color(248, 250, 252);  // Nền card nhẹ tinh tế
+    private final Color COLOR_BORDER      = new Color(226, 232, 240);  // Đường viền mảnh phẳng
+
     public Search_TaiKhoan_UI() {
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 24));
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(25, 25, 25, 25)); // Đệm biên rộng giúp giao diện thoáng đãng
 
-        // ===== HEADER =====
-        JPanel header = new JPanel();
-        JLabel title = new JLabel("TRA CỨU TÀI KHOẢN");
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
-        title.setForeground(new Color(0, 153, 255));
-        header.add(title);
-        add(header, BorderLayout.NORTH);
+        // =================================================
+        // 1. TOP SECTION: HEADER & SEARCH BAR
+        // =================================================
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
+        topPanel.setBackground(Color.WHITE);
 
-        // ===== BODY =====
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBorder(new EmptyBorder(10, 10, 10, 10));
-        body.setBackground(Color.WHITE);
-        add(body, BorderLayout.CENTER);
+        JLabel title = new JLabel("HỆ THỐNG TRA CỨU TÀI KHOẢN");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(COLOR_DARK);
+        topPanel.add(title, BorderLayout.NORTH);
 
-        // ===== SEARCH =====
-        JPanel search = new JPanel();
-        search.setBackground(Color.WHITE);
-        search.setLayout(new BoxLayout(search, BoxLayout.X_AXIS));
+        // Thanh công cụ tìm kiếm thiết kế phẳng (Premium Search Toolbar)
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        searchBar.setBackground(COLOR_BG_CARD);
+        searchBar.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
+
+        JLabel lblSearch = new JLabel("Tìm kiếm:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSearch.setForeground(COLOR_TEXT_MAIN);
+        searchBar.add(lblSearch);
 
         tfSearch = new TextField();
-        tfSearch.setPreferredSize(new Dimension(300, 40));
-        tfSearch.setHint("Nhập username / tên nhân viên");
+        tfSearch.setPreferredSize(new Dimension(350, 35));
+        tfSearch.setHint("Nhập username / tên nhân viên...");
+        tfSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchBar.add(tfSearch);
 
         Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
+        btnSearch.setText("Tìm Kiếm");
+        btnSearch.setBackground(COLOR_PRIMARY);
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        searchBar.add(btnSearch);
 
-        search.add(tfSearch);
-        search.add(Box.createHorizontalStrut(10));
-        search.add(btnSearch);
+        topPanel.add(searchBar, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
 
-        body.add(search, BorderLayout.NORTH);
+        // =================================================
+        // 2. MAIN CONTENT GRAPHICS (GRID 1x2)
+        // =================================================
+        JPanel mainContentGrid = new JPanel(new GridLayout(1, 2, 24, 0));
+        mainContentGrid.setBackground(Color.WHITE);
+        add(mainContentGrid, BorderLayout.CENTER);
 
-        // ===== MAIN =====
-        JPanel main = new JPanel(new GridLayout(1, 2, 10, 0));
-        body.add(main, BorderLayout.CENTER);
+        // --- BÊN TRÁI: DỮ LIỆU BẢNG PHẲNG KHÔNG LAG ---
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 10));
+        leftPanel.setBackground(Color.WHITE);
 
-        // ===== LEFT TABLE =====
-        JPanel left = new JPanel(new BorderLayout());
-
-        JLabel lbl = new JLabel("KẾT QUẢ");
-        lbl.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl.setHorizontalAlignment(SwingConstants.CENTER);
-
-        left.add(lbl, BorderLayout.NORTH);
+        JLabel lblLeft = new JLabel("DANH SÁCH TÀI KHOẢN HỆ THỐNG");
+        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblLeft.setForeground(COLOR_TEXT_MAIN);
+        leftPanel.add(lblLeft, BorderLayout.NORTH);
 
         model = new DefaultTableModel(
                 new String[]{
@@ -83,47 +102,60 @@ public class Search_TaiKhoan_UI extends JPanel {
                 }, 0
         );
 
-        table = new JTable(model);
-        table.setRowHeight(35);
+        // Khóa tính năng nhấp đúp chỉnh sửa text trực tiếp trên ô để triệt tiêu lag
+        table = new JTable(model) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        table.setRowHeight(42); // Hàng cao thoáng ráo
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setSelectionBackground(new Color(235, 245, 255)); // Nền xanh pastel dịu khi select
+        table.setSelectionForeground(COLOR_DARK);
+        table.setShowGrid(false); // Triệt tiêu đường lưới chia ô truyền thống
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        // Ép chế độ click bôi đen nguyên hàng mượt mà
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowSelectionAllowed(true);
+        table.setColumnSelectionAllowed(false);
+
+        // Thiết kế Header Table thanh lịch
+        JTableHeader th = table.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        th.setBackground(COLOR_BG_CARD);
+        th.setForeground(COLOR_DARK);
+        th.setPreferredSize(new Dimension(100, 42));
+        th.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
+        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        left.add(scrollPane, BorderLayout.CENTER);
-        main.add(left);
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        mainContentGrid.add(leftPanel);
 
-        // ===== RIGHT DETAIL =====
-        // Chỉ sửa phần RIGHT để ô text xám nhỏ lại giống bên khách hàng :contentReference[oaicite:0]{index=0}
+        // --- BÊN PHẢI: KHỐI CARD CHI TIẾT SANG TRỌNG ---
+        JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
+        rightPanel.setBackground(Color.WHITE);
 
-// ===== RIGHT DETAIL =====
+        JLabel lblRight = new JLabel("THÔNG TIN CHI TIẾT TÀI KHOẢN");
+        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRight.setForeground(COLOR_TEXT_MAIN);
+        rightPanel.add(lblRight, BorderLayout.NORTH);
 
-        // Trải đều phần RIGHT, ô text không dồn vào giữa và vẫn nhỏ :contentReference[oaicite:0]{index=0}
+        // Khối Card độc lập bao bọc toàn bộ form dọc gọn gàng
+        JPanel formContainer = new JPanel();
+        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
+        formContainer.setBackground(COLOR_BG_CARD);
+        formContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(20, 24, 20, 24)
+        ));
 
-// ===== RIGHT DETAIL =====
-
-        JPanel right = new JPanel(new BorderLayout());
-
-        JLabel lbl2 = new JLabel("CHI TIẾT TÀI KHOẢN");
-        lbl2.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl2.setHorizontalAlignment(SwingConstants.CENTER);
-
-        right.add(lbl2, BorderLayout.NORTH);
-
-// GridBagLayout để giãn đều toàn bộ chiều cao
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBorder(new EmptyBorder(20, 20, 20, 20));
-        form.setBackground(Color.WHITE);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
-
-// khoảng cách đều giữa các dòng
-        gbc.insets = new Insets(18, 10, 18, 10);
-
-// tạo field
+        // Khởi tạo các ô Textfield
         txtUsername = createField();
         txtMatKhau = createField();
         txtNhanVien = createField();
@@ -131,122 +163,70 @@ public class Search_TaiKhoan_UI extends JPanel {
         txtTrangThai = createField();
         txtNgayTao = createField();
 
-// giữ ô text nhỏ
-        Dimension smallField = new Dimension(220, 28);
+        // Áp dụng định dạng UI phẳng cho TextField
+        applyFlatTextField(txtUsername);
+        applyFlatTextField(txtMatKhau);
+        applyFlatTextField(txtNhanVien);
+        applyFlatTextField(txtChucVu);
+        applyFlatTextField(txtTrangThai);
+        applyFlatTextField(txtNgayTao);
 
-        txtUsername.setPreferredSize(smallField);
-        txtMatKhau.setPreferredSize(smallField);
-        txtNhanVien.setPreferredSize(smallField);
-        txtChucVu.setPreferredSize(smallField);
-        txtTrangThai.setPreferredSize(smallField);
-        txtNgayTao.setPreferredSize(smallField);
+        // Sắp xếp các cụm Nhãn - Ô chữ theo chiều dọc vuông vức, không bị dẹt méo
+        formContainer.add(createFieldGroup("Tên đăng nhập (Username)", txtUsername));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Mật khẩu truy cập", txtMatKhau));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Mã nhân viên sở hữu", txtNhanVien));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Chức vụ hệ thống", txtChucVu));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Trạng thái hoạt động", txtTrangThai));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Mã số tài khoản", txtNgayTao));
 
-// cho cột text giãn hợp lý
-        gbc.weightx = 1;
+        // Đẩy toàn bộ cấu trúc lên trên cùng để form luôn giữ kích thước nhỏ, vừa vặn
+        formContainer.add(Box.createVerticalGlue());
 
-// ===== Dòng 1
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        form.add(new JLabel("Username"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtUsername, gbc);
-
-// ===== Dòng 2
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        form.add(new JLabel("Mật khẩu"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtMatKhau, gbc);
-
-// ===== Dòng 3
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        form.add(new JLabel("Mã Nhân viên"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtNhanVien, gbc);
-
-// ===== Dòng 4
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        form.add(new JLabel("Chức vụ"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtChucVu, gbc);
-
-// ===== Dòng 5
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        form.add(new JLabel("Trạng thái"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtTrangThai, gbc);
-
-// ===== Dòng 6
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        form.add(new JLabel("Mã Tài Khoản"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtNgayTao, gbc);
-
-// dòng cuối để đẩy form phủ đều toàn bộ chiều cao RIGHT
-        gbc.gridy = 6;
-        gbc.weighty = 1;
-        form.add(Box.createVerticalGlue(), gbc);
-
-        right.add(form, BorderLayout.CENTER);
-        main.add(right);
+        rightPanel.add(formContainer, BorderLayout.CENTER);
+        mainContentGrid.add(rightPanel);
 
         // ===== LOAD DATA =====
         loadData();
 
-        // ===== CLICK TABLE =====
+        // =================================================
+        // INTERACTION & LOGIC CONTROL (GIỮ NGUYÊN)
+        // =================================================
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-
                 int row = table.getSelectedRow();
                 if (row == -1) return;
 
                 String username = model.getValueAt(row, 0).toString();
-
-                TaiKhoan tk = new TaiKhoanDao()
-                        .getByUsername(username);
+                TaiKhoan tk = new TaiKhoanDao().getByUsername(username);
 
                 if (tk != null) {
-
                     txtUsername.setText(tk.getTenDangNhap());
                     txtMatKhau.setText(tk.getMatKhau());
                     txtNhanVien.setText(tk.getMaNV());
                     txtChucVu.setText(tk.getMaChucVu());
                     txtTrangThai.setText(tk.getTrangThai());
-
-                    // tạm dùng MaTK hiển thị ở ô ngày tạo
-                    txtNgayTao.setText(tk.getMaTK());
+                    txtNgayTao.setText(tk.getMaTK()); // Tạm dùng MaTK hiển thị ở ô mã tài khoản
                 }
             }
         });
 
-        // ===== SEARCH =====
         btnSearch.addActionListener(e -> {
-
             String keyword = tfSearch.getText().trim();
-
             model.setRowCount(0);
-
             List<TaiKhoan> list;
 
             if (keyword.isEmpty()) {
                 list = new TaiKhoanDao().getAll();
             } else {
-                list = new TaiKhoanDao()
-                        .searchTaiKhoan(keyword);
+                list = new TaiKhoanDao().searchTaiKhoan(keyword);
             }
 
             for (TaiKhoan tk : list) {
-
                 model.addRow(new Object[]{
                         tk.getTenDangNhap(),
                         tk.getMaNV(),
@@ -256,23 +236,30 @@ public class Search_TaiKhoan_UI extends JPanel {
             }
 
             if (model.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tìm thấy tài khoản!"
-                );
+                clearForm();
+                JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản tương thích!");
+            } else {
+                // Tự động chọn dòng đầu tiên sau khi tìm kiếm để lấp đầy form chi tiết
+                table.setRowSelectionInterval(0, 0);
+                String userDau = model.getValueAt(0, 0).toString();
+                TaiKhoan tkDau = new TaiKhoanDao().getByUsername(userDau);
+                if (tkDau != null) {
+                    txtUsername.setText(tkDau.getTenDangNhap());
+                    txtMatKhau.setText(tkDau.getMatKhau());
+                    txtNhanVien.setText(tkDau.getMaNV());
+                    txtChucVu.setText(tkDau.getMaChucVu());
+                    txtTrangThai.setText(tkDau.getTrangThai());
+                    txtNgayTao.setText(tkDau.getMaTK());
+                }
             }
         });
     }
 
-    // ===== LOAD DATA =====
+    // ===== LOAD DATA TỪ DAO =====
     private void loadData() {
-
         model.setRowCount(0);
-
         List<TaiKhoan> list = new TaiKhoanDao().getAll();
-
         for (TaiKhoan tk : list) {
-
             model.addRow(new Object[]{
                     tk.getTenDangNhap(),
                     tk.getMaNV(),
@@ -280,15 +267,46 @@ public class Search_TaiKhoan_UI extends JPanel {
                     tk.getTrangThai()
             });
         }
+        if (model.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        }
     }
 
-    // ===== COMPONENT =====
+    private void clearForm() {
+        txtUsername.setText(""); txtMatKhau.setText(""); txtNhanVien.setText("");
+        txtChucVu.setText(""); txtTrangThai.setText(""); txtNgayTao.setText("");
+    }
+
+    // Định dạng cấu trúc phẳng mịn cho TextField hiển thị thông tin chi tiết
+    private void applyFlatTextField(TextField tf) {
+        tf.setEditable(false);
+        tf.setBackground(Color.WHITE);
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tf.setForeground(COLOR_DARK);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(6, 12, 6, 12)
+        ));
+    }
+
+    // Hàm bao bọc cặp Nhãn xếp dọc trên Trường dữ liệu (Ngăn kéo dẹt méo ô chữ)
+    private JPanel createFieldGroup(String labelText, TextField field) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setBackground(COLOR_BG_CARD);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(COLOR_TEXT_MAIN);
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(field, BorderLayout.CENTER);
+
+        p.setMaximumSize(new Dimension(Short.MAX_VALUE, 58));
+        return p;
+    }
+
+    // ===== KHỞI TẠO COMPONENT =====
     private TextField createField() {
         TextField tf = new TextField();
-        tf.setPreferredSize(new Dimension(200, 35));
         tf.setEditable(false);
-        tf.setBackground(new Color(245, 245, 245));
         return tf;
     }
-
 }

@@ -816,3 +816,5 @@ ALTER TABLE HoaDonPhong
 
 ALTER TABLE HoaDonPhong
     ADD TienDichVu FLOAT DEFAULT 0;
+ALTER TABLE ChiTietHoaDonPhong
+    ADD TienGiaHan DECIMAL(12,2) DEFAULT 0;

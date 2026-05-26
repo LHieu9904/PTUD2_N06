@@ -6,8 +6,10 @@ import Raven.button.Button;
 import Raven.textfield.TextField;
 
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
@@ -24,54 +26,71 @@ public class Search_KhachHang_UI extends JPanel {
     private TextField txtCCCD;
     private TextField txtGioiTinh;
 
+    // Hệ màu Material Design Modern UX đồng bộ hệ thống
+    private final Color COLOR_PRIMARY     = new Color(0, 153, 255);   // Xanh chủ đạo
+    private final Color COLOR_DARK        = new Color(30, 41, 59);     // Chữ chính (Charcoal)
+    private final Color COLOR_TEXT_MAIN   = new Color(71, 85, 105);    // Chữ phụ / Nhãn
+    private final Color COLOR_BG_CARD     = new Color(248, 250, 252);  // Nền card nhẹ tinh tế
+    private final Color COLOR_BORDER      = new Color(226, 232, 240);  // Đường viền mảnh phẳng
+
     public Search_KhachHang_UI() {
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 24));
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(25, 25, 25, 25)); // Đệm biên rộng giúp giao diện thoáng đãng
 
-        // ===== HEADER =====
-        JPanel header = new JPanel();
-        JLabel title = new JLabel("TRA CỨU KHÁCH HÀNG");
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
-        title.setForeground(new Color(0,153,255));
-        header.add(title);
-        add(header, BorderLayout.NORTH);
+        // =================================================
+        // 1. TOP SECTION: HEADER & SEARCH BAR
+        // =================================================
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
+        topPanel.setBackground(Color.WHITE);
 
-        // ===== BODY =====
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBorder(new EmptyBorder(10,10,10,10));
-        body.setBackground(Color.WHITE);
-        add(body, BorderLayout.CENTER);
+        JLabel title = new JLabel("HỆ THỐNG TRA CỨU KHÁCH HÀNG");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(COLOR_DARK);
+        topPanel.add(title, BorderLayout.NORTH);
 
-        // ===== SEARCH =====
-        JPanel search = new JPanel();
-        search.setBackground(Color.WHITE);
-        search.setLayout(new BoxLayout(search, BoxLayout.X_AXIS));
+        // Thanh công cụ tìm kiếm thiết kế phẳng (Premium Search Toolbar)
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        searchBar.setBackground(COLOR_BG_CARD);
+        searchBar.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
+
+        JLabel lblSearch = new JLabel("Tìm kiếm:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSearch.setForeground(COLOR_TEXT_MAIN);
+        searchBar.add(lblSearch);
 
         tfSearch = new TextField();
-        tfSearch.setPreferredSize(new Dimension(300,40));
-        tfSearch.setHint("Nhập tên / SĐT / CCCD / Mã KH");
+        tfSearch.setPreferredSize(new Dimension(350, 35));
+        tfSearch.setHint("Nhập tên / SĐT / CCCD / Mã KH...");
+        tfSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchBar.add(tfSearch);
 
         Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
+        btnSearch.setText("Tìm Kiếm");
+        btnSearch.setBackground(COLOR_PRIMARY);
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        searchBar.add(btnSearch);
 
-        search.add(tfSearch);
-        search.add(Box.createHorizontalStrut(10));
-        search.add(btnSearch);
+        topPanel.add(searchBar, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
 
-        body.add(search, BorderLayout.NORTH);
+        // =================================================
+        // 2. MAIN CONTENT GRAPHICS (GRID 1x2)
+        // =================================================
+        JPanel mainContentGrid = new JPanel(new GridLayout(1, 2, 24, 0));
+        mainContentGrid.setBackground(Color.WHITE);
+        add(mainContentGrid, BorderLayout.CENTER);
 
-        // ===== MAIN =====
-        JPanel main = new JPanel(new GridLayout(1,2,10,0));
-        body.add(main, BorderLayout.CENTER);
+        // --- BÊN TRÁI: DỮ LIỆU BẢNG PHẲNG ---
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 10));
+        leftPanel.setBackground(Color.WHITE);
 
-        // ===== LEFT TABLE =====
-        JPanel left = new JPanel(new BorderLayout());
-
-        JLabel lbl = new JLabel("KẾT QUẢ");
-        lbl.setFont(new Font("Tahoma", Font.BOLD,16));
-        lbl.setHorizontalAlignment(SwingConstants.CENTER);
-
-        left.add(lbl, BorderLayout.NORTH);
+        JLabel lblLeft = new JLabel("DANH SÁCH KẾT QUẢ TÌM KIẾM");
+        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblLeft.setForeground(COLOR_TEXT_MAIN);
+        leftPanel.add(lblLeft, BorderLayout.NORTH);
 
         model = new DefaultTableModel(
                 new String[]{
@@ -83,155 +102,114 @@ public class Search_KhachHang_UI extends JPanel {
         );
 
         table = new JTable(model);
-        table.setRowHeight(35);
+        table.setRowHeight(42); // Hàng cao rộng rãi thoáng đãng chuẩn hiện đại
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setSelectionBackground(new Color(235, 245, 255)); // Đổ nền màu xanh pastel dịu nhẹ khi chọn dòng
+        table.setSelectionForeground(COLOR_DARK);
+        table.setShowGrid(false); // Triệt tiêu đường chia ô caro xấu xí kiểu cũ
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        // Thiết kế Header Table thanh lịch
+        JTableHeader th = table.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        th.setBackground(COLOR_BG_CARD);
+        th.setForeground(COLOR_DARK);
+        th.setPreferredSize(new Dimension(100, 42));
+        th.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
+        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        left.add(scrollPane, BorderLayout.CENTER);
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        mainContentGrid.add(leftPanel);
 
-        main.add(left);
+        // --- BÊN PHẢI: KHỐI CARD CHI TIẾT SANG TRỌNG ---
+        JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
+        rightPanel.setBackground(Color.WHITE);
 
-        // ===== RIGHT DETAIL =====
-        // Giữ ô text nhỏ nhưng trải đều phần RIGHT, không dồn vào giữa
+        JLabel lblRight = new JLabel("THÔNG TIN CHI TIẾT KHÁCH HÀNG");
+        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRight.setForeground(COLOR_TEXT_MAIN);
+        rightPanel.add(lblRight, BorderLayout.NORTH);
 
-// ===== RIGHT DETAIL =====
+        // Khối Card bao bọc toàn bộ form, loại bỏ GridLayout co giãn mất kiểm soát
+        JPanel formContainer = new JPanel();
+        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
+        formContainer.setBackground(COLOR_BG_CARD);
+        formContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(20, 24, 20, 24)
+        ));
 
-        JPanel right = new JPanel(new BorderLayout());
-
-        JLabel lbl2 = new JLabel("CHI TIẾT KHÁCH HÀNG");
-        lbl2.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl2.setHorizontalAlignment(SwingConstants.CENTER);
-
-        right.add(lbl2, BorderLayout.NORTH);
-
-// dùng GridBagLayout để giãn đều theo chiều dọc
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBorder(new EmptyBorder(20, 20, 20, 20));
-        form.setBackground(Color.WHITE);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 10, 20, 10); // giãn đều theo chiều dọc
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
-
-// tạo field
+        // Khởi tạo các ô Textfield
         txtMaKH = createField();
         txtHoTen = createField();
         txtSDT = createField();
         txtCCCD = createField();
         txtGioiTinh = createField();
 
-// giữ ô text nhỏ
-        Dimension smallField = new Dimension(220, 28);
+        // Gọi hàm định dạng phẳng mượt mà cho các TextField
+        applyFlatTextField(txtMaKH);
+        applyFlatTextField(txtHoTen);
+        applyFlatTextField(txtSDT);
+        applyFlatTextField(txtCCCD);
+        applyFlatTextField(txtGioiTinh);
 
-        txtMaKH.setPreferredSize(smallField);
-        txtHoTen.setPreferredSize(smallField);
-        txtSDT.setPreferredSize(smallField);
-        txtCCCD.setPreferredSize(smallField);
-        txtGioiTinh.setPreferredSize(smallField);
+        // Sắp xếp các cụm Nhãn - Trường nhập liệu theo chiều dọc vuông vức
+        formContainer.add(createFieldGroup("Mã thành viên khách hàng", txtMaKH));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Họ và tên", txtHoTen));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Số điện thoại liên lạc", txtSDT));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Căn cước công dân (CCCD)", txtCCCD));
+        formContainer.add(Box.createVerticalStrut(12));
+        formContainer.add(createFieldGroup("Giới tính", txtGioiTinh));
 
-// cho cột phải giãn hợp lý
-        gbc.weightx = 1;
+        // Đẩy toàn bộ form lên trên cùng, giữ kích cỡ cố định hoàn hảo
+        formContainer.add(Box.createVerticalGlue());
 
-// ===== Dòng 1
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        form.add(new JLabel("Mã khách"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtMaKH, gbc);
-
-// ===== Dòng 2
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        form.add(new JLabel("Họ tên"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtHoTen, gbc);
-
-// ===== Dòng 3
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        form.add(new JLabel("Số điện thoại"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtSDT, gbc);
-
-// ===== Dòng 4
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        form.add(new JLabel("CCCD"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtCCCD, gbc);
-
-// ===== Dòng 5
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        form.add(new JLabel("Giới tính"), gbc);
-
-        gbc.gridx = 1;
-        form.add(txtGioiTinh, gbc);
-
-// đẩy form phủ đều chiều cao phần right
-        gbc.gridy = 5;
-        gbc.weighty = 1;
-        form.add(Box.createVerticalGlue(), gbc);
-
-        right.add(form, BorderLayout.CENTER);
-        main.add(right);
+        rightPanel.add(formContainer, BorderLayout.CENTER);
+        mainContentGrid.add(rightPanel);
 
         // ===== LOAD DATA =====
         loadData();
 
-        // ===== CLICK TABLE =====
+        // =================================================
+        // INTERACTION & LOGIC CONTROL (GIỮ NGUYÊN LOGIC CŨ)
+        // =================================================
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-
                 int row = table.getSelectedRow();
                 if (row == -1) return;
 
                 String maKH = model.getValueAt(row, 0).toString();
-
                 KhachHang kh = new KhachHangDao().getById(maKH);
 
                 if (kh != null) {
-
                     txtMaKH.setText(kh.getMaKH());
                     txtHoTen.setText(kh.getHoTen());
                     txtSDT.setText(kh.getSdt());
                     txtCCCD.setText(kh.getCccd());
-
-                    txtGioiTinh.setText(
-                            kh.getGioiTinh() == 1 ? "Nam" : "Nữ"
-                    );
-
-
+                    txtGioiTinh.setText(kh.getGioiTinh() == 1 ? "Nam" : "Nữ");
                 }
             }
         });
 
-        // ===== SEARCH =====
         btnSearch.addActionListener(e -> {
-
             String keyword = tfSearch.getText().trim();
-
             model.setRowCount(0);
-
             List<KhachHang> list;
 
             if (keyword.isEmpty()) {
                 list = new KhachHangDao().getAll();
             } else {
-                list = new KhachHangDao()
-                        .searchKhachHang(keyword);
+                list = new KhachHangDao().searchKhachHang(keyword);
             }
 
             for (KhachHang kh : list) {
-
                 model.addRow(new Object[]{
                         kh.getMaKH(),
                         kh.getHoTen(),
@@ -241,23 +219,16 @@ public class Search_KhachHang_UI extends JPanel {
             }
 
             if (model.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tìm thấy khách hàng!"
-                );
+                JOptionPane.showMessageDialog(this, "Không tìm thấy khách hàng!");
             }
         });
     }
 
-    // ===== LOAD DATA =====
+    // ===== LOAD DATA TỪ DAO =====
     private void loadData() {
-
         model.setRowCount(0);
-
         List<KhachHang> list = new KhachHangDao().getAll();
-
         for (KhachHang kh : list) {
-
             model.addRow(new Object[]{
                     kh.getMaKH(),
                     kh.getHoTen(),
@@ -267,13 +238,36 @@ public class Search_KhachHang_UI extends JPanel {
         }
     }
 
-    // ===== COMPONENT =====
-    private TextField createField() {
-        TextField tf = new TextField();
-        tf.setPreferredSize(new Dimension(200,35));
+    // 🌟 ĐÃ THÊM: Định nghĩa hàm applyFlatTextField bị thiếu khiến chương trình báo lỗi đỏ
+    private void applyFlatTextField(TextField tf) {
         tf.setEditable(false);
-        tf.setBackground(new Color(245,245,245));
-        return tf;
+        tf.setBackground(Color.WHITE);
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tf.setForeground(COLOR_DARK);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(6, 12, 6, 12)
+        ));
     }
 
+    // Cấu trúc nhóm trường xếp dọc thanh lịch
+    private JPanel createFieldGroup(String labelText, TextField field) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setBackground(COLOR_BG_CARD);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(COLOR_TEXT_MAIN);
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(field, BorderLayout.CENTER);
+
+        p.setMaximumSize(new Dimension(Short.MAX_VALUE, 58));
+        return p;
+    }
+
+    // ===== KHỞI TẠO COMPONENT =====
+    private TextField createField() {
+        TextField tf = new TextField();
+        tf.setEditable(false);
+        return tf;
+    }
 }

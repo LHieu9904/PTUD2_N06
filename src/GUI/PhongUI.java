@@ -1971,6 +1971,10 @@ public class PhongUI extends JPanel {
     // CLICK EVENT
     // =========================================================
 
+    // =========================================================
+    // CLICK EVENT (ĐÃ SỬA LỖI ĐÈ SỰ KIỆN KHIẾN POPUP BỊ ĐƠ GIỜ)
+    // =========================================================
+
     private void addClickEvent(
             JPanel card,
             Phong p
@@ -1984,168 +1988,67 @@ public class PhongUI extends JPanel {
                 new MouseAdapter() {
 
                     @Override
-                    public void mouseEntered(MouseEvent e) {
-
-                        card.setBorder(
-                                new CompoundBorder(
-                                        new LineBorder(
-                                                PRIMARY,
-                                                2,
-                                                true
-                                        ),
-                                        new EmptyBorder(
-                                                16,
-                                                16,
-                                                16,
-                                                16
-                                        )
-                                )
-                        );
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-
-                        card.setBorder(
-                                new CompoundBorder(
-                                        new EmptyBorder(3, 3, 3, 3),
-                                        new EmptyBorder(10, 20, 10, 20)
-                                )
-                        );
-                    }
-
-                    @Override
                     public void mouseClicked(MouseEvent e) {
 
-                        txtMaPhong.setText(
-                                p.getMaPhong()
-                        );
-
-                        txtTang.setText(
-                                String.valueOf(
-                                        p.getTang()
-                                )
-                        );
+                        // Đổ dữ liệu thô từ thực thể phòng lên Form nhập liệu phía trên
+                        txtMaPhong.setText(p.getMaPhong());
+                        txtTang.setText(String.valueOf(p.getTang()));
 
                         if (p.getTrangThai() != null) {
-
-                            cbTrangThai.setSelectedItem(
-                                    p.getTrangThai()
-                            );
+                            cbTrangThai.setSelectedItem(p.getTrangThai());
                         }
 
                         if (p.getLoaiPhong() != null) {
-
-                            cbLoai.setSelectedItem(
-                                    p.getLoaiPhong()
-                                            .getTenLP()
-                            );
+                            cbLoai.setSelectedItem(p.getLoaiPhong().getTenLP());
                         }
 
-                        // ================= ĐANG THUÊ =================
+                        // ================= ĐANG THUÊ (QUÉT GIỜ MỚI NHẤT TỪ DB) =================
+                        if ("Đang thuê".equals(p.getTrangThai())) {
 
-                        if ("Đang thuê".equals(
-                                p.getTrangThai()
-                        )) {
-
-                            Object[] info =
-                                    phongDao
-                                            .getThongTinPhongDangThue(
-                                                    p.getMaPhong()
-                                            );
+                            // Gọi trực tiếp xuống Database để bốc mốc thời gian thực tế vừa được gia hạn
+                            Object[] info = phongDao.getThongTinPhongDangThue(p.getMaPhong());
 
                             if (info != null) {
 
                                 String message =
                                         "===== THÔNG TIN KHÁCH HÀNG =====\n\n"
-                                                +
-                                                "Họ tên: "
-                                                + info[0]
-                                                + "\n"
-
-                                                +
-                                                "SĐT: "
-                                                + info[1]
-                                                + "\n"
-
-                                                +
-                                                "CCCD: "
-                                                + info[2]
-                                                + "\n\n"
-
-                                                +
-                                                "===== THÔNG TIN PHÒNG =====\n\n"
-
-                                                +
-                                                "Mã phòng: "
-                                                + info[3]
-                                                + "\n"
-
-                                                +
-                                                "Loại phòng: "
-                                                + info[4]
-                                                + "\n"
-
-                                                +
-                                                "Thời gian nhận: "
-                                                + info[5]
-                                                + "\n"
-
-                                                +
-                                                "Thời gian trả: "
-                                                + info[6];
+                                                + "Họ tên: " + info[0] + "\n"
+                                                + "SĐT: " + info[1] + "\n"
+                                                + "CCCD: " + info[2] + "\n\n"
+                                                + "===== THÔNG TIN PHÒNG =====\n\n"
+                                                + "Mã phòng: " + info[3] + "\n"
+                                                + "Loại phòng: " + info[4] + "\n"
+                                                + "Thời gian nhận: " + info[5] + "\n"
+                                                + "Thời gian trả: " + info[6]; // Đã đồng bộ hiển thị mốc giờ mới sau GH
 
                                 JOptionPane.showMessageDialog(
                                         null,
                                         message,
-                                        "Chi tiết phòng",
+                                        "Chi tiết phòng Đang thuê",
                                         JOptionPane.INFORMATION_MESSAGE
                                 );
                             }
                         }
 
-                        // ================= DỌN DẸP =================
+                        // ================= ĐANG DỌN DẸP =================
+                        if ("Đang dọn dẹp".equals(p.getTrangThai())) {
 
-                        if ("Đang dọn dẹp".equals(
-                                p.getTrangThai()
-                        )) {
+                            int confirm = JOptionPane.showConfirmDialog(
+                                    null,
+                                    "Đã dọn phòng xong chưa?",
+                                    "Xác nhận dọn dẹp phòng " + p.getMaPhong(),
+                                    JOptionPane.YES_NO_OPTION
+                            );
 
-                            int confirm =
-                                    JOptionPane.showConfirmDialog(
-                                            null,
-                                            "Đã dọn phòng xong chưa?",
-                                            "Xác nhận",
-                                            JOptionPane.YES_NO_OPTION
-                                    );
+                            if (confirm == JOptionPane.YES_OPTION) {
 
-                            if (confirm ==
-                                    JOptionPane.YES_OPTION) {
-
-                                boolean updated =
-                                        phongDao.updateTrangThai(
-                                                p.getMaPhong(),
-                                                "Trống"
-                                        );
+                                boolean updated = phongDao.updateTrangThai(p.getMaPhong(), "Trống");
 
                                 if (updated) {
-
-                                    JOptionPane.showMessageDialog(
-                                            null,
-                                            "Đã cập nhật trạng thái"
-                                    );
-
-                                    loadData(
-                                            "Tất cả",
-                                            0,
-                                            null
-                                    );
-
+                                    JOptionPane.showMessageDialog(null, "Đã cập nhật trạng thái phòng về trống!");
+                                    loadData("Tất cả", 0, null);
                                 } else {
-
-                                    JOptionPane.showMessageDialog(
-                                            null,
-                                            "Cập nhật thất bại"
-                                    );
+                                    JOptionPane.showMessageDialog(null, "Cập nhật thất bại!");
                                 }
                             }
                         }

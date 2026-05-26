@@ -200,7 +200,7 @@ public class LoginUI extends JFrame {
                 JOptionPane.showMessageDialog(
                         this,
                         "Không được để trống!"
-                );
+                );  
                 return;
             }
 

@@ -1227,6 +1227,146 @@ public class HoaDonPhongDao {
         }
         return list;
     }
+    // =========================================================================
+// ĐÃ ĐỒNG BỘ HOÀN TOÀN THEO CẤU TRÚC SCRIPT DATABASE THỰC TẾ CỦA BẠN
+// =========================================================================
+
+    public Object[] getPhongDoanhThuCaoNhat(java.util.Date tuNgay, java.util.Date denNgay) {
+        String sql = """
+        SELECT TOP 1 ct.MaPhong, SUM(hd.TongTien) AS DoanhThu
+        FROM ChiTietHoaDonPhong ct
+        JOIN HoaDonPhong hd ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        -- Sử dụng cột chuẩn NgayLapHoaDon từ cấu trúc bảng của bạn
+        WHERE hd.TrangThai = N'Đã thanh toán' 
+          AND hd.NgayLapHoaDon BETWEEN ? AND ?
+        GROUP BY ct.MaPhong 
+        ORDER BY DoanhThu DESC""";
+        try (java.sql.Connection con = Database.getInstance().getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Object[]{rs.getString("MaPhong"), rs.getDouble("DoanhThu")};
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Object[]{"Chưa có", 0.0};
+    }
+
+    public Object[] getLoaiPhongDoanhThuCaoNhat(java.util.Date tuNgay, java.util.Date denNgay) {
+        String sql = """
+        SELECT TOP 1 lp.TenLP, SUM(hd.TongTien) AS DoanhThu
+        FROM ChiTietHoaDonPhong ct
+        JOIN HoaDonPhong hd ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        JOIN Phong p ON ct.MaPhong = p.MaPhong
+        JOIN LoaiPhong lp ON p.MaLP = lp.MaLP
+        -- Sử dụng cột chuẩn NgayLapHoaDon từ cấu trúc bảng của bạn
+        WHERE hd.TrangThai = N'Đã thanh toán' 
+          AND hd.NgayLapHoaDon BETWEEN ? AND ?
+        GROUP BY lp.TenLP 
+        ORDER BY DoanhThu DESC""";
+        try (java.sql.Connection con = Database.getInstance().getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Object[]{rs.getString("TenLP"), rs.getDouble("DoanhThu")};
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new Object[]{"Chưa có", 0.0};
+    }
+
+    public java.util.Map<String, Integer> getDatasetDoanhThuLoaiPhong(java.util.Date tuNgay, java.util.Date denNgay) {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        String sql = """
+        SELECT lp.TenLP, CAST(SUM(hd.TongTien) AS INT) AS DoanhThu
+        FROM ChiTietHoaDonPhong ct
+        JOIN HoaDonPhong hd ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        JOIN Phong p ON ct.MaPhong = p.MaPhong
+        JOIN LoaiPhong lp ON p.MaLP = lp.MaLP
+        -- Sử dụng cột chuẩn NgayLapHoaDon từ cấu trúc bảng của bạn
+        WHERE hd.TrangThai = N'Đã thanh toán' 
+          AND hd.NgayLapHoaDon BETWEEN ? AND ?
+        GROUP BY lp.TenLP""";
+        try (java.sql.Connection con = Database.getInstance().getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            java.sql.ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("TenLP"), rs.getInt("DoanhThu"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    public java.util.List<Object[]> getChiTietTienTungPhong(java.util.Date tuNgay, java.util.Date denNgay) {
+        java.util.List<Object[]> list = new java.util.ArrayList<>();
+
+        // Câu lệnh SQL tinh gọn: Chỉ lấy Mã phòng, Số lượt ở, và Tổng tiền
+        String sql = """
+        SELECT 
+            ct.MaPhong,
+            COUNT(ct.MaHoaDonPhong) AS LuotO,
+            SUM(hd.TongTien) AS TongDoanhThu
+        FROM ChiTietHoaDonPhong ct
+        JOIN HoaDonPhong hd ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+        WHERE hd.TrangThai = N'Đã thanh toán' 
+          AND hd.NgayLapHoaDon BETWEEN ? AND ?
+        GROUP BY ct.MaPhong
+        """;
+
+        try (java.sql.Connection con = Database.getInstance().getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setTimestamp(1, new java.sql.Timestamp(tuNgay.getTime()));
+            ps.setTimestamp(2, new java.sql.Timestamp(denNgay.getTime()));
+            java.sql.ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                list.add(new Object[]{
+                        rs.getString("MaPhong"),
+                        rs.getInt("LuotO"),
+                        rs.getDouble("TongDoanhThu")
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public List<Object[]> timHoaDonTheoThang(String thangNam) {
+        List<Object[]> list = new java.util.ArrayList<>();
+        // SQL Server sử dụng FORMAT(NgayLap, 'MM/yyyy'), thay NgayLap bằng tên cột thực tế của bạn
+        String sql = "SELECT maHD, tenKhachHang, trangThai, tongTien " +
+                "FROM HoaDon WHERE FORMAT(NgayLap, 'MM/yyyy') = ?";
+
+        try (java.sql.Connection con = Database.getInstance().getConnection(); // Thay bằng cách lấy Connection của bạn
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, thangNam);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getString(1),
+                            rs.getString(2),
+                            rs.getString(3),
+                            rs.getDouble(4)
+                    });
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
     public String taoMaHoaDonTuDong() {
         return getNextMaHD();

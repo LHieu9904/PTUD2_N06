@@ -7,7 +7,9 @@ import Raven.textfield.TextField;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class Search_Phong_UI extends JPanel {
     private JTable table;
     private TextField tfSearch;
 
-    // ô text chi tiết
+    // Ô số liệu chi tiết
     private TextField txtMaPhong;
     private TextField txtTang;
     private TextField txtLoaiPhong;
@@ -29,42 +31,179 @@ public class Search_Phong_UI extends JPanel {
     private TextField txtNgayNhan;
     private TextField txtNgayTra;
 
+    // Hệ màu Material Design Modern UX đồng bộ toàn hệ thống
+    private final Color COLOR_PRIMARY     = new Color(0, 153, 255);   // Xanh thương hiệu
+    private final Color COLOR_DARK        = new Color(30, 41, 59);     // Chữ chính (Charcoal)
+    private final Color COLOR_TEXT_MAIN   = new Color(71, 85, 105);    // Chữ phụ / Nhãn
+    private final Color COLOR_BG_CARD     = new Color(248, 250, 252);  // Nền card nhẹ tinh tế
+    private final Color COLOR_BORDER      = new Color(226, 232, 240);  // Đường viền mảnh phẳng
+
     public Search_Phong_UI() {
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 24));
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(25, 25, 25, 25)); // Đệm biên rộng giúp giao diện thoáng đãng
 
-        // ===== HEADER =====
-        JPanel header = new JPanel();
-        JLabel title = new JLabel("TRA CỨU PHÒNG");
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
-        title.setForeground(new Color(0, 153, 255));
-        header.add(title);
-        add(header, BorderLayout.NORTH);
+        // =================================================
+        // 1. TOP SECTION: HEADER & SEARCH BAR
+        // =================================================
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
+        topPanel.setBackground(Color.WHITE);
 
-        // ===== BODY =====
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBorder(new EmptyBorder(10, 10, 10, 10));
-        body.setBackground(Color.WHITE);
-        add(body, BorderLayout.CENTER);
+        JLabel title = new JLabel("HỆ THỐNG TRA CỨU PHÒNG");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(COLOR_DARK);
+        topPanel.add(title, BorderLayout.NORTH);
 
-        // ===== SEARCH =====
-        JPanel search = new JPanel();
-        search.setBackground(Color.WHITE);
-        search.setLayout(new BoxLayout(search, BoxLayout.X_AXIS));
+        // Thanh công cụ tìm kiếm thiết kế phẳng (Premium Search Toolbar)
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        searchBar.setBackground(COLOR_BG_CARD);
+        searchBar.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
+
+        JLabel lblSearch = new JLabel("Mã phòng:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSearch.setForeground(COLOR_TEXT_MAIN);
+        searchBar.add(lblSearch);
 
         tfSearch = new TextField();
-        tfSearch.setPreferredSize(new Dimension(300, 40));
-        tfSearch.setHint("Nhập mã phòng");
+        tfSearch.setPreferredSize(new Dimension(300, 35));
+        tfSearch.setHint("Nhập mã phòng cần tra cứu...");
+        tfSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchBar.add(tfSearch);
 
         Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
+        btnSearch.setText("Tìm Kiếm");
+        btnSearch.setBackground(COLOR_PRIMARY);
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        searchBar.add(btnSearch);
 
+        topPanel.add(searchBar, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
+
+        // =================================================
+        // 2. MAIN CONTENT GRAPHICS (GRID 1x2)
+        // =================================================
+        JPanel mainContentGrid = new JPanel(new GridLayout(1, 2, 24, 0));
+        mainContentGrid.setBackground(Color.WHITE);
+        add(mainContentGrid, BorderLayout.CENTER);
+
+        // --- BÊN TRÁI: DỮ LIỆU BẢNG PHẲNG KHÔNG LAG ---
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 10));
+        leftPanel.setBackground(Color.WHITE);
+
+        JLabel lblLeft = new JLabel("DANH SÁCH PHÒNG KHÁCH SẠN");
+        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblLeft.setForeground(COLOR_TEXT_MAIN);
+        leftPanel.add(lblLeft, BorderLayout.NORTH);
+
+        model = new DefaultTableModel(
+                new String[]{
+                        "Mã phòng",
+                        "Tầng",
+                        "Loại",
+                        "Trạng thái"
+                }, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Chống nhấp đúp chỉnh sửa ô trực tiếp gây lag
+            }
+        };
+
+        table = new JTable(model);
+        table.setRowHeight(42); // Hàng cao thoáng ráo chuẩn hiện đại
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setSelectionBackground(new Color(235, 245, 255)); // Đổ nền màu xanh pastel dịu nhẹ khi chọn dòng
+        table.setSelectionForeground(COLOR_DARK);
+        table.setShowGrid(false); // Triệt tiêu đường lưới chia ô ô caro thô kệch
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        // Bật chế độ chỉ bôi đen nguyên hàng mượt mà
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowSelectionAllowed(true);
+        table.setColumnSelectionAllowed(false);
+
+        // Thiết kế Header Table thanh lịch
+        JTableHeader th = table.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        th.setBackground(COLOR_BG_CARD);
+        th.setForeground(COLOR_DARK);
+        th.setPreferredSize(new Dimension(100, 42));
+        th.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        mainContentGrid.add(leftPanel);
+
+        // --- BÊN PHẢI: KHỐI CARD CHI TIẾT SANG TRỌNG ---
+        JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
+        rightPanel.setBackground(Color.WHITE);
+
+        JLabel lblRight = new JLabel("THÔNG TIN CHI TIẾT PHÒNG TÌM KIẾM");
+        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRight.setForeground(COLOR_TEXT_MAIN);
+        rightPanel.add(lblRight, BorderLayout.NORTH);
+
+        // Khối Card bao bọc toàn bộ form dọc gọn gàng chống co giãn méo lệch ô
+        JPanel formWrapper = new JPanel(new BorderLayout());
+        formWrapper.setBackground(COLOR_BG_CARD);
+        formWrapper.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(20, 24, 20, 24)
+        ));
+
+        JPanel formGrid = new JPanel(new GridLayout(5, 2, 20, 14)); // Phân bổ 2 cột cân xứng song song
+        formGrid.setBackground(COLOR_BG_CARD);
+
+        txtMaPhong = createField();
+        txtTang = createField();
+        txtLoaiPhong = createField();
+        txtTrangThai = createField();
+        txtTenKhach = createField();
+        txtSDT = createField();
+        txtCCCD = createField();
+        txtNgayNhan = createField();
+        txtNgayTra = createField();
+
+        applyFlatTextField(txtMaPhong);
+        applyFlatTextField(txtTang);
+        applyFlatTextField(txtLoaiPhong);
+        applyFlatTextField(txtTrangThai);
+        applyFlatTextField(txtTenKhach);
+        applyFlatTextField(txtSDT);
+        applyFlatTextField(txtCCCD);
+        applyFlatTextField(txtNgayNhan);
+        applyFlatTextField(txtNgayTra);
+
+        formGrid.add(createFieldGroup("Mã số phòng", txtMaPhong));
+        formGrid.add(createFieldGroup("Vị trí tầng", txtTang));
+        formGrid.add(createFieldGroup("Loại hình phòng", txtLoaiPhong));
+        formGrid.add(createFieldGroup("Trạng thái hiện tại", txtTrangThai));
+        formGrid.add(createFieldGroup("Tên khách đang thuê", txtTenKhach));
+        formGrid.add(createFieldGroup("Số điện thoại khách", txtSDT));
+        formGrid.add(createFieldGroup("Căn cước công dân (CCCD)", txtCCCD));
+        formGrid.add(createFieldGroup("Thời gian nhận phòng", txtNgayNhan));
+        formGrid.add(createFieldGroup("Thời gian trả phòng dự kiến", txtNgayTra));
+
+        // Ô trống bổ sung để giữ lưới GridLayout vuông vắn
+        formGrid.add(new JPanel() {{ setBackground(COLOR_BG_CARD); }});
+
+        formWrapper.add(formGrid, BorderLayout.NORTH);
+        rightPanel.add(formWrapper, BorderLayout.CENTER);
+        mainContentGrid.add(rightPanel);
+
+        // =====================================================
+        // INTERACTION & LOGIC CONTROL (GIỮ NGUYÊN HOÀN TOÀN)
+        // =====================================================
         btnSearch.addActionListener(e -> {
-
             String maPhong = tfSearch.getText().trim();
-
             model.setRowCount(0);
-
             List<Phong> list;
 
             if (maPhong.isEmpty()) {
@@ -83,213 +222,20 @@ public class Search_Phong_UI extends JPanel {
             }
 
             if (list.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tìm thấy phòng!"
-                );
+                clearForm();
+                JOptionPane.showMessageDialog(this, "Không tìm thấy phòng!");
+            } else {
+                table.setRowSelectionInterval(0, 0);
+                hienThiChiTietDongSelected(0);
             }
         });
 
-        search.add(tfSearch);
-        search.add(Box.createHorizontalStrut(10));
-        search.add(btnSearch);
-
-        body.add(search, BorderLayout.NORTH);
-
-        // ===== MAIN =====
-        JPanel main = new JPanel(new GridLayout(1, 2, 10, 0));
-        body.add(main, BorderLayout.CENTER);
-
-        // ===== LEFT TABLE =====
-        JPanel left = new JPanel(new BorderLayout());
-
-        JLabel lbl = new JLabel("DANH SÁCH PHÒNG");
-        lbl.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl.setHorizontalAlignment(SwingConstants.CENTER);
-
-        left.add(lbl, BorderLayout.NORTH);
-
-        model = new DefaultTableModel(
-                new String[]{
-                        "Mã phòng",
-                        "Tầng",
-                        "Loại",
-                        "Trạng thái"
-                }, 0
-        ) {
-            @Override
-            public boolean isCellEditable(
-                    int row,
-                    int column
-            ) {
-                return false;
-            }
-        };
-
-        table = new JTable(model);
-        table.setDefaultEditor(Object.class, null);
-        table.setRowHeight(35);
-
-        // ===== THANH CUỘN TABLE =====
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
-        scrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-        );
-
-        left.add(scrollPane, BorderLayout.CENTER);
-
-        main.add(left);
-
-        // ===== RIGHT DETAIL =====
-        JPanel right = new JPanel(new BorderLayout());
-
-        JLabel lbl2 = new JLabel("CHI TIẾT PHÒNG");
-        lbl2.setFont(new Font("Tahoma", Font.BOLD, 16));
-        lbl2.setHorizontalAlignment(SwingConstants.CENTER);
-
-        right.add(lbl2, BorderLayout.NORTH);
-
-        JPanel form = new JPanel(new GridLayout(0, 2, 10, 10));
-        form.setBorder(new EmptyBorder(10, 10, 10, 10));
-        form.setBackground(Color.WHITE);
-
-        txtMaPhong = createField();
-        txtTang = createField();
-        txtLoaiPhong = createField();
-        txtTrangThai = createField();
-        txtTenKhach = createField();
-        txtSDT = createField();
-        txtCCCD = createField();
-        txtNgayNhan = createField();
-        txtNgayTra = createField();
-
-        form.add(new JLabel("Mã phòng"));
-        form.add(txtMaPhong);
-
-        form.add(new JLabel("Tầng"));
-        form.add(txtTang);
-
-        form.add(new JLabel("Loại phòng"));
-        form.add(txtLoaiPhong);
-
-        form.add(new JLabel("Trạng thái"));
-        form.add(txtTrangThai);
-
-        form.add(new JLabel("Tên khách"));
-        form.add(txtTenKhach);
-
-        form.add(new JLabel("SĐT"));
-        form.add(txtSDT);
-
-        form.add(new JLabel("CCCD"));
-        form.add(txtCCCD);
-
-        form.add(new JLabel("Ngày nhận"));
-        form.add(txtNgayNhan);
-
-        form.add(new JLabel("Ngày trả"));
-        form.add(txtNgayTra);
-
-        right.add(form, BorderLayout.CENTER);
-
-        main.add(right);
-
-        // ===== CLICK TABLE → ĐỔ DỮ LIỆU =====
         table.addMouseListener(new java.awt.event.MouseAdapter() {
-
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-
                 int row = table.getSelectedRow();
-
-                if (row == -1) {
-                    return;
-                }
-
-                // =====================================================
-                // THÔNG TIN PHÒNG
-                // =====================================================
-
-                txtMaPhong.setText(
-                        model.getValueAt(row, 0).toString()
-                );
-
-                txtTang.setText(
-                        model.getValueAt(row, 1).toString()
-                );
-
-                txtLoaiPhong.setText(
-                        model.getValueAt(row, 2).toString()
-                );
-
-                txtTrangThai.setText(
-                        model.getValueAt(row, 3).toString()
-                );
-
-                // =====================================================
-                // LẤY THÔNG TIN KHÁCH ĐANG THUÊ
-                // =====================================================
-
-                String maPhong =
-                        model.getValueAt(row, 0).toString();
-
-                Object[] info =
-                        new PhongDao()
-                                .getThongTinPhongDangThue(maPhong);
-
-                if (info != null) {
-
-                    txtTenKhach.setText(
-                            info[0] != null
-                                    ? info[0].toString()
-                                    : ""
-                    );
-
-                    txtSDT.setText(
-                            info[1] != null
-                                    ? info[1].toString()
-                                    : ""
-                    );
-
-                    txtCCCD.setText(
-                            info[2] != null
-                                    ? info[2].toString()
-                                    : ""
-                    );
-
-                    // =================================================
-                    // THỜI GIAN NHẬN
-                    // index 5
-                    // =================================================
-
-                    txtNgayNhan.setText(
-                            info[5] != null
-                                    ? info[5].toString()
-                                    : ""
-                    );
-
-                    // =================================================
-                    // THỜI GIAN TRẢ
-                    // index 6
-                    // =================================================
-
-                    txtNgayTra.setText(
-                            info[6] != null
-                                    ? info[6].toString()
-                                    : ""
-                    );
-
-                } else {
-
-                    txtTenKhach.setText("");
-                    txtSDT.setText("");
-                    txtCCCD.setText("");
-                    txtNgayNhan.setText("");
-                    txtNgayTra.setText("");
-                }
+                if (row == -1) return;
+                hienThiChiTietDongSelected(row);
             }
         });
 
@@ -297,12 +243,33 @@ public class Search_Phong_UI extends JPanel {
         loadAllPhong();
     }
 
+    private void hienThiChiTietDongSelected(int row) {
+        txtMaPhong.setText(model.getValueAt(row, 0).toString());
+        txtTang.setText(model.getValueAt(row, 1).toString());
+        txtLoaiPhong.setText(model.getValueAt(row, 2).toString());
+        txtTrangThai.setText(model.getValueAt(row, 3).toString());
+
+        String maPhong = model.getValueAt(row, 0).toString();
+        Object[] info = new PhongDao().getThongTinPhongDangThue(maPhong);
+
+        if (info != null) {
+            txtTenKhach.setText(info[0] != null ? info[0].toString() : "");
+            txtSDT.setText(info[1] != null ? info[1].toString() : "");
+            txtCCCD.setText(info[2] != null ? info[2].toString() : "");
+            txtNgayNhan.setText(info[5] != null ? info[5].toString() : "");
+            txtNgayTra.setText(info[6] != null ? info[6].toString() : "");
+        } else {
+            txtTenKhach.setText("");
+            txtSDT.setText("");
+            txtCCCD.setText("");
+            txtNgayNhan.setText("");
+            txtNgayTra.setText("");
+        }
+    }
+
     private void loadAllPhong() {
-
         model.setRowCount(0);
-
         List<Phong> list = new PhongDao().getAllPhong();
-
         for (Phong p : list) {
             model.addRow(new Object[]{
                     p.getMaPhong(),
@@ -311,15 +278,42 @@ public class Search_Phong_UI extends JPanel {
                     p.getTrangThai()
             });
         }
+        if (model.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+            hienThiChiTietDongSelected(0);
+        }
+    }
+
+    private void clearForm() {
+        txtMaPhong.setText(""); txtTang.setText(""); txtLoaiPhong.setText(""); txtTrangThai.setText("");
+        txtTenKhach.setText(""); txtSDT.setText(""); txtCCCD.setText(""); txtNgayNhan.setText(""); txtNgayTra.setText("");
+    }
+
+    private void applyFlatTextField(TextField tf) {
+        tf.setEditable(false);
+        tf.setBackground(Color.WHITE);
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tf.setForeground(COLOR_DARK);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(6, 12, 6, 12)
+        ));
+    }
+
+    private JPanel createFieldGroup(String labelText, TextField field) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setBackground(COLOR_BG_CARD);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(COLOR_TEXT_MAIN);
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(field, BorderLayout.CENTER);
+        return p;
     }
 
     private TextField createField() {
-
         TextField tf = new TextField();
-        tf.setPreferredSize(new Dimension(200, 35));
         tf.setEditable(false);
-        tf.setBackground(new Color(245, 245, 245));
-
         return tf;
     }
 }

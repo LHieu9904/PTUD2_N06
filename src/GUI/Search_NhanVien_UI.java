@@ -6,9 +6,12 @@ import Raven.button.Button;
 import Raven.textfield.TextField;
 
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Search_NhanVien_UI extends JPanel {
@@ -17,6 +20,7 @@ public class Search_NhanVien_UI extends JPanel {
     private DefaultTableModel model;
     private JTable table;
     private TextField tfSearch;
+    private JComboBox<String> cbChucVu; // Đưa ComboBox ra toàn cục để xử lý lọc nâng cao
 
     private TextField txtMaNV;
     private TextField txtHoTen;
@@ -27,60 +31,80 @@ public class Search_NhanVien_UI extends JPanel {
     private TextField txtTrangThai;
     private TextField txtDiaChi;
 
+    // Hệ màu Material Design Modern UX đồng bộ toàn bộ hệ thống
+    private final Color COLOR_PRIMARY     = new Color(0, 153, 255);   // Xanh thương hiệu
+    private final Color COLOR_DARK        = new Color(30, 41, 59);     // Chữ chính (Charcoal)
+    private final Color COLOR_TEXT_MAIN   = new Color(71, 85, 105);    // Chữ phụ / Nhãn
+    private final Color COLOR_BG_CARD     = new Color(248, 250, 252);  // Nền card nhẹ tinh tế
+    private final Color COLOR_BORDER      = new Color(226, 232, 240);  // Đường viền mảnh phẳng
+
     public Search_NhanVien_UI() {
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 24));
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(25, 25, 25, 25)); // Đệm biên rộng giúp giao diện thoáng đãng
 
-        // ===== HEADER =====
-        JPanel header = new JPanel();
-        JLabel title = new JLabel("TRA CỨU NHÂN VIÊN");
-        title.setFont(new Font("Tahoma", Font.BOLD, 22));
-        title.setForeground(new Color(0,153,255));
-        header.add(title);
-        add(header, BorderLayout.NORTH);
+        // =================================================
+        // 1. TOP SECTION: HEADER & SEARCH BAR
+        // =================================================
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
+        topPanel.setBackground(Color.WHITE);
 
-        // ===== BODY =====
-        JPanel body = new JPanel(new BorderLayout());
-        body.setBorder(new EmptyBorder(10,10,10,10));
-        body.setBackground(Color.WHITE);
-        add(body, BorderLayout.CENTER);
+        JLabel title = new JLabel("HỆ THỐNG TRA CỨU NHÂN VIÊN");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(COLOR_DARK);
+        topPanel.add(title, BorderLayout.NORTH);
 
-        // ===== SEARCH =====
-        JPanel search = new JPanel();
-        search.setBackground(Color.WHITE);
-        search.setLayout(new BoxLayout(search, BoxLayout.X_AXIS));
+        // Thanh công cụ tìm kiếm thiết kế phẳng (Premium Search Toolbar)
+        JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        searchBar.setBackground(COLOR_BG_CARD);
+        searchBar.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1, true));
+
+        JLabel lblSearch = new JLabel("Tìm kiếm:");
+        lblSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSearch.setForeground(COLOR_TEXT_MAIN);
+        searchBar.add(lblSearch);
 
         tfSearch = new TextField();
-        tfSearch.setPreferredSize(new Dimension(300,40));
-        tfSearch.setHint("Nhập tên / SĐT / CCCD");
+        tfSearch.setPreferredSize(new Dimension(300, 35));
+        tfSearch.setHint("Nhập tên / SĐT / CCCD...");
+        tfSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchBar.add(tfSearch);
 
-        JComboBox<String> cbChucVu = new JComboBox<>(new String[]{
+        // Cách tân JComboBox mặc định sang kiểu phẳng hiện đại
+        cbChucVu = new JComboBox<>(new String[]{
                 "Tất cả chức vụ", "Quản lý", "Lễ tân"
         });
+        cbChucVu.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cbChucVu.setBackground(Color.WHITE);
+        cbChucVu.setPreferredSize(new Dimension(150, 35));
+        searchBar.add(cbChucVu);
 
         Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
+        btnSearch.setText("Tìm Kiếm");
+        btnSearch.setBackground(COLOR_PRIMARY);
+        btnSearch.setForeground(Color.WHITE);
+        btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        searchBar.add(btnSearch);
 
-        search.add(tfSearch);
-        search.add(Box.createHorizontalStrut(10));
-        search.add(cbChucVu);
-        search.add(Box.createHorizontalStrut(10));
-        search.add(btnSearch);
+        topPanel.add(searchBar, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
 
-        body.add(search, BorderLayout.NORTH);
+        // =================================================
+        // 2. MAIN CONTENT GRAPHICS (GRID 1x2)
+        // =================================================
+        JPanel mainContentGrid = new JPanel(new GridLayout(1, 2, 24, 0));
+        mainContentGrid.setBackground(Color.WHITE);
+        add(mainContentGrid, BorderLayout.CENTER);
 
-        // ===== MAIN =====
-        JPanel main = new JPanel(new GridLayout(1,2,10,0));
-        body.add(main, BorderLayout.CENTER);
+        // --- BÊN TRÁI: DỮ LIỆU BẢNG PHẲNG ---
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 10));
+        leftPanel.setBackground(Color.WHITE);
 
-        // ===== LEFT TABLE =====
-        JPanel left = new JPanel(new BorderLayout());
-
-        JLabel lbl = new JLabel("DANH SÁCH NHÂN VIÊN");
-        lbl.setFont(new Font("Tahoma", Font.BOLD,16));
-        lbl.setHorizontalAlignment(SwingConstants.CENTER);
-
-        left.add(lbl, BorderLayout.NORTH);
+        JLabel lblLeft = new JLabel("DANH SÁCH NHÂN VIÊN HỆ THỐNG");
+        lblLeft.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblLeft.setForeground(COLOR_TEXT_MAIN);
+        leftPanel.add(lblLeft, BorderLayout.NORTH);
 
         model = new DefaultTableModel(
                 new String[]{
@@ -92,30 +116,59 @@ public class Search_NhanVien_UI extends JPanel {
                 }, 0
         );
 
-        table = new JTable(model);
-        table.setRowHeight(35);
+        // 🛠️ SỬA LỖI LAG: Không cho click sửa ô chữ trực tiếp, chỉ bôi đen hàng
+        table = new JTable(model) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Chống nháy đúp chuột sửa text trong bảng gây lag
+            }
+        };
+        table.setRowHeight(42);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.setSelectionBackground(new Color(235, 245, 255)); // Đổ nền xanh dịu khi chọn
+        table.setSelectionForeground(COLOR_DARK);
+        table.setShowGrid(false); // Xóa đường lưới ô caro thô kệch
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        // 🛠️ CHẾ ĐỘ CHỌN: Click là ăn nguyên dòng mượt mà
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowSelectionAllowed(true);
+        table.setColumnSelectionAllowed(false);
+
+        // Thiết kế Header Table thanh lịch
+        JTableHeader th = table.getTableHeader();
+        th.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        th.setBackground(COLOR_BG_CARD);
+        th.setForeground(COLOR_DARK);
+        th.setPreferredSize(new Dimension(100, 42));
+        th.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        );
+        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        left.add(scrollPane, BorderLayout.CENTER);
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        mainContentGrid.add(leftPanel);
 
-        main.add(left);
+        // --- BÊN PHẢI: KHỐI CARD CHI TIẾT SANG TRỌNG ---
+        JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
+        rightPanel.setBackground(Color.WHITE);
 
-        // ===== RIGHT DETAIL =====
-        JPanel right = new JPanel(new BorderLayout());
+        JLabel lblRight = new JLabel("THÔNG TIN CHI TIẾT NHÂN VIÊN");
+        lblRight.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblRight.setForeground(COLOR_TEXT_MAIN);
+        rightPanel.add(lblRight, BorderLayout.NORTH);
 
-        JLabel lbl2 = new JLabel("CHI TIẾT NHÂN VIÊN");
-        lbl2.setFont(new Font("Tahoma", Font.BOLD,16));
-        lbl2.setHorizontalAlignment(SwingConstants.CENTER);
+        JPanel formWrapper = new JPanel(new BorderLayout());
+        formWrapper.setBackground(COLOR_BG_CARD);
+        formWrapper.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(20, 24, 20, 24)
+        ));
 
-        right.add(lbl2, BorderLayout.NORTH);
-
-        JPanel form = new JPanel(new GridLayout(0,2,10,10));
-        form.setBorder(new EmptyBorder(10,10,10,10));
-        form.setBackground(Color.WHITE);
+        JPanel formGrid = new JPanel(new GridLayout(4, 2, 20, 14));
+        formGrid.setBackground(COLOR_BG_CARD);
 
         txtMaNV = createField();
         txtHoTen = createField();
@@ -126,90 +179,84 @@ public class Search_NhanVien_UI extends JPanel {
         txtTrangThai = createField();
         txtDiaChi = createField();
 
-        form.add(new JLabel("Mã nhân viên"));
-        form.add(txtMaNV);
+        applyFlatTextField(txtMaNV);
+        applyFlatTextField(txtHoTen);
+        applyFlatTextField(txtSDT);
+        applyFlatTextField(txtCCCD);
+        applyFlatTextField(txtGioiTinh);
+        applyFlatTextField(txtChucVu);
+        applyFlatTextField(txtTrangThai);
+        applyFlatTextField(txtDiaChi);
 
-        form.add(new JLabel("Họ tên"));
-        form.add(txtHoTen);
+        formGrid.add(createFieldGroup("Mã nhân viên", txtMaNV));
+        formGrid.add(createFieldGroup("Họ và tên", txtHoTen));
+        formGrid.add(createFieldGroup("Số điện thoại", txtSDT));
+        formGrid.add(createFieldGroup("Căn cước công dân (CCCD)", txtCCCD));
+        formGrid.add(createFieldGroup("Giới tính", txtGioiTinh));
+        formGrid.add(createFieldGroup("Chức vụ đảm nhiệm", txtChucVu));
+        formGrid.add(createFieldGroup("Trạng thái làm việc", txtTrangThai));
+        formGrid.add(createFieldGroup("Địa chỉ Email", txtDiaChi));
 
-        form.add(new JLabel("SĐT"));
-        form.add(txtSDT);
-
-        form.add(new JLabel("CCCD"));
-        form.add(txtCCCD);
-
-        form.add(new JLabel("Giới tính"));
-        form.add(txtGioiTinh);
-
-        form.add(new JLabel("Chức vụ"));
-        form.add(txtChucVu);
-
-        form.add(new JLabel("Trạng thái"));
-        form.add(txtTrangThai);
-
-        form.add(new JLabel("Địa chỉ Email"));
-        form.add(txtDiaChi);
-
-        right.add(form, BorderLayout.CENTER);
-
-        main.add(right);
+        formWrapper.add(formGrid, BorderLayout.NORTH);
+        rightPanel.add(formWrapper, BorderLayout.CENTER);
+        mainContentGrid.add(rightPanel);
 
         // ===== LOAD DATA =====
         loadData();
 
-        // ===== CLICK TABLE =====
+        // =================================================
+        // INTERACTION & LOGIC CONTROL
+        // =================================================
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-
                 int row = table.getSelectedRow();
                 if (row == -1) return;
 
                 String maNV = model.getValueAt(row, 0).toString();
-
                 NhanVien nv = new NhanVienDao().getById(maNV);
 
                 if (nv != null) {
-
                     txtMaNV.setText(nv.getMaNV());
                     txtHoTen.setText(nv.getHoTen());
                     txtSDT.setText(nv.getSdt());
                     txtCCCD.setText(nv.getCccd());
-
-                    txtGioiTinh.setText(
-                            nv.getGioiTinh() == 1 ? "Nam" : "Nữ"
-                    );
-
-                    txtChucVu.setText(
-                            nv.getChucVu().getTenChucVu()
-                    );
-
-                    txtTrangThai.setText(
-                            nv.getTrangThaiLamViec()
-                    );
-
-                    txtDiaChi.setText(
-                            nv.getEmail()
-                    );
+                    txtGioiTinh.setText(nv.getGioiTinh() == 1 ? "Nam" : "Nữ");
+                    txtChucVu.setText(nv.getChucVu().getTenChucVu());
+                    txtTrangThai.setText(nv.getTrangThaiLamViec());
+                    txtDiaChi.setText(nv.getEmail());
                 }
             }
         });
 
-        // ===== SEARCH =====
+        // 🛠️ LÀM ĐẦY ĐỦ HÀM TÌM KIẾM: Kết hợp đồng thời ô từ khóa và bộ lọc ComboBox Chức Vụ
         btnSearch.addActionListener(e -> {
-
-            String keyword = tfSearch.getText().trim();
+            String keyword = tfSearch.getText().trim().toLowerCase();
+            String chucVuDuocChon = cbChucVu.getSelectedItem().toString();
 
             model.setRowCount(0);
+            List<NhanVien> danhSachGoc = new NhanVienDao().getAll();
+            List<NhanVien> ketQuaLoc = new ArrayList<>();
 
-            java.util.List<NhanVien> list =
-                    new NhanVienDao().searchNhanVien(keyword);
+            for (NhanVien nv : danhSachGoc) {
+                // Kiểm tra điều kiện 1: Khớp chức vụ (Nếu chọn "Tất cả chức vụ" thì bỏ qua kiểm tra này)
+                boolean khớpChứcVụ = chucVuDuocChon.equals("Tất cả chức vụ")
+                        || nv.getChucVu().getTenChucVu().equalsIgnoreCase(chucVuDuocChon);
 
-            if (keyword.isEmpty()) {
-                list = new NhanVienDao().getAll();
+                // Kiểm tra điều kiện 2: Khớp từ khóa tìm kiếm (Mã, Tên, SĐT, CCCD)
+                boolean khớpTừKhóa = keyword.isEmpty()
+                        || nv.getMaNV().toLowerCase().contains(keyword)
+                        || nv.getHoTen().toLowerCase().contains(keyword)
+                        || nv.getSdt().contains(keyword)
+                        || nv.getCccd().contains(keyword);
+
+                // Thỏa mãn cả 2 tiêu chí lọc thì mới đưa vào kết quả bảng
+                if (khớpChứcVụ && khớpTừKhóa) {
+                    ketQuaLoc.add(nv);
+                }
             }
 
-            for (NhanVien nv : list) {
-
+            // Đẩy toàn bộ danh sách đã lọc lên Table
+            for (NhanVien nv : ketQuaLoc) {
                 model.addRow(new Object[]{
                         nv.getMaNV(),
                         nv.getHoTen(),
@@ -220,21 +267,31 @@ public class Search_NhanVien_UI extends JPanel {
             }
 
             if (model.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không tìm thấy nhân viên!"
-                );
+                clearForm();
+                JOptionPane.showMessageDialog(this, "Không tìm thấy dữ liệu nhân viên phù hợp!");
+            } else {
+                // Tự động bôi đen hàng đầu tiên sau khi tìm kiếm để tránh trống form
+                table.setRowSelectionInterval(0, 0);
+                String maDau = model.getValueAt(0, 0).toString();
+                NhanVien nvDau = new NhanVienDao().getById(maDau);
+                if (nvDau != null) {
+                    txtMaNV.setText(nvDau.getMaNV());
+                    txtHoTen.setText(nvDau.getHoTen());
+                    txtSDT.setText(nvDau.getSdt());
+                    txtCCCD.setText(nvDau.getCccd());
+                    txtGioiTinh.setText(nvDau.getGioiTinh() == 1 ? "Nam" : "Nữ");
+                    txtChucVu.setText(nvDau.getChucVu().getTenChucVu());
+                    txtTrangThai.setText(nvDau.getTrangThaiLamViec());
+                    txtDiaChi.setText(nvDau.getEmail());
+                }
             }
         });
     }
 
-    // ===== LOAD DANH SÁCH =====
+    // ===== LOAD DATA TỪ CSDL =====
     private void loadData() {
-
         model.setRowCount(0);
-
         List<NhanVien> list = new NhanVienDao().getAll();
-
         for (NhanVien nv : list) {
             model.addRow(new Object[]{
                     nv.getMaNV(),
@@ -244,15 +301,41 @@ public class Search_NhanVien_UI extends JPanel {
                     nv.getTrangThaiLamViec()
             });
         }
+        if (model.getRowCount() > 0) {
+            table.setRowSelectionInterval(0, 0);
+        }
     }
 
-    // ===== COMPONENT =====
+    private void clearForm() {
+        txtMaNV.setText(""); txtHoTen.setText(""); txtSDT.setText(""); txtCCCD.setText("");
+        txtGioiTinh.setText(""); txtChucVu.setText(""); txtTrangThai.setText(""); txtDiaChi.setText("");
+    }
+
+    private void applyFlatTextField(TextField tf) {
+        tf.setEditable(false);
+        tf.setBackground(Color.WHITE);
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tf.setForeground(COLOR_DARK);
+        tf.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(6, 12, 6, 12)
+        ));
+    }
+
+    private JPanel createFieldGroup(String labelText, TextField field) {
+        JPanel p = new JPanel(new BorderLayout(0, 4));
+        p.setBackground(COLOR_BG_CARD);
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(COLOR_TEXT_MAIN);
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(field, BorderLayout.CENTER);
+        return p;
+    }
+
     private TextField createField() {
         TextField tf = new TextField();
-        tf.setPreferredSize(new Dimension(200,35));
         tf.setEditable(false);
-        tf.setBackground(new Color(245,245,245));
         return tf;
     }
-
 }

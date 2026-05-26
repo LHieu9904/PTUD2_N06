@@ -229,40 +229,28 @@ public class ChiTietHoaDonPhongDao {
 
         return false;
     }
-    public boolean updateThoiGianTra(
-            String maPhong,
-            Timestamp thoiGianTraMoi
-    ) {
-
+    public boolean updateThoiGianTra(String maPhong, Timestamp thoiGianTraMoi) {
         String sql = """
-        UPDATE ChiTietHoaDonPhong
-        SET ThoiGianTra = ?
+    UPDATE ChiTietHoaDonPhong
+    SET ThoiGianTra = ?
+    WHERE MaPhong = ?
+    AND ThoiGianTra = (
+        SELECT MAX(ThoiGianTra)
+        FROM ChiTietHoaDonPhong
         WHERE MaPhong = ?
-        AND ThoiGianTra = (
-            SELECT MAX(ThoiGianTra)
-            FROM ChiTietHoaDonPhong
-            WHERE MaPhong = ?
-        )
-    """;
-
-        try (
-                Connection con =
-                        Database.getInstance().getConnection();
-
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
-        ) {
+    )
+""";
+        try (Connection con = Database.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setTimestamp(1, thoiGianTraMoi);
             ps.setString(2, maPhong);
             ps.setString(3, maPhong);
 
             return ps.executeUpdate() > 0;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return false;
     }
     public boolean updateThoiGianNhanTraHoaDon(

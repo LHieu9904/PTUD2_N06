@@ -512,27 +512,20 @@ public class KhachHangUI extends JPanel {
     // ================= VALIDATE =================
 
     private boolean validateInput() {
-
         String ten = txtTen.getText().trim();
         String sdt = txtSDT.getText().trim();
         String cccd = txtCCCD.getText().trim();
 
         if (ten.isEmpty()) {
-
             JOptionPane.showMessageDialog(this, "Tên không được rỗng");
             return false;
         }
-
-        if (!sdt.matches("^(03|05|07|09)\\\\d{8}$")) {
-
+        if (!sdt.matches("^(03|05|07|09)[0-9]{8}$")) {
             JOptionPane.showMessageDialog(this, "SĐT không hợp lệ");
             return false;
         }
 
-        cccd = cccd.trim();
-
-        if (!cccd.matches("^(\\\\d{3})([0-3])(\\\\d{2})(\\\\d{6})$")) {
-
+        if (!cccd.matches("^([0-9]{3})([0-3])([0-9]{2})([0-9]{6})$")) {
             JOptionPane.showMessageDialog(this, "CCCD không hợp lệ");
             return false;
         }

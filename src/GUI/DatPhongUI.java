@@ -1131,7 +1131,6 @@ public class DatPhongUI extends JPanel {
         }
     }
 
-    // ================= LOGIC GỐC GIỮ NGUYÊN HOÀN TOÀN =================
     private void clearForm() {
         tfHoTen.setText(""); tfSDT.setText(""); tfCCCD.setText(""); tfSoLuongNguoi.setText("");
         tfGioTu.setText(""); tfGioDen.setText(""); tfNgayTu.setText(""); tfNgayDen.setText("");
@@ -1267,26 +1266,7 @@ public class DatPhongUI extends JPanel {
                 return;
             }
 
-            // =====================================================
-            // STEP 6: ĐĂNG KÝ DỊCH VỤ ĐÍNH KÈM (NẾU CÓ)
-            // =====================================================
-            int confirm = JOptionPane.showConfirmDialog(
-                    this,
-                    "Bạn có muốn đăng ký thêm dịch vụ đi kèm luôn không?",
-                    "Hệ thống quản lý dịch vụ",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-            );
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                // ĐÃ FIX: Truyền trực tiếp mã hóa đơn tổng 'maHD' sang Dialog
-                // Loại bỏ hoàn toàn dvDao.createHDDV(maHD) để loại bỏ lỗi trùng lặp bản ghi
-                new ChonDichVuDialog(
-                        (Frame) SwingUtilities.getWindowAncestor(this),
-                        selectedMaPhong,
-                        maHD
-                ).setVisible(true);
-            }
+            // ĐÃ BỎ HOÀN TOÀN STEP 6 THEO YÊU CẦU
 
             // Hoàn tất quy trình hoàn chỉnh
             JOptionPane.showMessageDialog(

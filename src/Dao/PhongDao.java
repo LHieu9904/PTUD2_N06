@@ -986,51 +986,53 @@ public class PhongDao {
     public Object[] getChiTietTraPhong(String maPhong){
 
         String sql = """
-    SELECT TOP 1
-        p.MaPhong,
-        kh.HoTen,
-        kh.SDT,
-        ct.ThoiGianNhan,
-        ct.ThoiGianTra,
-        ISNULL(
+SELECT TOP 1
+    p.MaPhong,
+    kh.HoTen,
+    kh.SDT,
+    ct.ThoiGianNhan,
+    ct.ThoiGianTra,
+    ISNULL(
+        DATEDIFF(HOUR, ct.ThoiGianNhan, ISNULL(ct.ThoiGianTra, GETDATE()))
+        * lp.GiaGioDau
+    ,0) AS TienPhong,
+    ISNULL((
+        SELECT SUM(ctdv.ThanhTien)
+        FROM HoaDonDichVu hddv
+        JOIN ChiTietHoaDonDichVu ctdv
+            ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
+        WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
+    ),0) AS TienDichVu,
+    
+    -- GIỮ NGUYÊN HOÀN TOÀN LOGIC TÍNH TOÁN CŨ CỦA BẠN:
+    ISNULL(
+        (
             DATEDIFF(HOUR, ct.ThoiGianNhan, ISNULL(ct.ThoiGianTra, GETDATE()))
             * lp.GiaGioDau
-        ,0) AS TienPhong,
+        )
+        +
         ISNULL((
             SELECT SUM(ctdv.ThanhTien)
             FROM HoaDonDichVu hddv
             JOIN ChiTietHoaDonDichVu ctdv
                 ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
             WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
-        ),0) AS TienDichVu,
-        ISNULL(
-            (
-                DATEDIFF(HOUR, ct.ThoiGianNhan, ISNULL(ct.ThoiGianTra, GETDATE()))
-                * lp.GiaGioDau
-            )
-            +
-            ISNULL((
-                SELECT SUM(ctdv.ThanhTien)
-                FROM HoaDonDichVu hddv
-                JOIN ChiTietHoaDonDichVu ctdv
-                    ON hddv.MaHoaDonDichVu = ctdv.MaHoaDonDichVu
-                WHERE hddv.MaHoaDonPhong = hd.MaHoaDonPhong
-            ),0)
-        ,0) AS TongTien
+        ),0)
+    ,0) AS TienGiaHan -- Chỉ đổi tên nhãn hiển thị ở đây để Popup không bị lỗi compile
 
-    FROM ChiTietHoaDonPhong ct
-    JOIN HoaDonPhong hd
-        ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
-    JOIN KhachHang kh
-        ON hd.MaKH = kh.MaKH
-    JOIN Phong p
-        ON ct.MaPhong = p.MaPhong
-    JOIN LoaiPhong lp
-        ON p.MaLP = lp.MaLP
+FROM ChiTietHoaDonPhong ct
+JOIN HoaDonPhong hd
+    ON ct.MaHoaDonPhong = hd.MaHoaDonPhong
+JOIN KhachHang kh
+    ON hd.MaKH = kh.MaKH
+JOIN Phong p
+    ON ct.MaPhong = p.MaPhong
+JOIN LoaiPhong lp
+    ON p.MaLP = lp.MaLP
 
-    WHERE ct.MaPhong = ?
-    ORDER BY ct.ThoiGianNhan DESC
-    """;
+WHERE ct.MaPhong = ?
+ORDER BY ct.ThoiGianNhan DESC
+""";
 
         try(Connection con = Database.getInstance().getConnection();
             PreparedStatement ps = con.prepareStatement(sql)){
@@ -1047,14 +1049,13 @@ public class PhongDao {
                         rs.getTimestamp("ThoiGianTra"),
                         rs.getDouble("TienPhong"),
                         rs.getDouble("TienDichVu"),
-                        rs.getDouble("TongTien")
+                        rs.getDouble("TienGiaHan") // Đóng vai trò là biến Tổng tiền cũ của bạn
                 };
             }
 
         }catch(Exception e){
             e.printStackTrace();
         }
-
         return null;
     }
 
