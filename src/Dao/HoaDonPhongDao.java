@@ -569,7 +569,15 @@ public class HoaDonPhongDao {
             }
 
             // 3 & 4. UPDATE CHI TIẾT & PHÒNG (Giữ nguyên)
-            // ... (phần code update phòng và chi tiết giữ nguyên như cũ)
+            // 3. CẬP NHẬT TRẠNG THÁI PHÒNG SANG "Đang dọn dẹp"
+            String sqlUpdatePhong = "UPDATE Phong SET TrangThai = N'Đang dọn dẹp' WHERE MaPhong = ?";
+            try (PreparedStatement ps = con.prepareStatement(sqlUpdatePhong)) {
+                ps.setString(1, maPhong);
+                if (ps.executeUpdate() <= 0) {
+                    con.rollback(); // Nếu cập nhật phòng thất bại thì rollback toàn bộ
+                    return false;
+                }
+            }
 
             con.commit();
             return true;
