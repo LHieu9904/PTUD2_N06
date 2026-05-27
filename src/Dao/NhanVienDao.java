@@ -73,7 +73,8 @@ public class NhanVienDao {
 // Tên đăng nhập = MaNV
 // Mật khẩu = MaNV
 
-    public boolean insertNhanVien(NhanVien nv) {
+    // ================= INSERT (CẬP NHẬT ĐỂ BÁO LỖI CHI TIẾT) =================
+    public boolean insertNhanVien(NhanVien nv) throws Exception {
 
         String sqlNV = """
         INSERT INTO NhanVien
@@ -120,8 +121,8 @@ public class NhanVienDao {
             psTK = con.prepareStatement(sqlTK);
 
             psTK.setString(1, maTK);
-            psTK.setString(2, nv.getMaNV()); // username = MaNV
-            psTK.setString(3, nv.getMaNV()); // password mặc định = MaNV
+            psTK.setString(2, nv.getMaNV());
+            psTK.setString(3, nv.getMaNV());
             psTK.setString(4, nv.getMaNV());
             psTK.setString(5, "Hoạt động");
 
@@ -131,18 +132,12 @@ public class NhanVienDao {
             return true;
 
         } catch (Exception e) {
-
-            try {
-                if (con != null && !con.isClosed()) {
-                    con.rollback();
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            if (con != null && !con.isClosed()) {
+                try { con.rollback(); } catch (Exception ex) { ex.printStackTrace(); }
             }
-
-            e.printStackTrace();
+            // NÉM NGOẠI LỆ RA NGOÀI ĐỂ GUI BẮT ĐƯỢC THÔNG BÁO CHI TIẾT
+            throw e;
         } finally {
-
             try {
                 if (psNV != null) psNV.close();
                 if (psTK != null) psTK.close();
@@ -151,8 +146,6 @@ public class NhanVienDao {
                 e.printStackTrace();
             }
         }
-
-        return false;
     }
 
     // ================= UPDATE =================
@@ -171,22 +164,13 @@ public class NhanVienDao {
 // - SĐT
 // - Ảnh nhân viên
 
+    // ================= UPDATE (ĐÃ SỬA LỖI KHÔNG ĐỔI CHỨC VỤ) =================
     public boolean updateNhanVien(NhanVien nv) {
 
-        String sql = """
-        UPDATE NhanVien
-        SET HoTen = ?,
-            GioiTinh = ?,
-            CCCD = ?,
-            NgaySinh = ?,
-            TrangThaiLamViec = ?,
-            MaChucVu = ?,
-            Luong = ?,
-            AnhNhanVien = ?,
-            Email = ?,
-            SDT = ?
-        WHERE MaNV = ?
-    """;
+        // Chuỗi SQL viết liền mạch để loại bỏ hoàn toàn lỗi ngắt dòng của Text Block cũ
+        String sql = "UPDATE NhanVien SET HoTen = ?, GioiTinh = ?, CCCD = ?, NgaySinh = ?, " +
+                "TrangThaiLamViec = ?, MaChucVu = ?, Luong = ?, AnhNhanVien = ?, Email = ?, SDT = ? " +
+                "WHERE MaNV = ?";
 
         try (
                 Connection con = Database.getInstance().getConnection();
@@ -198,7 +182,14 @@ public class NhanVienDao {
             ps.setString(3, nv.getCccd());
             ps.setDate(4, nv.getNgaySinh());
             ps.setString(5, nv.getTrangThaiLamViec());
-            ps.setString(6, nv.getChucVu().getMaChucVu());
+
+            // Lấy chính xác MaChucVu truyền vào vị trí tham số thứ 6 (?)
+            if (nv.getChucVu() != null) {
+                ps.setString(6, nv.getChucVu().getMaChucVu());
+            } else {
+                ps.setNull(6, java.sql.Types.VARCHAR);
+            }
+
             ps.setDouble(7, nv.getLuong());
             ps.setString(8, nv.getAnhNhanVien());
             ps.setString(9, nv.getEmail());
@@ -216,11 +207,11 @@ public class NhanVienDao {
     public NhanVien getById(String maNV){
 
         String sql = """
-        SELECT nv.*, cv.*
-        FROM NhanVien nv
-        JOIN ChucVu cv ON nv.MaChucVu = cv.MaChucVu
-        WHERE nv.MaNV=?
-    """;
+    SELECT nv.*, cv.TenChucVu, cv.MoTa
+    FROM NhanVien nv
+    JOIN ChucVu cv ON nv.MaChucVu = cv.MaChucVu
+    WHERE nv.MaNV=?
+""";
 
         try (Connection con = Database.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -241,8 +232,11 @@ public class NhanVienDao {
                 nv.setHoTen(rs.getString("HoTen"));
                 nv.setGioiTinh(rs.getInt("GioiTinh"));
                 nv.setNgaySinh(rs.getDate("NgaySinh"));
+
+                // SỬA TẠI ĐÂY: Lấy chuẩn chuỗi chữ hoa "CCCD" và "SDT" trực tiếp từ DB
                 nv.setCccd(rs.getString("CCCD"));
-                nv.setSdt(rs.getString("sdt"));
+                nv.setSdt(rs.getString("SDT"));
+
                 nv.setTrangThaiLamViec(rs.getString("TrangThaiLamViec"));
                 nv.setLuong(rs.getDouble("Luong"));
                 nv.setEmail(rs.getString("Email"));
@@ -342,10 +336,13 @@ public class NhanVienDao {
                 nv.setMaNV(rs.getString("MaNV"));
                 nv.setHoTen(rs.getString("HoTen"));
                 nv.setGioiTinh(rs.getInt("GioiTinh"));
+
+                // SỬA TẠI ĐÂY: Đồng bộ viết HOA tên cột trong Database
                 nv.setCccd(rs.getString("CCCD"));
+                nv.setSdt(rs.getString("SDT"));
+
                 nv.setNgaySinh(rs.getDate("NgaySinh"));
                 nv.setAnhNhanVien(rs.getString("AnhNhanVien"));
-                nv.setSdt(rs.getString("SDT"));
                 nv.setEmail(rs.getString("Email"));
 
             }

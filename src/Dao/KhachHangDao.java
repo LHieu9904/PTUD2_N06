@@ -205,11 +205,10 @@ public class KhachHangDao {
                     khData[0] = rs.getString("MaKH");
                     khData[1] = rs.getString("HoTen");
 
-                    // Xử lý cột GioiTinh (Dạng số INT trong DB của bạn) sang String gán vào JComboBox
-                    // DB quy ước: 1 là "Nam", các giá trị khác (0) là "Nữ" (Khớp với logic hàm getAll của bạn)
                     int gioiTinhInt = rs.getInt("GioiTinh");
                     khData[2] = (gioiTinhInt == 1) ? "Nam" : "Nữ";
 
+                    // SỬA TẠI ĐÂY: Bảo toàn đọc dữ liệu dạng chuỗi văn bản thuần túy
                     khData[3] = rs.getString("CCCD");
 
                     return khData;
@@ -347,75 +346,29 @@ public class KhachHangDao {
 
         return list;
     }
-    public String insertKhach(String hoTen, String sdt) {
-
+    // Sửa thành: nhận thêm tham số cccd
+    public String insertKhach(String hoTen, String sdt, String cccd) {
         String maKH = "KH" + (System.currentTimeMillis() % 100000);
 
-        // tránh UNIQUE bị NULL
-        String cccd = String.valueOf(
-                System.currentTimeMillis() % 1000000000
-        );
-
         String sql = """
-        INSERT INTO KhachHang
-        (
-            MaKH,
-            HoTen,
-            SDT,
-            CCCD,
-            GioiTinh
-        )
-        VALUES (?, ?, ?, ?, ?)
+    INSERT INTO KhachHang (MaKH, HoTen, SDT, CCCD, GioiTinh)
+    VALUES (?, ?, ?, ?, ?)
     """;
 
-        try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+        try (Connection con = Database.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, maKH);
             ps.setString(2, hoTen);
             ps.setString(3, sdt);
-
-            // tuyệt đối không null
-            ps.setString(4, cccd);
-
-            ps.setInt(5, 1);
+            ps.setString(4, cccd); // Sử dụng cccd thật từ người dùng nhập
+            ps.setInt(5, 1);       // Lưu ý: nên thay bằng tham số giới tính sau này
 
             ps.executeUpdate();
-
             return maKH;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return null;
-    }
-    public String getMaKHBySDT(String sdt) {
-
-        String sql = """
-        SELECT MaKH
-        FROM KhachHang
-        WHERE SDT = ?
-    """;
-
-        try (
-                Connection con = Database.getInstance().getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
-            ps.setString(1, sdt);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return rs.getString("MaKH");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         return null;
     }
     public KhachHang getById(String maKH) {
@@ -526,6 +479,32 @@ public class KhachHangDao {
         }
 
         return null;
+    }
+    public String getMaKHBySDT(String sdt) {
+        String sql = "SELECT MaKH FROM KhachHang WHERE SDT = ?";
+        try (Connection con = Database.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, sdt);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("MaKH");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }public void updateCCCD(String maKH, String cccd) {
+        String sql = "UPDATE KhachHang SET CCCD = ? WHERE MaKH = ?";
+        try (Connection con = Database.getInstance().getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, cccd);
+            ps.setString(2, maKH);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

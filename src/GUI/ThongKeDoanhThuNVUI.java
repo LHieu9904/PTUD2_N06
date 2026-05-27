@@ -4,15 +4,31 @@ import Dao.HoaDonPhongDao;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 
+// import gói io và util cơ bản (GIỮ NGUYÊN)
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.text.DecimalFormat;
-import java.util.Calendar;
-import java.util.List;
+import javax.swing.table.JTableHeader;
+
+// ===== SỬA LỖI IMPORT: Chỉ định rõ ràng lớp Excel để tránh xung đột với java.awt =====
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ThongKeDoanhThuNVUI extends JPanel {
 
@@ -112,6 +128,16 @@ public class ThongKeDoanhThuNVUI extends JPanel {
         btnLoc.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
         btnLoc.addActionListener(e -> loadDataDoanhThu());
 
+        // BỔ SUNG: Nút Xuất Báo Cáo cấu trúc chuẩn đồng bộ Thống Kê Phòng
+        JButton btnExport = new JButton("📥 Xuất Báo Cáo");
+        btnExport.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnExport.setForeground(Color.WHITE);
+        btnExport.setBackground(new Color(100, 116, 139)); // Màu xám phụ giống bên Thống kê phòng của bạn
+        btnExport.setPreferredSize(new Dimension(140, 36));
+        btnExport.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnExport.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        btnExport.addActionListener(e -> exportThongKeNhanVien());
+
         // Đẩy các component vào layout hàng ngang
         c.gridx = 0; filterToolbar.add(new JLabel("Xem nhanh:"), c);
         c.gridx = 1; filterToolbar.add(cbThangQuick, c);
@@ -123,6 +149,7 @@ public class ThongKeDoanhThuNVUI extends JPanel {
         c.gridx = 7; filterToolbar.add(spinnerDenNgay, c);
         c.gridx = 8; c.weightx = 1.0; filterToolbar.add(Box.createHorizontalGlue(), c); // Đẩy nút về bên phải
         c.gridx = 9; c.weightx = 0.0; filterToolbar.add(btnLoc, c);
+        c.gridx = 10; c.weightx = 0.0; filterToolbar.add(btnExport, c); // Đặt nút Xuất cạnh nút Lọc
 
         container.add(titlePanel);
         container.add(filterToolbar);
@@ -167,8 +194,11 @@ public class ThongKeDoanhThuNVUI extends JPanel {
         table = new JTable(tableModel);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.setRowHeight(32);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        table.getTableHeader().setBackground(new Color(241, 245, 249));
+
+        JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(0, 42));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(new Color(241, 245, 249));
         table.setShowVerticalLines(false); // Ẩn viền dọc đúng chuẩn UI phẳng hiện đại
         table.setGridColor(COLOR_BORDER);
 
@@ -233,12 +263,151 @@ public class ThongKeDoanhThuNVUI extends JPanel {
                     row[0], // MaNV
                     row[1], // HoTen
                     row[2], // SoHoaDon
-                    formatter.format(doanhThu) + " đ" // Định dạng tiền tệ
+                    formatter.format(doAccessDouble(doanhThu)) + " đ" // Định dạng tiền tệ
             });
         }
 
         // Cập nhật nhãn tổng doanh thu
         lblTongDoanhThuHeThong.setText(formatter.format(tongDoanhThuHeThong) + " VND");
+    }
+
+    private double doAccessDouble(double val) {
+        return val;
+    }
+
+    // =========================================================================
+    // HÀM XUẤT BÁO CÁO EXCEL CHUẨN - KHÔNG XUNG ĐỘT FONT VÀ COLOR
+    // =========================================================================
+    private void exportThongKeNhanVien() {
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu hiển thị trên bảng để xuất báo cáo!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn vị trí lưu file thống kê doanh thu nhân viên");
+
+        SimpleDateFormat fileDateFormater = new SimpleDateFormat("ddMMyyyy");
+        String txtTuNgay = fileDateFormater.format((java.util.Date) spinnerTuNgay.getValue());
+        String txtDenNgay = fileDateFormater.format((java.util.Date) spinnerDenNgay.getValue());
+
+        fileChooser.setSelectedFile(new File(txtTuNgay + "_to_" + txtDenNgay + "_ThongKeNhanVien.xlsx"));
+
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File fileToSave = fileChooser.getSelectedFile();
+        String filePath = fileToSave.getAbsolutePath();
+        if (!filePath.endsWith(".xlsx")) {
+            filePath += ".xlsx";
+        }
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Doanh Thu Nhân Viên");
+
+            // ===== CHỈ ĐỊNH RÕ ĐƯỜNG DẪN ORG.APACHE.POI KHI KHỞI TẠO ĐỂ TRÁNH XUNG ĐỘT =====
+            org.apache.poi.ss.usermodel.Font titleExcelFont = workbook.createFont();
+            titleExcelFont.setFontName("Segoe UI");
+            titleExcelFont.setFontHeightInPoints((short) 16);
+            titleExcelFont.setBold(true);
+            CellStyle titleStyle = workbook.createCellStyle();
+            titleStyle.setFont(titleExcelFont);
+
+            org.apache.poi.ss.usermodel.Font headerExcelFont = workbook.createFont();
+            headerExcelFont.setFontName("Segoe UI");
+            headerExcelFont.setFontHeightInPoints((short) 11);
+            headerExcelFont.setBold(true);
+            headerExcelFont.setColor(IndexedColors.WHITE.getIndex());
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerExcelFont);
+            headerStyle.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            org.apache.poi.ss.usermodel.Font normalExcelFont = workbook.createFont();
+            normalExcelFont.setFontName("Segoe UI");
+            normalExcelFont.setFontHeightInPoints((short) 11);
+
+            CellStyle normalStyle = workbook.createCellStyle();
+            normalStyle.setFont(normalExcelFont);
+
+            CellStyle centerStyle = workbook.createCellStyle();
+            centerStyle.setFont(normalExcelFont);
+            centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            CellStyle rightStyle = workbook.createCellStyle();
+            rightStyle.setFont(normalExcelFont);
+            rightStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            org.apache.poi.ss.usermodel.Font boldExcelFont = workbook.createFont();
+            boldExcelFont.setFontName("Segoe UI");
+            boldExcelFont.setFontHeightInPoints((short) 12);
+            boldExcelFont.setBold(true);
+            CellStyle boldStyle = workbook.createCellStyle();
+            boldStyle.setFont(boldExcelFont);
+
+            // Viết dữ liệu văn bản vào Excel
+            Row rowTitle = sheet.createRow(0);
+            Cell cellTitle = rowTitle.createCell(0);
+            cellTitle.setCellValue("BÁO CÁO HIỆU SUẤT & DOANH THU NHÂN VIÊN");
+            cellTitle.setCellStyle(titleStyle);
+
+            Row rowTime = sheet.createRow(1);
+            Cell cellTime = rowTime.createCell(0);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            cellTime.setCellValue("Giai đoạn báo cáo: Từ ngày " + sdf.format((java.util.Date) spinnerTuNgay.getValue()) + " đến ngày " + sdf.format((java.util.Date) spinnerDenNgay.getValue()));
+            cellTime.setCellStyle(normalStyle);
+
+            int rowIdx = 3;
+            Row rowHeader = sheet.createRow(rowIdx++);
+            for (int c = 0; c < table.getColumnCount(); c++) {
+                Cell cell = rowHeader.createCell(c);
+                cell.setCellValue(table.getColumnName(c));
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (int r = 0; r < tableModel.getRowCount(); r++) {
+                Row rowData = sheet.createRow(rowIdx++);
+                for (int c = 0; c < table.getColumnCount(); c++) {
+                    Cell cell = rowData.createCell(c);
+                    Object value = tableModel.getValueAt(r, c);
+                    cell.setCellValue(value != null ? value.toString() : "");
+
+                    if (c == 0 || c == 2) {
+                        cell.setCellStyle(centerStyle);
+                    } else if (c == 3) {
+                        cell.setCellStyle(rightStyle);
+                    } else {
+                        cell.setCellStyle(normalStyle);
+                    }
+                }
+            }
+
+            sheet.createRow(rowIdx++);
+            Row rowSummary = sheet.createRow(rowIdx);
+            Cell cellLabelTotal = rowSummary.createCell(1);
+            cellLabelTotal.setCellValue("TỔNG DOANH THU HỆ THỐNG TÍCH LŨY:");
+            cellLabelTotal.setCellStyle(boldStyle);
+
+            Cell cellValueTotal = rowSummary.createCell(3);
+            cellValueTotal.setCellValue(lblTongDoanhThuHeThong.getText());
+            cellValueTotal.setCellStyle(boldStyle);
+
+            for (int c = 0; c < table.getColumnCount(); c++) {
+                sheet.autoSizeColumn(c);
+            }
+
+            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                workbook.write(out);
+                JOptionPane.showMessageDialog(this, "Xuất báo cáo doanh thu nhân viên ra tệp Excel thành công!\nĐường dẫn tệp: " + filePath, "Thành Công", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gặp lỗi trong quá trình kết xuất báo cáo Excel: " + e.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private void styleComponent(JComponent comp, int width) {

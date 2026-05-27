@@ -104,7 +104,6 @@ public class LoginUI extends JFrame {
         txtPass.setMaximumSize(new Dimension(440, 50));
         txtPass.setAlignmentX(Component.LEFT_ALIGNMENT);
         formPanel.add(txtPass);
-
         // ===== OPTIONS (GIỮ NGUYÊN) =====
         formPanel.add(Box.createVerticalStrut(30));
 
@@ -191,63 +190,55 @@ public class LoginUI extends JFrame {
             }
         });
         // ================= LOGIN + PHÂN QUYỀN =================
+
         btnLogin.addActionListener(e -> {
 
             String user = txtUser.getText().trim();
             String pass = new String(txtPass.getPassword()).trim();
 
             if (user.isEmpty() || pass.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Không được để trống!"
-                );  
+                JOptionPane.showMessageDialog(this, "Không được để trống!");
                 return;
             }
 
+            // Gọi hàm check tài khoản mật khẩu
             TaiKhoan tk = taiKhoanDao.login(user, pass);
 
             if (tk != null) {
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Đăng nhập thành công - " + tk.getHoTen()
-                );
-
-                // phân quyền theo Mã Chức Vụ
-                String maChucVu = tk.getMaChucVu();
-
-                if ("CV01".equalsIgnoreCase(maChucVu)) {
-
-                    // QUẢN LÝ
-                    NhanVien nv = new NhanVienDao()
-                            .getById(tk.getMaNV());
-
-                    new AccountDetailUI(nv).setVisible(true);
-
-                }
-                else if ("CV02".equalsIgnoreCase(maChucVu)) {
-
-                    NhanVien nv = new NhanVienDao()
-                            .getById(tk.getMaNV());
-
-                    new AccountDetailUI(nv).setVisible(true);
-                }
-                else {
+                // 1. KIỂM TRA TRẠNG THÁI TRƯỚC: Nếu dính chữ "Khóa" thì thông báo riêng và ngắt luôn
+                if (tk.getTrangThai() != null &&
+                        (tk.getTrangThai().equalsIgnoreCase("Khóa") || tk.getTrangThai().equalsIgnoreCase("Bị khóa"))) {
 
                     JOptionPane.showMessageDialog(
                             this,
-                            "Tài khoản chưa được phân quyền!"
+                            "Tài khoản của bạn đã bị vô hiệu hóa",
+                            "Đăng nhập thất bại",
+                            JOptionPane.ERROR_MESSAGE
                     );
+                    return; // Dừng lại tại đây, không cho vào hệ thống
                 }
 
+                // 2. NẾU TÀI KHOẢN HOẠT ĐỘNG BÌNH THƯỜNG -> TIẾP TỤC VÀO HỆ THỐNG Y NHƯ CŨ
+                JOptionPane.showMessageDialog(this, "Đăng nhập thành công - " + tk.getHoTen());
+
+                String maChucVu = tk.getMaChucVu();
+                if ("CV01".equalsIgnoreCase(maChucVu)) {
+                    NhanVien nv = new NhanVienDao().getById(tk.getMaNV());
+                    new AccountDetailUI(nv).setVisible(true);
+                }
+                else if ("CV02".equalsIgnoreCase(maChucVu)) {
+                    NhanVien nv = new NhanVienDao().getById(tk.getMaNV());
+                    new AccountDetailUI(nv).setVisible(true);
+                }
+                else {
+                    JOptionPane.showMessageDialog(this, "Tài khoản chưa được phân quyền!");
+                }
                 dispose();
 
             } else {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Sai tài khoản hoặc mật khẩu!"
-                );
+                // Chỉ khi gõ sai tên đăng nhập hoặc sai mật khẩu thật thì mới nhảy vào đây
+                JOptionPane.showMessageDialog(this, "Sai tài khoản hoặc mật khẩu!");
             }
         });
 

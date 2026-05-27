@@ -4,15 +4,31 @@ import Dao.KhachHangDao;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 
+// import gói io và util cơ bản (GIỮ NGUYÊN)
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import javax.swing.table.JTableHeader;
+
+// ===== CHỈ ĐỊNH RÕ ĐƯỜNG DẪN ORG.APACHE.POI KHI KHỞI TẠO ĐỂ TRÁNH XUNG ĐỘT VỚI AWT =====
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ThongKeKhachHangUI extends JPanel {
 
@@ -61,9 +77,8 @@ public class ThongKeKhachHangUI extends JPanel {
     }
 
     private JPanel createHeaderAndFilterBar() {
-        JPanel container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setOpaque(false);
+        JPanel toolbar = new JPanel(new BorderLayout());
+        toolbar.setOpaque(false);
 
         // Tiêu đề phân hệ
         JPanel titlePanel = new JPanel(new GridLayout(2, 1, 0, 4));
@@ -80,12 +95,11 @@ public class ThongKeKhachHangUI extends JPanel {
 
         titlePanel.add(title);
         titlePanel.add(subtitle);
+        toolbar.add(titlePanel, BorderLayout.WEST);
 
         // Thanh công cụ bộ lọc ngày phẳng bo góc tròn
-        JPanel filterToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 12));
-        filterToolbar.setBackground(Color.WHITE);
-        filterToolbar.putClientProperty(FlatClientProperties.STYLE, "arc: 12");
-        filterToolbar.setBorder(new EmptyBorder(4, 10, 4, 10));
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        filterPanel.setOpaque(false);
 
         spinnerTuNgay = new JSpinner(new SpinnerDateModel());
         spinnerTuNgay.setEditor(new JSpinner.DateEditor(spinnerTuNgay, "dd/MM/yyyy"));
@@ -98,24 +112,23 @@ public class ThongKeKhachHangUI extends JPanel {
         spinnerDenNgay.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
 
         JButton btnLoc = new JButton("📊 Lọc Số Liệu");
-        btnLoc.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnLoc.setForeground(Color.WHITE);
-        btnLoc.setBackground(COLOR_PRIMARY);
-        btnLoc.setPreferredSize(new Dimension(130, 36));
-        btnLoc.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnLoc.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        styleButton(btnLoc, COLOR_PRIMARY, Color.WHITE);
         btnLoc.addActionListener(e -> loadDataThongKe());
 
-        filterToolbar.add(new JLabel("Từ ngày:"));
-        filterToolbar.add(spinnerTuNgay);
-        filterToolbar.add(new JLabel("Đến ngày:"));
-        filterToolbar.add(spinnerDenNgay);
-        filterToolbar.add(Box.createHorizontalStrut(10));
-        filterToolbar.add(btnLoc);
+        // BỔ SUNG: Nút xuất báo cáo đồng bộ thiết kế với phân hệ phòng
+        JButton btnExport = new JButton("📥 Xuất Báo Cáo");
+        styleButton(btnExport, new Color(100, 116, 139), Color.WHITE);
+        btnExport.addActionListener(e -> exportThongKeKhachHang());
 
-        container.add(titlePanel);
-        container.add(filterToolbar);
-        return container;
+        filterPanel.add(new JLabel("Từ ngày:"));
+        filterPanel.add(spinnerTuNgay);
+        filterPanel.add(new JLabel("Đến ngày:"));
+        filterPanel.add(spinnerDenNgay);
+        filterPanel.add(btnLoc);
+        filterPanel.add(btnExport);
+
+        toolbar.add(filterPanel, BorderLayout.EAST);
+        return toolbar;
     }
 
     private JPanel createTableReportCard() {
@@ -132,9 +145,12 @@ public class ThongKeKhachHangUI extends JPanel {
         table = new JTable(tableModel);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.setRowHeight(38);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        table.getTableHeader().setBackground(new Color(30, 41, 59)); // Màu tối sang trọng
-        table.getTableHeader().setForeground(Color.WHITE);
+
+        JTableHeader header = table.getTableHeader();
+        header.setPreferredSize(new Dimension(0, 42));
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(new Color(30, 41, 59)); // Màu tối sang trọng
+        header.setForeground(Color.WHITE);
         table.setShowVerticalLines(false);
         table.setGridColor(COLOR_BORDER);
 
@@ -199,5 +215,145 @@ public class ThongKeKhachHangUI extends JPanel {
         }
 
         lblFooterReport.setText("Hệ thống ghi nhận: Có " + list.size() + " đối tượng khách hàng đã phát sinh hoạt động lưu trú tại khách sạn trong kỳ.");
+    }
+
+    // =========================================================================
+    // HÀM XUẤT BÁO CÁO THỐNG KÊ KHÁCH HÀNG RA FILE EXCEL (.XLSX) CHUẨN ĐỒNG BỘ
+    // =========================================================================
+    private void exportThongKeKhachHang() {
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu thống kê trên bảng để kết xuất báo cáo!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn vị trí lưu file thống kê lượt sử dụng khách hàng");
+
+        SimpleDateFormat fileDateFormatter = new SimpleDateFormat("ddMMyyyy");
+        String txtTuNgay = fileDateFormatter.format((Date) spinnerTuNgay.getValue());
+        String txtDenNgay = fileDateFormatter.format((Date) spinnerDenNgay.getValue());
+
+        fileChooser.setSelectedFile(new File("BaoCaoTuongTacKH_" + txtTuNgay + "_" + txtDenNgay + ".xlsx"));
+
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File fileToSave = fileChooser.getSelectedFile();
+        String filePath = fileToSave.getAbsolutePath();
+        if (!filePath.endsWith(".xlsx")) {
+            filePath += ".xlsx";
+        }
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Lượt Sử Dụng Khách Hàng");
+
+            // ===== KHỞI TẠO FONT EXCEL SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI TRÁNH XUNG ĐỘT VỚI AWT =====
+            org.apache.poi.ss.usermodel.Font titleExcelFont = workbook.createFont();
+            titleExcelFont.setFontName("Segoe UI");
+            titleExcelFont.setFontHeightInPoints((short) 16);
+            titleExcelFont.setBold(true);
+            CellStyle titleStyle = workbook.createCellStyle();
+            titleStyle.setFont(titleExcelFont);
+
+            org.apache.poi.ss.usermodel.Font headerExcelFont = workbook.createFont();
+            headerExcelFont.setFontName("Segoe UI");
+            headerExcelFont.setFontHeightInPoints((short) 11);
+            headerExcelFont.setBold(true);
+            headerExcelFont.setColor(IndexedColors.WHITE.getIndex());
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerExcelFont);
+            headerStyle.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            org.apache.poi.ss.usermodel.Font normalExcelFont = workbook.createFont();
+            normalExcelFont.setFontName("Segoe UI");
+            normalExcelFont.setFontHeightInPoints((short) 11);
+
+            CellStyle normalStyle = workbook.createCellStyle();
+            normalStyle.setFont(normalExcelFont);
+
+            CellStyle centerStyle = workbook.createCellStyle();
+            centerStyle.setFont(normalExcelFont);
+            centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            org.apache.poi.ss.usermodel.Font boldExcelFont = workbook.createFont();
+            boldExcelFont.setFontName("Segoe UI");
+            boldExcelFont.setFontHeightInPoints((short) 12);
+            boldExcelFont.setBold(true);
+            CellStyle boldStyle = workbook.createCellStyle();
+            boldStyle.setFont(boldExcelFont);
+
+            // Viết Tiêu đề báo cáo
+            Row rowTitle = sheet.createRow(0);
+            Cell cellTitle = rowTitle.createCell(0);
+            cellTitle.setCellValue("BÁO CÁO THỐNG KÊ LƯỢT SỬ DỤNG KHÁCH SẠN KHÁCH HÀNG");
+            cellTitle.setCellStyle(titleStyle);
+
+            Row rowTime = sheet.createRow(1);
+            Cell cellTime = rowTime.createCell(0);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            cellTime.setCellValue("Giai đoạn báo cáo: Từ ngày " + sdf.format((Date) spinnerTuNgay.getValue()) + " đến ngày " + sdf.format((Date) spinnerDenNgay.getValue()));
+            cellTime.setCellStyle(normalStyle);
+
+            // Viết các cột tiêu đề tên bảng
+            int rowIdx = 3;
+            Row rowHeader = sheet.createRow(rowIdx++);
+            for (int c = 0; c < table.getColumnCount(); c++) {
+                Cell cell = rowHeader.createCell(c);
+                cell.setCellValue(table.getColumnName(c));
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Vòng lặp nạp dữ liệu động từ TableModel
+            for (int r = 0; r < tableModel.getRowCount(); r++) {
+                Row rowData = sheet.createRow(rowIdx++);
+                for (int c = 0; c < table.getColumnCount(); c++) {
+                    Cell cell = rowData.createCell(c);
+                    Object value = tableModel.getValueAt(r, c);
+                    cell.setCellValue(value != null ? value.toString() : "");
+
+                    // Áp dụng định dạng canh lề giữa cho tất cả các cột dữ liệu (riêng cột tên để lề trái mặc định)
+                    if (c != 2) {
+                        cell.setCellStyle(centerStyle);
+                    } else {
+                        cell.setCellStyle(normalStyle);
+                    }
+                }
+            }
+
+            // Ghi dòng tổng hợp chân bảng dữ liệu
+            sheet.createRow(rowIdx++);
+            Row rowSummary = sheet.createRow(rowIdx);
+            Cell cellFooter = rowSummary.createCell(0);
+            cellFooter.setCellValue(lblFooterReport.getText());
+            cellFooter.setCellStyle(boldStyle);
+
+            // Tự động kéo giãn độ rộng khít vừa vặn với ký tự
+            for (int c = 0; c < table.getColumnCount(); c++) {
+                sheet.autoSizeColumn(c);
+            }
+
+            // Ghi xuất luồng dữ liệu vật lý
+            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                workbook.write(out);
+                JOptionPane.showMessageDialog(this, "Xuất báo cáo thống kê khách hàng ra tệp Excel thành công!\nĐường dẫn tệp: " + filePath, "Thành Công", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gặp lỗi trong quá trình kết xuất báo cáo Excel: " + e.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setPreferredSize(new Dimension(140, 36));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
     }
 }

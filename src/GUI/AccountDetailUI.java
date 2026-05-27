@@ -653,7 +653,7 @@ public class AccountDetailUI extends JFrame {
         });
     }
 }*/
-package GUI;
+/*package GUI;
 
 import Dao.NhanVienDao;
 import Entity.NhanVien;
@@ -1089,5 +1089,440 @@ public class AccountDetailUI extends JFrame {
         panel.add(wrapper, BorderLayout.CENTER);
 
         loadPanel(panel);
+    }
+}*/
+package GUI;
+
+import Dao.NhanVienDao;
+import Entity.NhanVien;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatLightLaf;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class AccountDetailUI extends JFrame {
+
+    private NhanVien nhanVien;
+    private JPanel mainContent;
+
+    // ===== PALETTE MÀU NGUYÊN BẢN CỦA BẠN =====
+    private final Color COLOR_NAV_ACTIVE = new Color(0, 120, 255);  // Xanh dương sáng khi active
+    private final Color COLOR_BG_MAIN = new Color(245, 245, 245);
+    private final Color COLOR_TEXT_MAIN = new Color(30, 41, 59);
+    private final Color COLOR_TEXT_MUTED = new Color(100, 116, 139);
+    private final Color COLOR_BORDER = new Color(226, 232, 240);
+
+    public AccountDetailUI(NhanVien nv) {
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception ignored) {}
+
+        this.nhanVien = nv;
+        initUI();
+    }
+
+    private void initUI() {
+        setTitle("Quản Lý Khách Sạn");
+        setSize(1100, 650);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // ĐỔI MỚI: Navbar giờ đây đã có ảnh nền đè ở dưới
+        add(createNavbar(), BorderLayout.NORTH);
+
+        mainContent = new JPanel(new BorderLayout());
+        mainContent.setBackground(COLOR_BG_MAIN);
+        add(mainContent, BorderLayout.CENTER);
+
+        showHomePanel();
+    }
+
+    // ================= ĐÃ CẬP NHẬT: NAVBAR SỬ DỤNG ẢNH NỀN ĐÈ PHÍA DƯỚI SẮC NÉT =================
+    private JPanel createNavbar() {
+        String maCV = nhanVien.getChucVu().getMaChucVu();
+
+        // Nạp ảnh nền cho Navbar (Bạn có thể đổi sang file ảnh khác nếu muốn)
+        ImageIcon navIcon = new ImageIcon("src/photo/ảnh nền.jpg");
+        Image navRawImage = navIcon.getImage();
+
+        // Tạo Panel tùy chỉnh để tự vẽ ảnh nền khử răng cưa đè dưới Navbar
+        JPanel navbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 12)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (navRawImage != null) {
+                    Graphics2D g2d = (Graphics2D) g.create();
+                    // Bật chế độ vẽ chất lượng cao tránh bể nét cho thanh gác Menu
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+                    // Vẽ ảnh đè dưới toàn bộ thanh Navbar
+                    g2d.drawImage(navRawImage, 0, 0, getWidth(), getHeight(), this);
+
+                    // LỚP PHỦ MỜ (Tùy chọn): Thêm một lớp màu xanh đen trong suốt 40% để chữ Menu nổi bật hơn
+                    g2d.setColor(new Color(0, 40, 120, 100));
+                    g2d.fillRect(0, 0, getWidth(), getHeight());
+
+                    g2d.dispose();
+                }
+            }
+        };
+        navbar.setPreferredSize(new Dimension(0, 60));
+        navbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
+
+        // ===== ADMIN =====
+        JButton btnAdmin = menuButton(nhanVien.getHoTen(), true);
+        btnAdmin.addActionListener(e -> showAccountPanel());
+
+        // ===== HỆ THỐNG =====
+        JButton btnHeThong = menuButton("Hệ thống", false);
+        btnHeThong.addActionListener(e -> showHomePanel());
+
+        // ===== DANH MỤC (CÓ DROPDOWN) =====
+        JButton btnDanhMuc = menuButton("Danh mục", false);
+        JPopupMenu danhMucMenu = createStyledPopupMenu();
+
+        JMenuItem khachHang = new JMenuItem("Khách hàng");
+        khachHang.addActionListener(e -> loadPanel(new KhachHangUI()));
+
+        JMenuItem menuNhanVien = new JMenuItem("Nhân viên");
+        menuNhanVien.addActionListener(e -> loadPanel(new NhanVienUI()));
+
+        JMenuItem taiKhoan = new JMenuItem("Tài khoản");
+        taiKhoan.addActionListener(e -> loadPanel(new TaiKhoanUI()));
+
+        JMenuItem dichVu = new JMenuItem("Dịch vụ");
+        dichVu.addActionListener(e -> loadPanel(new DichVuUI()));
+
+        JMenuItem khuyenMai = new JMenuItem("Khuyến mãi");
+        khuyenMai.addActionListener(e -> loadPanel(new KhuyenMaiUI()));
+
+        JMenuItem phong = new JMenuItem("Phòng");
+        phong.addActionListener(e -> loadPanel(new PhongUI()));
+
+        danhMucMenu.add(khachHang);
+        danhMucMenu.add(dichVu);
+        danhMucMenu.add(phong);
+
+        if ("CV01".equals(maCV)) {
+            danhMucMenu.add(menuNhanVien);
+            danhMucMenu.add(taiKhoan);
+            danhMucMenu.add(khuyenMai);
+        }
+
+        btnDanhMuc.addActionListener(e -> danhMucMenu.show(btnDanhMuc, 0, btnDanhMuc.getHeight()));
+
+        // ===== XỬ LÝ =====
+        JButton btnXuLy = menuButton("Xử lý", false);
+        JPopupMenu xuLyMenu = createStyledPopupMenu();
+
+        JMenuItem datPhong = new JMenuItem("Đặt phòng");
+        datPhong.addActionListener(e -> loadPanel(new DatPhongUI(nhanVien.getMaNV())));
+
+        JMenuItem nhanPhong = new JMenuItem("Nhận Phòng");
+        nhanPhong.addActionListener(e -> loadPanel(new NhanPhongUI(nhanVien.getMaNV())));
+
+        JMenuItem giahanPhong = new JMenuItem("Gia Hạn Phòng");
+        giahanPhong.addActionListener(e -> loadPanel(new GiaHanPhong_UI()));
+
+        JMenuItem thanhToan = new JMenuItem("Thanh toán - Trả Phòng");
+        thanhToan.addActionListener(e -> loadPanel(new TraPhong_UI(nhanVien.getMaNV())));
+
+        JMenuItem dichVuPhong = new JMenuItem("Dịch Vụ Phòng");
+        dichVuPhong.addActionListener(e -> loadPanel(new DichVuPhong_UI()));
+
+        JMenuItem thuePhong = new JMenuItem("Thuê Phòng");
+        thuePhong.addActionListener(e -> loadPanel(new ThuePhong_UI(nhanVien.getMaNV())));
+
+        xuLyMenu.add(nhanPhong);
+        xuLyMenu.add(giahanPhong);
+        xuLyMenu.add(thanhToan);
+        xuLyMenu.add(datPhong);
+        xuLyMenu.add(dichVuPhong);
+        xuLyMenu.add(thuePhong);
+
+        btnXuLy.addActionListener(e -> xuLyMenu.show(btnXuLy, 0, btnXuLy.getHeight()));
+
+        // ===== TÌM KIẾM =====
+        JButton btnTimKiem = menuButton("Tìm kiếm", false);
+        JPopupMenu timKiemMenu = createStyledPopupMenu();
+
+        JMenuItem tkHoaDon = new JMenuItem("Hóa đơn");
+        tkHoaDon.addActionListener(e -> loadPanel(new Search_HoaDon_UI()));
+
+        JMenuItem tkkhachHang = new JMenuItem("Khách Hàng");
+        tkkhachHang.addActionListener(e -> loadPanel(new Search_KhachHang_UI()));
+
+        JMenuItem tktaiKhoan = new JMenuItem("Tài Khoản");
+        tktaiKhoan.addActionListener(e -> loadPanel(new Search_TaiKhoan_UI()));
+
+        JMenuItem tkphongKS = new JMenuItem("Phòng");
+        tkphongKS.addActionListener(e -> loadPanel(new Search_Phong_UI()));
+
+        JMenuItem tknhanVien = new JMenuItem("Nhân Viên");
+        tknhanVien.addActionListener(e -> loadPanel(new Search_NhanVien_UI()));
+
+        timKiemMenu.add(tkHoaDon);
+        timKiemMenu.add(tkkhachHang);
+
+        if ("CV01".equals(maCV)) {
+            timKiemMenu.add(tktaiKhoan);
+            timKiemMenu.add(tknhanVien);
+        }
+        timKiemMenu.add(tkphongKS);
+
+        btnTimKiem.addActionListener(e -> timKiemMenu.show(btnTimKiem, 0, btnTimKiem.getHeight()));
+
+        // ===== THỐNG KÊ =====
+        JButton btnThongKe = menuButton("Thống kê", false);
+        JPopupMenu thongKeMenu = createStyledPopupMenu();
+
+        JMenuItem tkDoanhThu = new JMenuItem("Thống kê doanh thu");
+        tkDoanhThu.addActionListener(e -> loadPanel(new Manager_Stastics_UI()));
+
+        JMenuItem tkPhong = new JMenuItem("Thống kê phòng");
+        tkPhong.addActionListener(e -> loadPanel(new ThongKePhongUI()));
+
+        JMenuItem tkDTNV = new JMenuItem("Thống kê doanh thu nhân viên");
+        tkDTNV.addActionListener(e -> loadPanel(new ThongKeDoanhThuNVUI()));
+
+        JMenuItem tkKH = new JMenuItem("Thống kê khách hàng");
+        tkKH.addActionListener(e -> loadPanel(new ThongKeKhachHangUI()));
+
+        thongKeMenu.add(tkDoanhThu);
+        thongKeMenu.add(tkPhong);
+        thongKeMenu.add(tkDTNV);
+        thongKeMenu.add(tkKH);
+
+        btnThongKe.addActionListener(e -> thongKeMenu.show(btnThongKe, 0, btnThongKe.getHeight()));
+
+        // ===== ĐĂNG XUẤT =====
+        JButton btnLogout = menuButton("Đăng Xuất", false);
+        btnLogout.addActionListener(e -> {
+            new LoginUI().setVisible(true);
+            dispose();
+        });
+
+        navbar.add(btnAdmin);
+        navbar.add(btnHeThong);
+        navbar.add(btnDanhMuc);
+        navbar.add(btnXuLy);
+        navbar.add(btnTimKiem);
+        if ("CV01".equals(maCV)) {
+            navbar.add(btnThongKe);
+        }
+        navbar.add(btnLogout);
+
+        return navbar;
+    }
+
+    // ================= ĐÃ CẬP NHẬT: NÚT TRONG SUỐT HOẶC MỜ ĐỂ LỘ ẢNH NỀN NAVBAR PhÍA DƯỚI =================
+    private JButton menuButton(String text, boolean active) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+
+        // Nếu nút đang active thì để nền xanh mờ, nếu nút bình thường thì để trong suốt lộ ảnh nền
+        btn.setBackground(active ? COLOR_NAV_ACTIVE : new Color(255, 255, 255, 35));
+
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setPreferredSize(new Dimension(130, 35));
+        btn.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+        return btn;
+    }
+
+    private JPopupMenu createStyledPopupMenu() {
+        JPopupMenu menu = new JPopupMenu();
+        menu.putClientProperty(FlatClientProperties.STYLE, "arc: 10; font: 14; border: 1,1,1,1," +
+                String.format("#%02x%02x%02x", COLOR_BORDER.getRed(), COLOR_BORDER.getGreen(), COLOR_BORDER.getBlue()));
+        return menu;
+    }
+
+    private void loadPanel(JPanel panel) {
+        mainContent.removeAll();
+        mainContent.add(panel, BorderLayout.CENTER);
+        mainContent.revalidate();
+        mainContent.repaint();
+    }
+
+    // ================= BANNER HỆ THỐNG TRÀN NỀN TOÀN DIỆN 100% SẮC NÉT =================
+    private void showHomePanel() {
+        JLayeredPane layeredPane = new JLayeredPane();
+
+        ImageIcon originalIcon = new ImageIcon("src/photo/ảnh nền.jpg");
+        Image rawImage = originalIcon.getImage();
+
+        JPanel backgroundPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (rawImage != null) {
+                    Graphics2D g2d = (Graphics2D) g.create();
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                    g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                    g2d.drawImage(rawImage, 0, 0, getWidth(), getHeight(), this);
+                    g2d.dispose();
+                }
+            }
+        };
+
+        layeredPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                backgroundPanel.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
+            }
+        });
+
+        JPanel foregroundPanel = new JPanel(new GridBagLayout());
+        foregroundPanel.setOpaque(false);
+
+        JPanel rightBottomWidget = new JPanel();
+        rightBottomWidget.setLayout(new BoxLayout(rightBottomWidget, BoxLayout.Y_AXIS));
+        rightBottomWidget.setOpaque(false);
+
+        JLabel title = new JLabel("HỆ THỐNG KHÁCH SẠN LUXURY", JLabel.RIGHT);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(Color.WHITE);
+        title.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        title.setText("<html><body style='text-shadow: 2px 2px 5px rgba(0,0,0,0.95); letter-spacing: 1px;'>" + title.getText() + "</body></html>");
+
+        JLabel clock = new JLabel("00:00:00", JLabel.RIGHT);
+        clock.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        clock.setForeground(new Color(255, 204, 0));
+        clock.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        JLabel date = new JLabel("", JLabel.RIGHT);
+        date.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        date.setForeground(new Color(241, 245, 249));
+        date.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        rightBottomWidget.add(title);
+        rightBottomWidget.add(Box.createVerticalStrut(4));
+        rightBottomWidget.add(clock);
+        rightBottomWidget.add(Box.createVerticalStrut(4));
+        rightBottomWidget.add(date);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.SOUTHEAST;
+        gbc.insets = new Insets(0, 0, 30, 40);
+
+        foregroundPanel.add(rightBottomWidget, gbc);
+
+        layeredPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                foregroundPanel.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
+            }
+        });
+
+        layeredPane.add(backgroundPanel, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(foregroundPanel, JLayeredPane.PALETTE_LAYER);
+
+        JPanel containerPanel = new JPanel(new BorderLayout());
+        containerPanel.add(layeredPane, BorderLayout.CENTER);
+        loadPanel(containerPanel);
+
+        javax.swing.Timer timer = new javax.swing.Timer(1000, e -> {
+            LocalDateTime now = LocalDateTime.now();
+            clock.setText(now.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+            date.setText(now.format(DateTimeFormatter.ofPattern("'Ngày' dd 'Tháng' MM 'Năm' yyyy")));
+
+            clock.setText("<html><body style='text-shadow: 2px 2px 5px rgba(0,0,0,0.9);'>" + clock.getText() + "</body></html>");
+            date.setText("<html><body style='text-shadow: 1px 1px 3px rgba(0,0,0,0.8);'>" + date.getText() + "</body></html>");
+        });
+        timer.start();
+    }
+
+    // ================= CHI TIẾT TÀI KHOẢN CÁ NHÂN =================
+    private void showAccountPanel() {
+        NhanVienDao dao = new NhanVienDao();
+        nhanVien = dao.getNhanVienTheoMa(nhanVien.getMaNV());
+
+        JPanel outerPanel = new JPanel(new GridBagLayout());
+        outerPanel.setBackground(COLOR_BG_MAIN);
+
+        JPanel mainCard = new JPanel(new BorderLayout(35, 0));
+        mainCard.setBackground(Color.WHITE);
+        mainCard.putClientProperty(FlatClientProperties.STYLE, "arc: 20; dropShadow: true");
+        mainCard.setBorder(new EmptyBorder(35, 40, 35, 40));
+        mainCard.setPreferredSize(new Dimension(850, 420));
+
+        JPanel leftProfile = new JPanel(new BorderLayout(0, 15));
+        leftProfile.setOpaque(false);
+        leftProfile.setPreferredSize(new Dimension(240, 0));
+
+        String tenAnh = nhanVien.getAnhNhanVien();
+        String duongDanAnh = "photo/default.png";
+        if (tenAnh != null && !tenAnh.trim().isEmpty()) {
+            String checkPath = "photo/" + nhanVien.getAnhNhanVien();
+            if (new File(checkPath).exists()) {
+                duongDanAnh = checkPath;
+            }
+        }
+
+        Image img = new ImageIcon(duongDanAnh).getImage().getScaledInstance(220, 260, Image.SCALE_SMOOTH);
+        JLabel avatar = new JLabel(new ImageIcon(img));
+        avatar.setHorizontalAlignment(JLabel.CENTER);
+        avatar.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(COLOR_BORDER, 1, true),
+                new EmptyBorder(4, 4, 4, 4)
+        ));
+
+        JLabel name = new JLabel(nhanVien.getHoTen(), JLabel.CENTER);
+        name.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        name.setForeground(COLOR_TEXT_MAIN);
+
+        leftProfile.add(avatar, BorderLayout.CENTER);
+        leftProfile.add(name, BorderLayout.SOUTH);
+
+        JPanel rightInfoGrid = new JPanel(new GridLayout(6, 1, 0, 10));
+        rightInfoGrid.setOpaque(false);
+
+        rightInfoGrid.add(createProfileRow("Mã nhân viên:", nhanVien.getMaNV() != null ? nhanVien.getMaNV() : ""));
+        rightInfoGrid.add(createProfileRow("Giới tính:", nhanVien.getGioiTinh() == 1 ? "Nam" : "Nữ"));
+        rightInfoGrid.add(createProfileRow("Ngày sinh:", nhanVien.getNgaySinh() != null ? nhanVien.getNgaySinh().toString() : "Chưa có"));
+        rightInfoGrid.add(createProfileRow("Số CCCD:", nhanVien.getCccd() != null ? nhanVien.getCccd() : "Chưa có"));
+        rightInfoGrid.add(createProfileRow("Số điện thoại:", nhanVien.getSdt() != null ? nhanVien.getSdt() : "Chưa có"));
+        rightInfoGrid.add(createProfileRow("Chức vụ hiện tại:", nhanVien.getChucVu() != null ? nhanVien.getChucVu().getTenChucVu() : "Chưa có"));
+
+        mainCard.add(leftProfile, BorderLayout.WEST);
+        mainCard.add(rightInfoGrid, BorderLayout.CENTER);
+
+        outerPanel.add(mainCard, new GridBagConstraints());
+        loadPanel(outerPanel);
+    }
+
+    private JPanel createProfileRow(String labelText, String valueText) {
+        JPanel row = new JPanel(new BorderLayout());
+        row.setOpaque(false);
+        row.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, COLOR_BORDER));
+
+        JLabel lblLabel = new JLabel(labelText);
+        lblLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblLabel.setForeground(COLOR_TEXT_MUTED);
+
+        JLabel lblValue = new JLabel(valueText);
+        lblValue.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        lblValue.setForeground(COLOR_TEXT_MAIN);
+
+        row.add(lblLabel, BorderLayout.WEST);
+        row.add(lblValue, BorderLayout.EAST);
+        return row;
     }
 }

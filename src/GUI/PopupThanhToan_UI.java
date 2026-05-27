@@ -330,10 +330,11 @@ public class PopupThanhToan_UI extends JDialog {
 
             boolean ok = hdDao.thanhToanHoaDon(
                     maPhong,
+                    this.maNV, // <-- Đảm bảo biến này lấy từ UserSession hoặc biến toàn cục trong class
                     kmDao.getMaKhuyenMaiByTen(cbKM.getSelectedItem().toString()),
                     thueDao.getMaThueByTen(cbThue.getSelectedItem().toString()),
-                    Double.parseDouble(txtTienVAT.getText().replace(",","")),
-                    Double.parseDouble(txtTong.getText().replace(",",""))
+                    Double.parseDouble(txtTienVAT.getText().replace(",", "")),
+                    Double.parseDouble(txtTong.getText().replace(",", ""))
             );
 
             if(ok){
@@ -364,6 +365,7 @@ public class PopupThanhToan_UI extends JDialog {
                                 )
                         )
                 ).setVisible(true);
+
 
                 dispose();
             }else{

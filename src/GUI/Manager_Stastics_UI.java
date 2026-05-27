@@ -1,749 +1,49 @@
-/*package GUI;
-
-import Raven.button.Button;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-import java.time.LocalDate;
-
-public class Manager_Stastics_UI extends JPanel {
-
-    private JComboBox<String> chonThang;
-    private JComboBox<String> chonNam;
-
-    private JLabel tongTien;
-    private JLabel doanhThuPhong;
-    private JLabel doanhThuDichVu;
-
-    public Manager_Stastics_UI() {
-
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        // ===== HEADER =====
-        JPanel header = new JPanel();
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Color.WHITE);
-        add(header, BorderLayout.NORTH);
-
-        // ===== FILTER =====
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,10,10));
-        filterPanel.setBackground(Color.WHITE);
-
-        chonThang = new JComboBox<>();
-        for (int i = 1; i <= 12; i++) {
-            chonThang.addItem("Tháng " + i);
-        }
-        chonThang.setSelectedIndex(LocalDate.now().getMonthValue() - 1);
-        chonThang.setPreferredSize(new Dimension(120,35));
-
-        chonNam = new JComboBox<>();
-        int year = LocalDate.now().getYear();
-        for (int i = 0; i < 5; i++) {
-            chonNam.addItem(String.valueOf(year - i));
-        }
-        chonNam.setPreferredSize(new Dimension(100,35));
-
-        Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
-        btnSearch.setPreferredSize(new Dimension(80,35));
-
-        Button btnExport = new Button();
-        btnExport.setText("Xuất file");
-        btnExport.setPreferredSize(new Dimension(100,35));
-
-        filterPanel.add(chonThang);
-        filterPanel.add(chonNam);
-        filterPanel.add(btnSearch);
-        filterPanel.add(btnExport);
-
-        header.add(filterPanel);
-
-        // ===== CARD THỐNG KÊ =====
-        JPanel statsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
-        statsPanel.setBorder(new EmptyBorder(20,20,20,20));
-        statsPanel.setBackground(Color.WHITE);
-
-        statsPanel.add(createCard(
-                "Tổng tiền hóa đơn",
-                tongTien = new JLabel("0 VNĐ"),
-                new Color(255,153,0)
-        ));
-
-        statsPanel.add(createCard(
-                "Tiền phòng",
-                doanhThuPhong = new JLabel("0 VNĐ"),
-                new Color(255,80,80)
-        ));
-
-        statsPanel.add(createCard(
-                "Tiền dịch vụ",
-                doanhThuDichVu = new JLabel("0 VNĐ"),
-                new Color(0,153,255)
-        ));
-
-        header.add(statsPanel);
-
-        // ===== BODY =====
-        JPanel body = new JPanel(new GridLayout(1,2,20,0));
-        body.setBorder(new EmptyBorder(20,20,20,20));
-        body.setBackground(Color.WHITE);
-        add(body, BorderLayout.CENTER);
-
-        // ===== PIE CHART (UI giả) =====
-        JPanel left = new JPanel(new BorderLayout());
-        left.setBorder(new LineBorder(new Color(200,200,200)));
-        left.setBackground(Color.WHITE);
-
-        JLabel pieTitle = new JLabel("Tỷ lệ doanh thu (Phòng / Dịch vụ)", SwingConstants.CENTER);
-        pieTitle.setFont(new Font("Tahoma", Font.BOLD, 14));
-
-        left.add(pieTitle, BorderLayout.NORTH);
-        left.add(new JLabel("PieChart", SwingConstants.CENTER), BorderLayout.CENTER);
-
-        // ===== LINE CHART (UI giả) =====
-        JPanel right = new JPanel(new BorderLayout());
-        right.setBorder(new LineBorder(new Color(200,200,200)));
-        right.setBackground(Color.WHITE);
-
-        JLabel lineTitle = new JLabel("Doanh thu theo ngày trong tháng", SwingConstants.CENTER);
-        lineTitle.setFont(new Font("Tahoma", Font.BOLD, 14));
-
-        right.add(lineTitle, BorderLayout.NORTH);
-        right.add(new JLabel("LineChart", SwingConstants.CENTER), BorderLayout.CENTER);
-
-        body.add(left);
-        body.add(right);
-    }
-
-    // ===== CARD =====
-    private JPanel createCard(String title, JLabel value, Color color){
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(color);
-
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(200,200,200)),
-                new EmptyBorder(20,20,20,20)
-        ));
-
-        JLabel lblTitle = new JLabel(title);
-        lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Tahoma", Font.BOLD, 16));
-
-        value.setForeground(Color.WHITE);
-        value.setFont(new Font("Tahoma", Font.BOLD, 22));
-
-        panel.add(lblTitle, BorderLayout.NORTH);
-        panel.add(value, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    // ===== TEST =====
-    public static void main(String[] args) {
-        JFrame f = new JFrame();
-        f.setSize(1200,600);
-        f.setLocationRelativeTo(null);
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new Manager_Stastics_UI());
-        f.setVisible(true);
-    }
-}
 package GUI;
 
 import Dao.ThongKeDao;
 import Raven.button.Button;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatLightLaf;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.*;
-import java.io.FileWriter;
+// import gói io và util cơ bản (GIỮ NGUYÊN)
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.BasicStroke;
+import java.awt.Cursor;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Map;
-
-public class Manager_Stastics_UI extends JPanel {
-
-    private JComboBox<String> chonThang;
-    private JComboBox<String> chonNam;
-
-    private JLabel tongTien;
-    private JLabel doanhThuPhong;
-    private JLabel doanhThuDichVu;
-
-    private JPanel pieChartPanel;
-    private JPanel lineChartPanel;
-
-    private final ThongKeDao thongKeDao =
-            new ThongKeDao();
-
-    public Manager_Stastics_UI(){
-
-        initUI();
-
-        loadThongKe();
-    }
-
-    // =====================================================
-    // INIT UI
-    // =====================================================
-
-    private void initUI(){
-
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-
-        add(createHeader(), BorderLayout.NORTH);
-
-        add(createBody(), BorderLayout.CENTER);
-    }
-
-    // =====================================================
-    // HEADER
-    // =====================================================
-
-    private JPanel createHeader(){
-
-        JPanel header = new JPanel();
-
-        header.setLayout(
-                new BoxLayout(
-                        header,
-                        BoxLayout.Y_AXIS
-                )
-        );
-
-        header.setBackground(Color.WHITE);
-
-        header.add(createFilterPanel());
-
-        header.add(createStatsPanel());
-
-        return header;
-    }
-
-    // =====================================================
-    // FILTER PANEL
-    // =====================================================
-
-    private JPanel createFilterPanel(){
-
-        JPanel panel =
-                new JPanel(
-                        new FlowLayout(
-                                FlowLayout.CENTER,
-                                10,
-                                10
-                        )
-                );
-
-        panel.setBackground(Color.WHITE);
-
-        chonThang = new JComboBox<>();
-
-        for(int i = 1; i <= 12; i++){
-
-            chonThang.addItem(
-                    "Tháng " + i
-            );
-        }
-
-        chonThang.setSelectedIndex(
-                LocalDate.now().getMonthValue() - 1
-        );
-
-        chonNam = new JComboBox<>();
-
-        int year = LocalDate.now().getYear();
-
-        for(int i = 0; i < 5; i++){
-
-            chonNam.addItem(
-                    String.valueOf(year - i)
-            );
-        }
-
-        Button btnSearch = new Button();
-        btnSearch.setText("Tìm");
-
-        Button btnExport = new Button();
-        btnExport.setText("Xuất file");
-
-        btnSearch.addActionListener(e -> loadThongKe());
-
-        btnExport.addActionListener(e -> exportThongKe());
-
-        panel.add(chonThang);
-        panel.add(chonNam);
-        panel.add(btnSearch);
-        panel.add(btnExport);
-
-        return panel;
-    }
-
-    // =====================================================
-    // STATS PANEL
-    // =====================================================
-
-    private JPanel createStatsPanel(){
-
-        JPanel panel =
-                new JPanel(
-                        new GridLayout(
-                                1,
-                                3,
-                                20,
-                                0
-                        )
-                );
-
-        panel.setBorder(
-                new EmptyBorder(
-                        20,
-                        20,
-                        20,
-                        20
-                )
-        );
-
-        panel.setBackground(Color.WHITE);
-
-        panel.add(createCard(
-                "Tổng tiền hóa đơn",
-                tongTien = new JLabel("0 VNĐ"),
-                new Color(255,153,0)
-        ));
-
-        panel.add(createCard(
-                "Tiền phòng",
-                doanhThuPhong = new JLabel("0 VNĐ"),
-                new Color(255,80,80)
-        ));
-
-        panel.add(createCard(
-                "Tiền dịch vụ",
-                doanhThuDichVu = new JLabel("0 VNĐ"),
-                new Color(0,153,255)
-        ));
-
-        return panel;
-    }
-
-    // =====================================================
-    // BODY
-    // =====================================================
-
-    private JPanel createBody(){
-
-        JPanel body =
-                new JPanel(
-                        new GridLayout(
-                                1,
-                                2,
-                                20,
-                                0
-                        )
-                );
-
-        body.setBorder(
-                new EmptyBorder(
-                        20,
-                        20,
-                        20,
-                        20
-                )
-        );
-
-        body.setBackground(Color.WHITE);
-
-        body.add(createPieChartPanel());
-
-        body.add(createLineChartPanel());
-
-        return body;
-    }
-
-    // =====================================================
-    // PIE CHART
-    // =====================================================
-
-    private JPanel createPieChartPanel(){
-
-        JPanel panel =
-                new JPanel(new BorderLayout());
-
-        panel.setBorder(
-                new LineBorder(
-                        new Color(200,200,200)
-                )
-        );
-
-        JLabel title =
-                new JLabel(
-                        "Tỷ lệ doanh thu",
-                        SwingConstants.CENTER
-                );
-
-        title.setFont(
-                new Font(
-                        "Tahoma",
-                        Font.BOLD,
-                        14
-                )
-        );
-
-        pieChartPanel = new JPanel(){
-
-            @Override
-            protected void paintComponent(Graphics g) {
-
-                super.paintComponent(g);
-
-                drawPieChart(g);
-            }
-        };
-
-        pieChartPanel.setBackground(Color.WHITE);
-
-        panel.add(title, BorderLayout.NORTH);
-
-        panel.add(pieChartPanel, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    // =====================================================
-    // LINE CHART
-    // =====================================================
-
-    private JPanel createLineChartPanel(){
-
-        JPanel panel =
-                new JPanel(new BorderLayout());
-
-        panel.setBorder(
-                new LineBorder(
-                        new Color(200,200,200)
-                )
-        );
-
-        JLabel title =
-                new JLabel(
-                        "Doanh thu theo ngày",
-                        SwingConstants.CENTER
-                );
-
-        title.setFont(
-                new Font(
-                        "Tahoma",
-                        Font.BOLD,
-                        14
-                )
-        );
-
-        lineChartPanel = new JPanel(){
-
-            @Override
-            protected void paintComponent(Graphics g) {
-
-                super.paintComponent(g);
-
-                drawLineChart(g);
-            }
-        };
-
-        lineChartPanel.setBackground(Color.WHITE);
-
-        panel.add(title, BorderLayout.NORTH);
-
-        panel.add(lineChartPanel, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    // =====================================================
-    // LOAD THỐNG KÊ
-    // =====================================================
-
-    private void loadThongKe(){
-
-        int thang =
-                chonThang.getSelectedIndex() + 1;
-
-        int nam =
-                Integer.parseInt(
-                        chonNam.getSelectedItem().toString()
-                );
-
-        double tong =
-                thongKeDao.getTongDoanhThu(thang, nam);
-
-        double phong =
-                thongKeDao.getDoanhThuPhong(thang, nam);
-
-        double dv =
-                thongKeDao.getDoanhThuDichVu(thang, nam);
-
-        DecimalFormat df =
-                new DecimalFormat("###,### VNĐ");
-
-        tongTien.setText(df.format(tong));
-
-        doanhThuPhong.setText(df.format(phong));
-
-        doanhThuDichVu.setText(df.format(dv));
-
-        pieChartPanel.repaint();
-
-        lineChartPanel.repaint();
-    }
-
-    // =====================================================
-    // PIE CHART DRAW
-    // =====================================================
-
-    private void drawPieChart(Graphics g){
-
-        int thang =
-                chonThang.getSelectedIndex() + 1;
-
-        int nam =
-                Integer.parseInt(
-                        chonNam.getSelectedItem().toString()
-                );
-
-        double phong =
-                thongKeDao.getDoanhThuPhong(thang, nam);
-
-        double dv =
-                thongKeDao.getDoanhThuDichVu(thang, nam);
-
-        double tong = phong + dv;
-
-        if(tong <= 0){
-
-            g.drawString(
-                    "Không có dữ liệu",
-                    120,
-                    120
-            );
-
-            return;
-        }
-
-        int phongAngle =
-                (int)((phong / tong) * 360);
-
-        g.setColor(new Color(255,80,80));
-        g.fillArc(70,40,180,180,0,phongAngle);
-
-        g.setColor(new Color(0,153,255));
-        g.fillArc(70,40,180,180,phongAngle,360-phongAngle);
-    }
-
-    // =====================================================
-    // LINE CHART DRAW
-    // =====================================================
-
-    private void drawLineChart(Graphics g){
-
-        int thang =
-                chonThang.getSelectedIndex() + 1;
-
-        int nam =
-                Integer.parseInt(
-                        chonNam.getSelectedItem().toString()
-                );
-
-        Map<Integer, Double> map =
-                thongKeDao.getDoanhThuTheoNgay(thang, nam);
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.drawLine(50,250,550,250);
-
-        g2.drawLine(50,250,50,50);
-
-        if(map.isEmpty()){
-
-            g2.drawString(
-                    "Không có dữ liệu",
-                    250,
-                    150
-            );
-
-            return;
-        }
-
-        double max = 0;
-
-        for(double d : map.values()){
-
-            if(d > max){
-
-                max = d;
-            }
-        }
-
-        int prevX = -1;
-        int prevY = -1;
-
-        for(int day : map.keySet()){
-
-            double value = map.get(day);
-
-            int x = 50 + day * 15;
-
-            int y =
-                    250 - (int)(
-                            (value / max) * 180
-                    );
-
-            g2.fillOval(x-3,y-3,6,6);
-
-            if(prevX != -1){
-
-                g2.drawLine(
-                        prevX,
-                        prevY,
-                        x,
-                        y
-                );
-            }
-
-            prevX = x;
-            prevY = y;
-        }
-    }
-
-    // =====================================================
-    // EXPORT FILE
-    // =====================================================
-
-    private void exportThongKe(){
-
-        try{
-
-            JFileChooser chooser =
-                    new JFileChooser();
-
-            int result =
-                    chooser.showSaveDialog(this);
-
-            if(result != JFileChooser.APPROVE_OPTION){
-
-                return;
-            }
-
-            FileWriter writer =
-                    new FileWriter(
-                            chooser.getSelectedFile()
-                    );
-
-            writer.write(
-                    "THỐNG KÊ DOANH THU\n"
-            );
-
-            writer.write(
-                    tongTien.getText() + "\n"
-            );
-
-            writer.close();
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Xuất file thành công!"
-            );
-
-        }catch(Exception e){
-
-            e.printStackTrace();
-        }
-    }
-
-    // =====================================================
-    // CARD
-    // =====================================================
-
-    private JPanel createCard(
-            String title,
-            JLabel value,
-            Color color
-    ){
-
-        JPanel panel =
-                new JPanel(new BorderLayout());
-
-        panel.setBackground(color);
-
-        panel.setBorder(
-                BorderFactory.createCompoundBorder(
-                        new LineBorder(
-                                new Color(200,200,200)
-                        ),
-                        new EmptyBorder(
-                                20,
-                                20,
-                                20,
-                                20
-                        )
-                )
-        );
-
-        JLabel lblTitle =
-                new JLabel(title);
-
-        lblTitle.setForeground(Color.WHITE);
-
-        lblTitle.setFont(
-                new Font(
-                        "Tahoma",
-                        Font.BOLD,
-                        16
-                )
-        );
-
-        value.setForeground(Color.WHITE);
-
-        value.setFont(
-                new Font(
-                        "Tahoma",
-                        Font.BOLD,
-                        22
-                )
-        );
-
-        panel.add(lblTitle, BorderLayout.NORTH);
-
-        panel.add(value, BorderLayout.SOUTH);
-
-        return panel;
-    }
-}*/
-package GUI;
-
-import Dao.ThongKeDao;
-import Raven.button.Button;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.io.FileWriter;
-import java.text.DecimalFormat;
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+// ===== CHỈ ĐỊNH RÕ ĐƯỜNG DẪN ORG.APACHE.POI KHI KHỞI TẠO ĐỂ TRÁNH XUNG ĐỘT VỚI AWT =====
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class Manager_Stastics_UI extends JPanel {
 
     private JComboBox<String> chonThang;
     private JComboBox<String> chonNam;
 
-    // ĐÃ BỔ SUNG: Thành phần phục vụ lọc Theo Ngày
     private JComboBox<String> chonNgay;
     private JRadioButton rdTheoThang;
     private JRadioButton rdTheoNgay;
@@ -779,7 +79,7 @@ public class Manager_Stastics_UI extends JPanel {
 
         initUI();
         initEvent();
-        switchFilterMode(); // Thiết lập trạng thái bộ lọc ban đầu
+        switchFilterMode();
         loadThongKe();
     }
 
@@ -788,15 +88,11 @@ public class Manager_Stastics_UI extends JPanel {
         add(createBody(), BorderLayout.CENTER);
     }
 
-    // =====================================================
-    // HEADER & FILTERS (THIẾT KẾ LẠI BỘ LỌC ĐA NĂNG)
-    // =====================================================
     private JPanel createHeader() {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
 
-        // Tiêu đề trang báo cáo
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         titlePanel.setOpaque(false);
         JLabel lblTitle = new JLabel("BÁO CÁO DOANH THU HỆ THỐNG");
@@ -806,11 +102,9 @@ public class Manager_Stastics_UI extends JPanel {
         header.add(titlePanel);
         header.add(Box.createVerticalStrut(10));
 
-        // Thanh điều khiển bộ lọc (Filter Control Panel)
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
         filterPanel.setOpaque(false);
 
-        // Tạo RadioButton để chuyển đổi chế độ
         rdTheoThang = new JRadioButton("Theo Tháng", true);
         rdTheoNgay = new JRadioButton("Theo Ngày", false);
         ButtonGroup group = new ButtonGroup();
@@ -820,19 +114,16 @@ public class Manager_Stastics_UI extends JPanel {
         styleRadioButton(rdTheoThang);
         styleRadioButton(rdTheoNgay);
 
-        // Hộp chọn Ngày
         chonNgay = new JComboBox<>();
         for (int i = 1; i <= 31; i++) chonNgay.addItem("Ngày " + i);
         chonNgay.setSelectedIndex(LocalDate.now().getDayOfMonth() - 1);
         styleComboBox(chonNgay, 90);
 
-        // Hộp chọn Tháng
         chonThang = new JComboBox<>();
         for (int i = 1; i <= 12; i++) chonThang.addItem("Tháng " + i);
         chonThang.setSelectedIndex(LocalDate.now().getMonthValue() - 1);
         styleComboBox(chonThang, 110);
 
-        // Hộp chọn Năm
         chonNam = new JComboBox<>();
         int year = LocalDate.now().getYear();
         for (int i = 0; i < 5; i++) chonNam.addItem(String.valueOf(year - i));
@@ -843,7 +134,6 @@ public class Manager_Stastics_UI extends JPanel {
 
         btnExport.addActionListener(e -> exportThongKe());
 
-        // Đổ các thành phần vào thanh bộ lọc theo thứ tự tối ưu trải nghiệm
         filterPanel.add(new JLabel("Chế độ lọc:"));
         filterPanel.add(rdTheoThang);
         filterPanel.add(rdTheoNgay);
@@ -872,26 +162,20 @@ public class Manager_Stastics_UI extends JPanel {
         return panel;
     }
 
-    // =====================================================
-    // SỰ KIỆN ĐIỀU KHIỂN CHUYỂN CHẾ ĐỘ ẨN HIỆN
-    // =====================================================
     private void initEvent() {
-        // Lắng nghe sự kiện click chọn chế độ trên Radio Button
         rdTheoThang.addActionListener(e -> switchFilterMode());
         rdTheoNgay.addActionListener(e -> switchFilterMode());
         btnSearch.addActionListener(e -> loadThongKe());
-
-        // Tự động thay đổi số ngày trong combobox khi chọn tháng/năm khác nhau (Tránh ngày 31 của tháng 2)
         chonThang.addActionListener(e -> updateDayComboBounds());
         chonNam.addActionListener(e -> updateDayComboBounds());
     }
 
     private void switchFilterMode() {
         if (rdTheoThang.isSelected()) {
-            chonNgay.setVisible(false);   // Ẩn ô chọn ngày đi nếu lọc theo tháng
+            chonNgay.setVisible(false);
             chonThang.setVisible(true);
         } else {
-            chonNgay.setVisible(true);    // Hiện đầy đủ Ngày/Tháng/Năm để lọc ngày cụ thể
+            chonNgay.setVisible(true);
             chonThang.setVisible(true);
             updateDayComboBounds();
         }
@@ -924,9 +208,6 @@ public class Manager_Stastics_UI extends JPanel {
         }
     }
 
-    // =====================================================
-    // BODY CONTAINING CHARTS
-    // =====================================================
     private JPanel createBody() {
         JPanel body = new JPanel(new GridLayout(1, 2, 20, 0));
         body.setOpaque(false);
@@ -968,7 +249,7 @@ public class Manager_Stastics_UI extends JPanel {
     }
 
     // =====================================================
-    // LOAD & TRUY VẤN THỐNG KÊ (HỖ TRỢ ĐA PHƯƠNG THỨC)
+    // LOAD & TRUY VẤN THỐNG KÊ (ĐÃ CẬP NHẬT LẤY DỮ LIỆU THẬT 100%)
     // =====================================================
     private void loadThongKe() {
         int thang = chonThang.getSelectedIndex() + 1;
@@ -977,7 +258,7 @@ public class Manager_Stastics_UI extends JPanel {
         double tong = 0, phong = 0, dv = 0;
 
         if (rdTheoThang.isSelected()) {
-            // LUỒNG 1: LỌC THEO THÁNG (Gọi hàm DAO gốc của bạn)
+            // LUỒNG 1: LỌC THEO THÁNG (Giữ nguyên dữ liệu thật cũ của bạn)
             tong = thongKeDao.getTongDoanhThu(thang, nam);
             phong = thongKeDao.getDoanhThuPhong(thang, nam);
             dv = thongKeDao.getDoanhThuDichVu(thang, nam);
@@ -985,28 +266,29 @@ public class Manager_Stastics_UI extends JPanel {
             // LUỒNG 2: LỌC THEO NGÀY CỦA THÁNG
             int ngay = chonNgay.getSelectedIndex() + 1;
 
-            // Nếu bạn đã viết sẵn hàm lấy theo ngày trong DAO thì gọi ở đây.
-            // Nếu chưa, hệ thống sẽ tự bóc tách thông tin ngày từ Map Doanh thu theo ngày của bạn để hiển thị cực kì thông minh:
-            Map<Integer, Double> mapTheoNgay = thongKeDao.getDoanhThuTheoNgay(thang, nam);
-            if (mapTheoNgay != null && mapTheoNgay.containsKey(ngay)) {
-                tong = mapTheoNgay.get(ngay);
-                // Giả định tỷ lệ chia đều tạm thời từ tổng nếu DAO chưa phân tách sâu tiền phòng/dv cho từng ngày đơn lẻ
-                phong = tong * 0.75;
-                dv = tong * 0.25;
-            }
+            // ĐÃ SỬA: Xóa bỏ đoạn map cũ chia tỷ lệ % toán học đi.
+            // Gọi trực tiếp dữ liệu chuẩn từ câu lệnh SQL Server ra.
+            phong = thongKeDao.getDoanhThuPhongTheoNgay(ngay, thang, nam);
+            dv = thongKeDao.getDoanhThuDichVuTheoNgay(ngay, thang, nam);
+            tong = thongKeDao.getTongDoanhThuTheoNgay(ngay, thang, nam);
         }
 
+        // Đổ dữ liệu thật lên các thẻ hiển thị trên giao diện
         tongTien.setText(df.format(tong));
-        doanhThuPhong.setText(df.format(phong));
+        doanhThuPhong.setText(df.format(phong)); // Đang chứa "1,200,000 VNĐ"
         doanhThuDichVu.setText(df.format(dv));
 
+        // Vẽ lại 2 biểu đồ khớp theo mốc số liệu thật mới
+        pieChartPanel.revalidate();
         pieChartPanel.repaint();
+        lineChartPanel.revalidate();
         lineChartPanel.repaint();
     }
 
-    // =====================================================
-    // VẼ BIỂU ĐỒ TRÒN ĐỘNG
-    // =====================================================
+    private void doActiveText(JLabel label, String text) {
+        label.setText(text);
+    }
+
     private void drawResponsivePieChart(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -1019,7 +301,6 @@ public class Manager_Stastics_UI extends JPanel {
         int x = (width - size) / 2 - 50;
         int y = (height - size) / 2;
 
-        // Lấy dữ liệu văn bản số tiền thô để tính toán phần trăm cung tròn trực tiếp từ ô Text Label
         double phong = Double.parseDouble(doanhThuPhong.getText().replaceAll("[^0-9]", ""));
         double dv = Double.parseDouble(doanhThuDichVu.getText().replaceAll("[^0-9]", ""));
         double tong = phong + dv;
@@ -1039,7 +320,6 @@ public class Manager_Stastics_UI extends JPanel {
         g2.setColor(COLOR_SERVICE);
         g2.fillArc(x, y, size, size, phongAngle, 360 - phongAngle);
 
-        // Vẽ Legend bên phải
         int lx = x + size + 30;
         int ly = height / 2 - 20;
         g2.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -1051,9 +331,6 @@ public class Manager_Stastics_UI extends JPanel {
         g2.setColor(TEXT_MAIN); g2.drawString(String.format("Dịch vụ: %.1f%%", (dv / tong) * 100), lx + 22, ly + 40);
     }
 
-    // =====================================================
-    // VẼ BIỂU ĐỒ ĐƯỜNG XU HƯỚNG ĐỘNG
-    // =====================================================
     private void drawResponsiveLineChart(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -1090,7 +367,6 @@ public class Manager_Stastics_UI extends JPanel {
         for (double d : map.values()) if (d > maxRevenue) maxRevenue = d;
         if (maxRevenue == 0) maxRevenue = 1.0;
 
-        // Vẽ đường lưới phụ ngang
         g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{4.0f}, 0.0f));
         for (int i = 1; i <= 4; i++) {
             int gridY = (h - paddingBottom) - (graphH * i / 4);
@@ -1104,7 +380,6 @@ public class Manager_Stastics_UI extends JPanel {
         g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
         if (rdTheoThang.isSelected()) {
-            // CHẾ ĐỘ THÁNG: Vẽ đồ thị đường chạy suốt từ ngày 1 đến hết tháng như cũ
             int maxDays = java.time.YearMonth.of(nam, thang).lengthOfMonth();
             int prevX = -1, prevY = -1;
 
@@ -1123,7 +398,6 @@ public class Manager_Stastics_UI extends JPanel {
                 prevX = x; prevY = y;
             }
         } else {
-            // CHẾ ĐỘ NGÀY: Vẽ cột đơn lẻ (Bar) hoặc điểm mốc tập trung để làm nổi bật ngày đang chọn
             int xemNgay = chonNgay.getSelectedIndex() + 1;
             double value = map.getOrDefault(xemNgay, 0.0);
 
@@ -1133,7 +407,6 @@ public class Manager_Stastics_UI extends JPanel {
             g2.setColor(TEXT_SUB);
             g2.drawString("Ngày " + xemNgay, x - 18, h - paddingBottom + 18);
 
-            // Vẽ một cột thuôn phẳng hiện đại thay vì đường thẳng đơn độc
             g2.setColor(COLOR_SERVICE);
             g2.fillRect(x - 20, y, 40, (h - paddingBottom) - y);
 
@@ -1143,27 +416,175 @@ public class Manager_Stastics_UI extends JPanel {
         }
     }
 
+    public void refreshData() {
+        loadThongKe();
+        pieChartPanel.repaint();
+        lineChartPanel.repaint();
+    }
+
+    // =========================================================================
+    // HÀM XUẤT BÁO CÁO DOANH THU TỔNG HỢP RA EXCEL (.XLSX) CHUẨN ĐỒNG BỘ
+    // =========================================================================
+    // =========================================================================
+    // HÀM XUẤT BÁO CÁO DOANH THU TỔNG HỢP RA EXCEL (.XLSX) ĐÃ TRỊ DỨT ĐIỂM LỖI
+    // =========================================================================
     private void exportThongKe() {
-        try {
-            JFileChooser chooser = new JFileChooser();
-            if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-            FileWriter writer = new FileWriter(chooser.getSelectedFile() + ".csv");
-            writer.write("BAO CAO DOANH THU KHACH SAN\n");
-            writer.write("Ky bao cao," + (chonThang.getSelectedIndex() + 1) + "/" + chonNam.getSelectedItem() + "\n");
-            writer.write("Hang muc,So tien\n");
-            writer.write("Tong cong," + tongTien.getText().replaceAll("[^0-9]", "") + "\n");
-            writer.write("Tien phong," + doanhThuPhong.getText().replaceAll("[^0-9]", "") + "\n");
-            writer.write("Tien dich vu," + doanhThuDichVu.getText().replaceAll("[^0-9]", "") + "\n");
-            writer.close();
-            JOptionPane.showMessageDialog(this, "Xuất dữ liệu thành công!");
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn vị trí lưu file báo cáo tổng hợp doanh thu");
+
+        SimpleDateFormat fileDateFormatter = new SimpleDateFormat("ddMMyyyy");
+        String txtThang = String.format("%02d", chonThang.getSelectedIndex() + 1);
+        String txtNam = chonNam.getSelectedItem().toString();
+
+        if (rdTheoThang.isSelected()) {
+            fileChooser.setSelectedFile(new File("BaoCaoDoanhThu_Thang" + txtThang + "_" + txtNam + ".xlsx"));
+        } else {
+            String txtNgay = String.format("%02d", chonNgay.getSelectedIndex() + 1);
+            fileChooser.setSelectedFile(new File("BaoCaoDoanhThu_Ngay" + txtNgay + txtThang + txtNam + ".xlsx"));
+        }
+
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File fileToSave = fileChooser.getSelectedFile();
+        String filePath = fileToSave.getAbsolutePath();
+        if (!filePath.endsWith(".xlsx")) {
+            filePath += ".xlsx";
+        }
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Doanh Thu Tổng Hợp");
+
+            org.apache.poi.ss.usermodel.Font titleExcelFont = workbook.createFont();
+            titleExcelFont.setFontName("Segoe UI");
+            titleExcelFont.setFontHeightInPoints((short) 16);
+            titleExcelFont.setBold(true);
+            CellStyle titleStyle = workbook.createCellStyle();
+            titleStyle.setFont(titleExcelFont);
+
+            org.apache.poi.ss.usermodel.Font sectionExcelFont = workbook.createFont();
+            sectionExcelFont.setFontName("Segoe UI");
+            sectionExcelFont.setFontHeightInPoints((short) 12);
+            sectionExcelFont.setBold(true);
+            CellStyle sectionStyle = workbook.createCellStyle();
+            sectionStyle.setFont(sectionExcelFont);
+
+            org.apache.poi.ss.usermodel.Font headerExcelFont = workbook.createFont();
+            headerExcelFont.setFontName("Segoe UI");
+            headerExcelFont.setFontHeightInPoints((short) 11);
+            headerExcelFont.setBold(true);
+            headerExcelFont.setColor(IndexedColors.WHITE.getIndex());
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerExcelFont);
+
+            // ĐÃ SỬA LỖI: Thay thế setBackgroundColor bằng cặp lệnh màu nền chuẩn của POI
+            headerStyle.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            org.apache.poi.ss.usermodel.Font normalExcelFont = workbook.createFont();
+            normalExcelFont.setFontName("Segoe UI");
+            normalExcelFont.setFontHeightInPoints((short) 11);
+
+            CellStyle normalStyle = workbook.createCellStyle();
+            normalStyle.setFont(normalExcelFont);
+
+            CellStyle centerStyle = workbook.createCellStyle();
+            centerStyle.setFont(normalExcelFont);
+            centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            CellStyle rightStyle = workbook.createCellStyle();
+            rightStyle.setFont(normalExcelFont);
+            rightStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            // 1. Ghi tiêu đề văn bản chính
+            Row rowTitle = sheet.createRow(0);
+            Cell cellTitle = rowTitle.createCell(0);
+            cellTitle.setCellValue("BÁO CÁO THỐNG KÊ DOANH THU TỔNG HỢP HỆ THỐNG");
+            cellTitle.setCellStyle(titleStyle);
+
+            Row rowTime = sheet.createRow(1);
+            Cell cellTime = rowTime.createCell(0);
+            String thongTinKyKyBaoCao = rdTheoThang.isSelected()
+                    ? "Kỳ báo cáo: " + chonThang.getSelectedItem().toString() + " / Năm " + txtNam
+                    : "Kỳ báo cáo: " + chonNgay.getSelectedItem().toString() + " - " + chonThang.getSelectedItem().toString() + " / Năm " + txtNam;
+            cellTime.setCellValue(thongTinKyKyBaoCao);
+            cellTime.setCellStyle(normalStyle);
+
+            // 2. Đổ khối KPI tổng hợp số liệu
+            int rowIdx = 3;
+            Row rowSectionKPI = sheet.createRow(rowIdx++);
+            Cell cellKPI = rowSectionKPI.createCell(0);
+            cellKPI.setCellValue("I. SỐ LIỆU TỔNG HỢP KINH DOANH TRONG KỲ");
+            cellKPI.setCellStyle(sectionStyle);
+
+            Row rowKPI1 = sheet.createRow(rowIdx++);
+            rowKPI1.createCell(0).setCellValue("Hạng mục tích lũy");
+            rowKPI1.createCell(2).setCellValue("Giá trị doanh thu mang về");
+            rowKPI1.getCell(0).setCellStyle(headerStyle); rowKPI1.getCell(2).setCellStyle(headerStyle);
+
+            Row rowKPI2 = sheet.createRow(rowIdx++);
+            rowKPI2.createCell(0).setCellValue("Tổng tiền hóa đơn ghi nhận:");
+            rowKPI2.createCell(2).setCellValue(tongTien.getText());
+            rowKPI2.getCell(0).setCellStyle(normalStyle); rowKPI2.getCell(2).setCellStyle(sectionStyle);
+
+            Row rowKPI3 = sheet.createRow(rowIdx++);
+            rowKPI3.createCell(0).setCellValue("Doanh thu khai thác phòng:");
+            rowKPI3.createCell(2).setCellValue(doanhThuPhong.getText());
+            rowKPI3.getCell(0).setCellStyle(normalStyle); rowKPI3.getCell(2).setCellStyle(normalStyle);
+
+            Row rowKPI4 = sheet.createRow(rowIdx++);
+            rowKPI4.createCell(0).setCellValue("Doanh thu khai thác dịch vụ đi kèm:");
+            rowKPI4.createCell(2).setCellValue(doanhThuDichVu.getText());
+            rowKPI4.getCell(0).setCellStyle(normalStyle); rowKPI4.getCell(2).setCellStyle(normalStyle);
+
+            rowIdx++; // Dòng cách trống
+
+            // 3. Nếu là chế độ xem theo tháng, đổ thêm chi tiết bảng phân rã doanh thu theo từng ngày
+            if (rdTheoThang.isSelected()) {
+                Row rowSectionList = sheet.createRow(rowIdx++);
+                Cell cellListTitle = rowSectionList.createCell(0);
+                cellListTitle.setCellValue("II. BẢNG PHÂN RÃ CHI TIẾT DOANH THU THEO TỪNG NGÀY TRONG THÁNG");
+                cellListTitle.setCellStyle(sectionStyle);
+
+                Row rowHeader = sheet.createRow(rowIdx++);
+                rowHeader.createCell(0).setCellValue("Mốc thời gian");
+                rowHeader.createCell(2).setCellValue("Doanh thu thực tế thu về");
+                rowHeader.getCell(0).setCellStyle(headerStyle); rowHeader.getCell(2).setCellStyle(headerStyle);
+
+                int maxDays = java.time.YearMonth.of(Integer.parseInt(txtNam), chonThang.getSelectedIndex() + 1).lengthOfMonth();
+                Map<Integer, Double> rawMap = thongKeDao.getDoanhThuTheoNgay(chonThang.getSelectedIndex() + 1, Integer.parseInt(txtNam));
+                if (rawMap == null) rawMap = new java.util.HashMap<>();
+
+                for (int day = 1; day <= maxDays; day++) {
+                    double value = rawMap.getOrDefault(day, 0.0);
+                    Row rowData = sheet.createRow(rowIdx++);
+                    rowData.createCell(0).setCellValue("Ngày " + day + "/" + txtThang + "/" + txtNam);
+                    rowData.createCell(2).setCellValue(df.format(value));
+                    rowData.getCell(0).setCellStyle(centerStyle);
+                    rowData.getCell(2).setCellStyle(rightStyle);
+                }
+            }
+
+            // Tự động căn chỉnh dãn rộng cột Excel khít nội dung
+            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(1);
+            sheet.autoSizeColumn(2);
+            sheet.autoSizeColumn(3);
+
+            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                workbook.write(out);
+                JOptionPane.showMessageDialog(this, "Xuất báo cáo tổng hợp doanh thu hệ thống ra tệp Excel thành công!\nĐường dẫn tệp: " + filePath, "Thành Công", JOptionPane.INFORMATION_MESSAGE);
+            }
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi xuất tập tin!");
+            JOptionPane.showMessageDialog(this, "Gặp lỗi trong quá trình kết xuất báo cáo Excel: " + e.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
-    // =====================================================
-    // UI COMPONENT STYLE FACTORIES
-    // =====================================================
     private JPanel createCard(String title, JLabel value, Color indicatorColor) {
         JPanel panel = new RoundedPanel(20);
         panel.setBackground(CARD_BG);
@@ -1224,7 +645,8 @@ public class Manager_Stastics_UI extends JPanel {
             g2.setColor(getBackground());
             g2.fillRoundRect(0, 0, getWidth() - 6, getHeight() - 6, radius, radius);
             g2.dispose();
-            super.paintComponent(g);
+            super.paintComponent(g2);
         }
     }
+
 }

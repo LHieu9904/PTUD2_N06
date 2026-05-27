@@ -248,38 +248,41 @@ public class PhongDao {
    }
 
     public boolean insert(Phong p){
+        // Ép giá trị mặc định là 'Trống' ngay tại code Java
+        String trangThai = (p.getTrangThai() == null || p.getTrangThai().isEmpty()) ? "Trống" : p.getTrangThai();
 
-        String sql = "INSERT INTO Phong VALUES (?,?,?,?)";
+        String sql = "INSERT INTO Phong (MaPhong, TrangThai, Tang, MaLP) VALUES (?,?,?,?)";
 
         try(Connection con = Database.getInstance().getConnection();
             PreparedStatement ps = con.prepareStatement(sql)){
 
             ps.setString(1, p.getMaPhong());
-            ps.setString(2, p.getTrangThai());
+            ps.setString(2, trangThai); // Truyền biến đã được ép mặc định
             ps.setInt(3, p.getTang());
             ps.setString(4, p.getLoaiPhong().getMaLP());
 
             return ps.executeUpdate() > 0;
-
-        }catch(Exception e){
+        } catch(Exception e){
             e.printStackTrace();
         }
-
         return false;
     }
 
     public boolean update(Phong p){
+        // Ép kiểu để chắc chắn trạng thái không bao giờ là null
+        String trangThaiMoi = (p.getTrangThai() == null || p.getTrangThai().isEmpty())
+                ? "Trống" : p.getTrangThai();
 
         String sql = """
-            UPDATE Phong
-            SET TrangThai=?, Tang=?, MaLP=?
-            WHERE MaPhong=?
-        """;
+        UPDATE Phong
+        SET TrangThai=?, Tang=?, MaLP=?
+        WHERE MaPhong=?
+    """;
 
         try(Connection con = Database.getInstance().getConnection();
             PreparedStatement ps = con.prepareStatement(sql)){
 
-            ps.setString(1, p.getTrangThai());
+            ps.setString(1, trangThaiMoi); // Dùng biến đã qua kiểm tra
             ps.setInt(2, p.getTang());
             ps.setString(3, p.getLoaiPhong().getMaLP());
             ps.setString(4, p.getMaPhong());
@@ -289,7 +292,6 @@ public class PhongDao {
         }catch(Exception e){
             e.printStackTrace();
         }
-
         return false;
     }
 

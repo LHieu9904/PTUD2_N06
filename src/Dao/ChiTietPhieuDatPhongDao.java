@@ -14,27 +14,25 @@ public class ChiTietPhieuDatPhongDao {
             int soNguoi
     ) {
 
+        // 🌟 ĐÃ SỬA: Bổ sung thêm cột SoLuong và dấu chấm hỏi (?) thứ 5 vào câu lệnh SQL
         String sql = """
-    INSERT INTO ChiTietPhieuDatPhong
-    (
-        MaPhieuDatPhong,
-        MaPhong,
-        ThoiGianNhan,
-        ThoiGianTra
-    )
-    VALUES (?, ?, ?, ?)
-""";
+            INSERT INTO ChiTietPhieuDatPhong
+            (
+                MaPhieuDatPhong,
+                MaPhong,
+                ThoiGianNhan,
+                ThoiGianTra,
+                SoLuong
+            )
+            VALUES (?, ?, ?, ?, ?)
+        """;
 
         try (
-                Connection con =
-                        Database.getInstance().getConnection();
-
-                PreparedStatement ps =
-                        con.prepareStatement(sql)
+                Connection con = Database.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
         ) {
 
             ps.setString(1, maPhieu);
-
             ps.setString(2, maPhong);
 
             ps.setTimestamp(
@@ -47,6 +45,8 @@ public class ChiTietPhieuDatPhongDao {
                     Timestamp.valueOf(tgTra)
             );
 
+            // 🌟 ĐÃ SỬA: Nạp tham số số người vào dấu chấm hỏi thứ 5
+            ps.setInt(5, soNguoi);
 
             int rs = ps.executeUpdate();
 
@@ -62,6 +62,7 @@ public class ChiTietPhieuDatPhongDao {
 
         return false;
     }
+
     public boolean updateThoiGianNhanTra(
             String maPhong,
             java.time.LocalDateTime thoiGianNhan,

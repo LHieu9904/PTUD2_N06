@@ -687,6 +687,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
@@ -1008,7 +1009,18 @@ public class DatPhongUI extends JPanel {
         JPanel container = new JPanel(new GridLayout(2, 1, 0, 20));
         container.setOpaque(false);
 
-        container.add(createListPanel("Hạng Phòng Trống Khả Dụng", availableRoomPanel));
+        // BƯỚC QUAN TRỌNG: Khởi tạo panel với GridLayout(0, 5) ngay từ đầu
+        availableRoomPanel = new JPanel(new GridLayout(0, 5, 5, 5));
+        availableRoomPanel.setBackground(Color.WHITE);
+
+        // Bọc vào ScrollPane
+        JScrollPane scroll = new JScrollPane(availableRoomPanel);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setBorder(null);
+        scroll.setPreferredSize(new Dimension(280, 400)); // Cố định chiều rộng 280px
+
+        container.add(createListPanel("Hạng Phòng Trống Khả Dụng", scroll));
         container.add(createListPanel("Sổ Nhật Ký Đặt Phòng Gần Đây", bookedRoomPanel));
 
         return container;
@@ -1088,47 +1100,34 @@ public class DatPhongUI extends JPanel {
 
     private void loadPhongTrong() {
         availableRoomPanel.removeAll();
-        String loaiPhong = cbbLoaiPhong.getSelectedItem().toString();
-        List<Phong> list = new PhongDao().getPhongTrongTheoLoai(loaiPhong);
+        // Dùng BoxLayout xếp dọc
+        availableRoomPanel.setLayout(new BoxLayout(availableRoomPanel, BoxLayout.Y_AXIS));
 
-        availableRoomPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        List<Phong> list = new PhongDao().getPhongTrongTheoLoai(cbbLoaiPhong.getSelectedItem().toString());
 
         for (Phong p : list) {
-            JPanel card = new JPanel(new BorderLayout());
-            card.setPreferredSize(new Dimension(85, 55));
-            card.setBackground(Color.WHITE);
-            card.setBorder(new LineBorder(COLOR_BORDER, 1, true));
-            card.putClientProperty(FlatClientProperties.STYLE, "arc: 8");
+            // Kiểm tra xem phòng này có đang là phòng đang chọn không
+            boolean isSelected = p.getMaPhong().equals(selectedMaPhong);
 
-            JLabel lb = new JLabel(p.getMaPhong(), JLabel.CENTER);
-            lb.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            lb.setForeground(COLOR_TEXT_MAIN);
+            JPanel item = createRoomListItem(p.getMaPhong(), p.getTrangThai(), isSelected);
 
-            card.add(lb, BorderLayout.CENTER);
-            card.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-            card.addMouseListener(new java.awt.event.MouseAdapter() {
+            item.addMouseListener(new MouseAdapter() {
                 @Override
-                public void mouseClicked(java.awt.event.MouseEvent e) {
+                public void mouseClicked(MouseEvent e) {
+                    // 1. Cập nhật mã phòng được chọn
                     selectedMaPhong = p.getMaPhong();
-                    for (Component c : availableRoomPanel.getComponents()) {
-                        c.setBackground(Color.WHITE);
-                        ((JPanel) c).setBorder(new LineBorder(COLOR_BORDER, 1, true));
-                    }
-                    card.setBackground(new Color(239, 246, 255));
-                    card.setBorder(new LineBorder(COLOR_PRIMARY, 2, true));
+
+                    // 2. GỌI LẠI LOAD ĐỂ VẼ LẠI TOÀN BỘ DANH SÁCH (Trick này đảm bảo chỉ 1 phòng được chọn)
+                    loadPhongTrong();
                 }
             });
 
-            availableRoomPanel.add(card);
+            availableRoomPanel.add(item);
+            availableRoomPanel.add(Box.createVerticalStrut(5)); // Khoảng cách giữa các dòng
         }
 
         availableRoomPanel.revalidate();
         availableRoomPanel.repaint();
-
-        if (list.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Không có phòng trống cho loại phòng này!");
-        }
     }
 
     private void clearForm() {
@@ -1138,9 +1137,14 @@ public class DatPhongUI extends JPanel {
 
         if (cbbLoaiPhong.getItemCount() > 0) cbbLoaiPhong.setSelectedIndex(0);
         selectedMaPhong = null;
+
+        // SỬA TẠI ĐÂY: Thêm kiểm tra instanceof
         for (Component c : availableRoomPanel.getComponents()) {
-            c.setBackground(Color.WHITE);
-            ((JPanel) c).setBorder(new LineBorder(COLOR_BORDER, 1, true));
+            if (c instanceof JPanel) { // Chỉ ép kiểu nếu nó là JPanel
+                JPanel p = (JPanel) c;
+                p.setBackground(Color.WHITE);
+                p.setBorder(new LineBorder(COLOR_BORDER, 1, true));
+            }
         }
     }
 
@@ -1183,17 +1187,20 @@ public class DatPhongUI extends JPanel {
             HoaDonPhongDao hdDao = new HoaDonPhongDao();
 
             // =====================================================
-            // STEP 1: XỬ LÝ THÔNG TIN KHÁCH HÀNG
             // =====================================================
+// STEP 1: XỬ LÝ THÔNG TIN KHÁCH HÀNG
+// =====================================================
             String sdt = tfSDT.getText().trim();
+            String ten = tfHoTen.getText().trim();
+            String cccd = tfCCCD.getText().trim(); // Lấy CCCD từ UI
             String maKH = khDao.getMaKHBySDT(sdt);
 
-            // Nếu là khách hàng mới hoàn toàn (chưa có SĐT trong hệ thống) -> Tiến hành thêm mới
             if (maKH == null) {
-                maKH = khDao.insertKhach(
-                        tfHoTen.getText().trim(),
-                        sdt
-                );
+                // Khách mới: Truyền cả CCCD vào hàm insert
+                maKH = khDao.insertKhach(ten, sdt, cccd);
+            } else {
+                // Khách cũ: Cập nhật lại CCCD (đề phòng trường hợp trước đó khách chưa có CCCD)
+                khDao.updateCCCD(maKH, cccd);
             }
 
             if (maKH == null) {
@@ -1291,6 +1298,24 @@ public class DatPhongUI extends JPanel {
             );
         }
     }
+    private JPanel createRoomListItem(String maPhong, String status, boolean isSelected) {
+        JPanel item = new JPanel(new BorderLayout(10, 0));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45)); // Chiều cao cố định
+        item.setPreferredSize(new Dimension(250, 45));
+
+        // Logic đổi màu khi chọn
+        item.setBackground(isSelected ? new Color(220, 235, 255) : Color.WHITE);
+        item.setBorder(new CompoundBorder(
+                new LineBorder(isSelected ? COLOR_PRIMARY : COLOR_BORDER, isSelected ? 2 : 1, true),
+                new EmptyBorder(0, 10, 0, 10)
+        ));
+
+        JLabel lbMa = new JLabel("Phòng: " + maPhong);
+        lbMa.setFont(new Font("Segoe UI", isSelected ? Font.BOLD : Font.PLAIN, 14));
+
+        item.add(lbMa, BorderLayout.CENTER);
+        return item;
+    }
 
     private void loadDatPhong() {
         bookedRoomPanel.removeAll();
@@ -1351,7 +1376,7 @@ public class DatPhongUI extends JPanel {
         return b;
     }
 
-    private JPanel createListPanel(String title, JPanel content) {
+    private JPanel createListPanel(String title, java.awt.Component content) { // Đổi thành Component
         JPanel panel = createStyledCard();
         panel.setLayout(new BorderLayout(0, 10));
 
@@ -1359,12 +1384,8 @@ public class DatPhongUI extends JPanel {
         lb.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lb.setForeground(COLOR_TEXT_MAIN);
 
-        content.setBackground(Color.WHITE);
-        JScrollPane scroll = new JScrollPane(content);
-        scroll.setBorder(null);
-
         panel.add(lb, BorderLayout.NORTH);
-        panel.add(scroll, BorderLayout.CENTER);
+        panel.add(content, BorderLayout.CENTER); // Component sẽ được add vào đây
         return panel;
     }
 

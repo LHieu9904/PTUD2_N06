@@ -69,6 +69,7 @@ public class TaiKhoanDao {
     // 2. trạng thái
     // 3. chức vụ
 
+    // ================= UPDATE (ĐỒNG BỘ TRẠNG THÁI SANG BẢNG NHÂN VIÊN) =================
     public boolean updateOnlyAccount(TaiKhoan tk) {
 
         String sqlTK = """
@@ -78,9 +79,11 @@ public class TaiKhoanDao {
             WHERE TenDangNhap = ?
         """;
 
+        // Thêm lệnh cập nhật trạng thái làm việc bên Nhân viên tương ứng
         String sqlNV = """
             UPDATE NhanVien
-            SET MaChucVu = ?
+            SET MaChucVu = ?,
+                TrangThaiLamViec = ?
             WHERE MaNV = ?
         """;
 
@@ -88,41 +91,47 @@ public class TaiKhoanDao {
 
         try {
             con = Database.getInstance().getConnection();
-            con.setAutoCommit(false);
+            con.setAutoCommit(false); // Kích hoạt Transaction an toàn dữ liệu
 
-            // update bảng tài khoản
+            // 1. Cập nhật bảng tài khoản
             PreparedStatement psTK = con.prepareStatement(sqlTK);
-
             psTK.setString(1, tk.getMatKhau());
             psTK.setString(2, tk.getTrangThai());
             psTK.setString(3, tk.getTenDangNhap());
-
             psTK.executeUpdate();
 
-            // update chức vụ bên nhân viên
+            // 2. Cập nhật chức vụ và tự động đồng bộ trạng thái làm việc sang nhân viên
             PreparedStatement psNV = con.prepareStatement(sqlNV);
-
             psNV.setString(1, tk.getMaChucVu());
-            psNV.setString(2, tk.getMaNV());
 
+            // Nếu tài khoản chọn trạng thái "Khóa" -> Nhân viên chuyển thành "Nghỉ"
+            // Ngược lại nếu chọn "Hoạt động" -> Nhân viên chuyển thành "Đang làm"
+            if (tk.getTrangThai() != null && tk.getTrangThai().equalsIgnoreCase("Khóa")) {
+                psNV.setString(2, "Nghỉ");
+            } else {
+                psNV.setString(2, "Đang làm");
+            }
+
+            psNV.setString(3, tk.getMaNV());
             psNV.executeUpdate();
 
-            con.commit();
+            con.commit(); // Xác nhận lưu lên cả 2 bảng dữ liệu thành công
             return true;
 
         } catch (Exception e) {
-
             try {
-                if (con != null) {
-                    con.rollback();
-                }
+                if (con != null) con.rollback();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-
             e.printStackTrace();
+        } finally {
+            try {
+                if (con != null) con.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
         return false;
     }
 
@@ -306,10 +315,10 @@ public class TaiKhoanDao {
 
         return false;
     }
-    // ================= LOGIN =================
-
+    // ================= LOGIN (CHẶN TUYỆT ĐỐI TÀI KHOẢN KHÓA/NHÂN VIÊN NGHỈ) =================
     public TaiKhoan login(String user, String pass) {
 
+        // Bỏ điều kiện lọc TrangThai ở đây để câu lệnh SQL luôn tìm ra tài khoản nếu gõ đúng mật khẩu
         String sql = """
         SELECT
             tk.*,
@@ -333,16 +342,13 @@ public class TaiKhoanDao {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 TaiKhoan tk = new TaiKhoan();
-
                 tk.setMaNV(rs.getString("MaNV"));
                 tk.setHoTen(rs.getString("HoTen"));
+                tk.setMaChucVu(rs.getString("MaChucVu"));
 
-                // lấy mã chức vụ
-                tk.setMaChucVu(
-                        rs.getString("MaChucVu")
-                );
+                // Bắt buộc phải lấy cột này để đẩy ra ngoài giao diện kiểm tra
+                tk.setTrangThai(rs.getString("TrangThai"));
 
                 return tk;
             }
@@ -350,7 +356,6 @@ public class TaiKhoanDao {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
     }
 // ======================================

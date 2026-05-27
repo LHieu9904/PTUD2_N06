@@ -442,16 +442,16 @@ CREATE TABLE NhanVien (
 );
 
 INSERT INTO NhanVien VALUES
-('NV1250001',N'Nguyễn Văn A',1,'079201000001','1995-01-01',N'Đang làm','CV01',15000000,'a.jpg','a@gmail.com','0900000001'),
-('NV0250001',N'Trần Thị B',0,'079301000002','2001-02-02',N'Đang làm','CV02',9000000,'b.jpg','b@gmail.com','0900000002'),
-('NV0250002',N'Lê Văn C',1,'079201000003','2001-03-03',N'Đang làm','CV02',9000000,'c.jpg','c@gmail.com','0900000003'),
-('NV0250003',N'Phạm Thị D',0,'079301000004','2001-04-04',N'Đang làm','CV02',9000000,'d.jpg','d@gmail.com','0900000004'),
-('NV0250004',N'Hoàng Văn E',1,'079201000005','2001-05-05',N'Đang làm','CV02',9000000,'e.jpg','e@gmail.com','0900000005'),
-('NV0250005',N'Võ Thị F',0,'079301000006','2001-06-06',N'Đang làm','CV02',9000000,'f.jpg','f@gmail.com','0900000006'),
-('NV0250006',N'Đặng Văn G',1,'079201000007','2001-07-07',N'Đang làm','CV02',9000000,'g.jpg','g@gmail.com','0900000007'),
-('NV0250007',N'Bùi Thị H',0,'079301000008','2001-08-08',N'Đang làm','CV02',9000000,'h.jpg','h@gmail.com','0900000008'),
-('NV0250008',N'Đỗ Văn I',1,'079201000009','2001-09-09',N'Đang làm','CV02',9000000,'i.jpg','i@gmail.com','0900000009'),
-('NV0250009',N'Ngô Thị K',0,'079301000010','2001-10-10',N'Đang làm','CV02',9000000,'k.jpg','k@gmail.com','0900000010');
+('NV1250001',N'Nguyễn Văn An',1,'079295000001','1995-01-01',N'Đang làm','CV01',15000000,'a.jpg','a@gmail.com','0900000001'),
+('NV0250001',N'Trần Thị Bình',0,'079301000002','2001-02-02',N'Đang làm','CV02',9000000,'b.jpg','b@gmail.com','0900000002'),
+('NV0250002',N'Lê Văn Chương',1,'079201000003','2001-03-03',N'Đang làm','CV02',9000000,'c.jpg','c@gmail.com','0900000003'),
+('NV0250003',N'Phạm Thị Dung',0,'079301000004','2001-04-04',N'Đang làm','CV02',9000000,'d.jpg','d@gmail.com','0900000004'),
+('NV0250004',N'Hoàng Văn Huy',1,'079201000005','2001-05-05',N'Đang làm','CV02',9000000,'e.jpg','e@gmail.com','0900000005'),
+('NV0250005',N'Võ Thị Nguyệt',0,'079301000006','2001-06-06',N'Đang làm','CV02',9000000,'f.jpg','f@gmail.com','0900000006'),
+('NV0250006',N'Đặng Văn Gia',1,'079201000007','2001-07-07',N'Đang làm','CV02',9000000,'g.jpg','g@gmail.com','0900000007'),
+('NV0250007',N'Bùi Thị Hạnh',0,'079301000008','2001-08-08',N'Đang làm','CV02',9000000,'h.jpg','h@gmail.com','0900000008'),
+('NV0250008',N'Đỗ Văn Vương',1,'079201000009','2001-09-09',N'Đang làm','CV02',9000000,'i.jpg','i@gmail.com','0900000009'),
+('NV0250009',N'Ngô Thị Quỳnh',0,'079301000010','2001-10-10',N'Đang làm','CV02',9000000,'k.jpg','k@gmail.com','0900000010');
 
 -- =====================================================
 -- TÀI KHOẢN
@@ -470,15 +470,15 @@ REFERENCES NhanVien(MaNV)
 
 INSERT INTO TaiKhoan VALUES
 ('TK001','admin','Admin@123','NV1250001',N'Hoạt động'),
-('TK002','lt1','LeTan@123','NV0250001',N'Hoạt động'),
-('TK003','lt2','LeTan@123','NV0250002',N'Hoạt động'),
-('TK004','lt3','LeTan@123','NV0250003',N'Hoạt động'),
-('TK005','lt4','LeTan@123','NV0250004',N'Hoạt động'),
-('TK006','lt5','LeTan@123','NV0250005',N'Hoạt động'),
-('TK007','lt6','LeTan@123','NV0250006',N'Hoạt động'),
-('TK008','lt7','LeTan@123','NV0250007',N'Hoạt động'),
-('TK009','lt8','LeTan@123','NV0250008',N'Hoạt động'),
-('TK010','lt9','LeTan@123','NV0250009',N'Hoạt động');
+('TK002','lt1','Letan@123','NV0250001',N'Hoạt động'),
+('TK003','lt2','Letan@123','NV0250002',N'Hoạt động'),
+('TK004','lt3','Letan@123','NV0250003',N'Hoạt động'),
+('TK005','lt4','Letan@123','NV0250004',N'Hoạt động'),
+('TK006','lt5','Letan@123','NV0250005',N'Hoạt động'),
+('TK007','lt6','Letan@123','NV0250006',N'Hoạt động'),
+('TK008','lt7','Letan@123','NV0250007',N'Hoạt động'),
+('TK009','lt8','Letan@123','NV0250008',N'Hoạt động'),
+('TK010','lt9','Letan@123','NV0250009',N'Hoạt động');
 
 -- =====================================================
 -- KHÁCH HÀNG
@@ -493,16 +493,16 @@ GioiTinh INT CHECK(GioiTinh IN(0,1))
 );
 
 INSERT INTO KhachHang VALUES
-('KH0001',N'Nguyễn Minh A','0911111111','079201111111',1),
-('KH0002',N'Trần Thị B','0911111112','079301111112',0),
-('KH0003',N'Lê Văn C','0911111113','079201111113',1),
-('KH0004',N'Phạm Thị D','0911111114','079301111114',0),
-('KH0005',N'Hoàng Văn E','0911111115','079201111115',1),
-('KH0006',N'Võ Thị F','0911111116','079301111116',0),
-('KH0007',N'Đặng Văn G','0911111117','079201111117',1),
-('KH0008',N'Bùi Thị H','0911111118','079301111118',0),
-('KH0009',N'Đỗ Văn I','0911111119','079201111119',1),
-('KH0010',N'Ngô Thị K','0911111120','079301111120',0);
+('KH0001',N'Nguyễn Minh An','0911111111','079201111111',1),
+('KH0002',N'Trần Thị Bích','0911111112','079301111112',0),
+('KH0003',N'Lê Văn Dương','0911111113','079201111113',1),
+('KH0004',N'Phạm Thị Tuyết','0911111114','079301111114',0),
+('KH0005',N'Hoàng Văn Gia Bảo','0911111115','079201111115',1),
+('KH0006',N'Võ Thị Tuyết Quỳnh','0911111116','079301111116',0),
+('KH0007',N'Đặng Văn Tuấn Trường','0911111117','079201111117',1),
+('KH0008',N'Bùi Thị Hồng','0911111118','079301111118',0),
+('KH0009',N'Đỗ Văn Gia Duy','0911111119','079201111119',1),
+('KH0010',N'Ngô Thị Tuyết Lan','0911111120','079301111120',0);
 
 -- =====================================================
 -- LOẠI PHÒNG
@@ -596,7 +596,12 @@ INSERT INTO PhieuDatPhong VALUES
 ('DP007',GETDATE(),'KH0007','NV0250007'),
 ('DP008',GETDATE(),'KH0008','NV0250008'),
 ('DP009',GETDATE(),'KH0009','NV0250009'),
-('DP010',GETDATE(),'KH0010','NV0250001');
+('DP010',GETDATE(),'KH0010','NV0250001'),
+('DP011', DATEADD(DAY, -5, GETDATE()), 'KH0004', 'NV0250001'),
+('DP012', DATEADD(DAY, -4, GETDATE()), 'KH0005', 'NV0250002'),
+('DP013', DATEADD(DAY, -3, GETDATE()), 'KH0006', 'NV0250003'),
+('DP014', DATEADD(DAY, -2, GETDATE()), 'KH0007', 'NV0250004'),
+('DP015', DATEADD(DAY, -1, GETDATE()), 'KH0008', 'NV0250005');
 
 -- =====================================================
 -- CHI TIẾT PHIẾU ĐẶT PHÒNG
@@ -631,7 +636,12 @@ INSERT INTO ChiTietPhieuDatPhong VALUES
 ('DP007','P301',GETDATE(),DATEADD(HOUR,11,GETDATE()),4),
 ('DP008','P302',GETDATE(),DATEADD(HOUR,12,GETDATE()),2),
 ('DP009','P303',GETDATE(),DATEADD(HOUR,13,GETDATE()),1),
-('DP010','P401',GETDATE(),DATEADD(HOUR,14,GETDATE()),2);
+('DP010','P401',GETDATE(),DATEADD(HOUR,14,GETDATE()),2),
+('DP011', 'P101', DATEADD(DAY, -5, GETDATE()), DATEADD(DAY, -4, GETDATE()), 2),
+('DP012', 'P201', DATEADD(DAY, -4, GETDATE()), DATEADD(DAY, -3, GETDATE()), 1),
+('DP013', 'P301', DATEADD(DAY, -3, GETDATE()), DATEADD(DAY, -2, GETDATE()), 3),
+('DP014', 'P401', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -1, GETDATE()), 2),
+('DP015', 'P102', DATEADD(DAY, -1, GETDATE()), GETDATE(), 1);
 
 -- =====================================================
 -- KHUYẾN MÃI
@@ -725,8 +735,12 @@ FOREIGN KEY (MaThue)
 INSERT INTO HoaDonPhong VALUES
 ('HD001',GETDATE(),'DP001','NV0250001','KH0001','KM001','T001',500000,25000,N'Chưa thanh toán'),
 ('HD002',GETDATE(),'DP002','NV0250002','KH0002','KM002','T002',600000,36000,N'Chưa thanh toán'),
-('HD003',GETDATE(),'DP003','NV0250003','KH0003','KM003','T003',700000,49000,N'Chưa thanh toán');
-
+('HD003',GETDATE(),'DP003','NV0250003','KH0003','KM003','T003',700000,49000,N'Chưa thanh toán'),
+('HD004', DATEADD(DAY, -5, GETDATE()), 'DP011', 'NV0250001', 'KH0004', 'KM001', 'T006', 800000, 80000, N'Đã thanh toán'),
+('HD005', DATEADD(DAY, -4, GETDATE()), 'DP012', 'NV0250002', 'KH0005', 'KM002', 'T006', 450000, 45000, N'Đã thanh toán'),
+('HD006', DATEADD(DAY, -3, GETDATE()), 'DP013', 'NV0250003', 'KH0006', 'KM003', 'T006', 1200000, 120000, N'Đã thanh toán'),
+('HD007', DATEADD(DAY, -2, GETDATE()), 'DP014', 'NV0250004', 'KH0007', 'KM004', 'T006', 600000, 60000, N'Đã thanh toán'),
+('HD008', DATEADD(DAY, -1, GETDATE()), 'DP015', 'NV0250005', 'KH0008', 'KM005', 'T006', 350000, 35000, N'Đã thanh toán');
 -- =====================================================
 -- CHI TIẾT HÓA ĐƠN PHÒNG
 -- =====================================================
@@ -762,7 +776,12 @@ FOREIGN KEY (MaPhong)
 INSERT INTO ChiTietHoaDonPhong VALUES
 ('HD001','P101',GETDATE(),DATEADD(HOUR,5,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
 ('HD002','P201',GETDATE(),DATEADD(HOUR,6,GETDATE()),N'Giờ',2,N'Đang dùng',N'Chưa TT'),
-('HD003','P301',GETDATE(),DATEADD(HOUR,7,GETDATE()),N'Ngày',1,N'Đang dùng',N'Chưa TT');
+('HD003','P301',GETDATE(),DATEADD(HOUR,7,GETDATE()),N'Ngày',1,N'Đang dùng',N'Chưa TT'),
+('HD004', 'P101', DATEADD(DAY, -5, GETDATE()), DATEADD(DAY, -4, GETDATE()), N'Ngày', 2, N'Đã dùng', N'Đã TT'),
+('HD005', 'P201', DATEADD(DAY, -4, GETDATE()), DATEADD(DAY, -3, GETDATE()), N'Giờ', 1, N'Đã dùng', N'Đã TT'),
+('HD006', 'P301', DATEADD(DAY, -3, GETDATE()), DATEADD(DAY, -2, GETDATE()), N'Ngày', 3, N'Đã dùng', N'Đã TT'),
+('HD007', 'P401', DATEADD(DAY, -2, GETDATE()), DATEADD(DAY, -1, GETDATE()), N'Giờ', 2, N'Đã dùng', N'Đã TT'),
+('HD008', 'P102', DATEADD(DAY, -1, GETDATE()), GETDATE(), N'Giờ', 1, N'Đã dùng', N'Đã TT');
 
 -- =====================================================
 -- HÓA ĐƠN DỊCH VỤ
@@ -779,7 +798,10 @@ REFERENCES HoaDonPhong(MaHoaDonPhong)
 INSERT INTO HoaDonDichVu VALUES
 ('HDDV001','HD001'),
 ('HDDV002','HD002'),
-('HDDV003','HD003')
+('HDDV003','HD003'),
+('HDDV004', 'HD004'),
+('HDDV006', 'HD006'),
+('HDDV008', 'HD008');
 
 -- =====================================================
 -- CHI TIẾT HÓA ĐƠN DỊCH VỤ
@@ -810,7 +832,10 @@ FOREIGN KEY (MaDichVu)
 INSERT INTO ChiTietHoaDonDichVu VALUES
 ('HDDV001','DV001',GETDATE(),2,10000,20000),
 ('HDDV002','DV002',GETDATE(),1,15000,15000),
-('HDDV003','DV003',GETDATE(),3,15000,45000)
+('HDDV003','DV003',GETDATE(),3,15000,45000),
+('HDDV004', 'DV001', DATEADD(DAY, -5, GETDATE()), 3, 10000, 30000),
+('HDDV006', 'DV004', DATEADD(DAY, -3, GETDATE()), 1, 50000, 50000),
+('HDDV008', 'DV009', DATEADD(DAY, -1, GETDATE()), 2, 40000, 80000);
 ALTER TABLE HoaDonPhong
     ADD TienPhong FLOAT DEFAULT 0;
 
@@ -818,3 +843,22 @@ ALTER TABLE HoaDonPhong
     ADD TienDichVu FLOAT DEFAULT 0;
 ALTER TABLE ChiTietHoaDonPhong
     ADD TienGiaHan DECIMAL(12,2) DEFAULT 0;
+SELECT MaPhieuDatPhong, MaPhong, ThoiGianNhan, ThoiGianTra, SoLuong
+FROM ChiTietPhieuDatPhong;
+SELECT * FROM Phong WHERE TrangThai != N'Trống';
+UPDATE Phong
+SET TrangThai = N'Trống'
+WHERE TrangThai IS NULL OR TrangThai = '';
+-- Kiểm tra tổng doanh thu từng loại để xem cái nào đang bị âm hoặc sai
+SELECT
+    'Tiền Phòng' AS Loai, SUM(TongTien) AS Tong
+FROM HoaDonPhong WHERE TrangThai = N'Đã thanh toán'
+UNION ALL
+SELECT
+    'Tiền Dịch Vụ', SUM(ct.ThanhTien)
+FROM ChiTietHoaDonDichVu ct
+         JOIN HoaDonDichVu hdv ON ct.MaHoaDonDichVu = hdv.MaHoaDonDichVu
+         JOIN HoaDonPhong hdp ON hdv.MaHoaDonPhong = hdp.MaHoaDonPhong
+WHERE hdp.TrangThai = N'Đã thanh toán';
+ALTER TABLE KhachHang DROP CONSTRAINT UQ__KhachHan__A955A0AA1BC63CBB;
+ALTER TABLE KhachHang ALTER COLUMN CCCD VARCHAR(20);

@@ -461,7 +461,8 @@ public class NhanPhongUI extends JPanel {
                         "Mã phòng",
                         "Loại phòng",
                         "Khách hàng",
-                        "SĐT"
+                        "SĐT",
+                        "Số người"
                 },
                 0
         );
@@ -891,82 +892,57 @@ public class NhanPhongUI extends JPanel {
         // EVENT TABLE
         // =====================================================
 
-        table.addMouseListener(
-                new java.awt.event.MouseAdapter() {
+        // =====================================================
+        // EVENT TABLE (ĐÃ ĐỒNG BỘ THỨ TỰ - KHÔNG LO BỊ GHI ĐÈ)
+        // =====================================================
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
 
-                    public void mouseClicked(
-                            java.awt.event.MouseEvent evt
-                    ) {
+                int row = table.getSelectedRow();
+                if(row == -1) return;
 
-                        int row =
-                                table.getSelectedRow();
+                String maPhong = getValueSafe(row, 0);
 
-                        if(row == -1) return;
+                txtMa.setText(maPhong);
+                txtTen.setText(getValueSafe(row, 2));
+                txtSDT.setText(getValueSafe(row, 3));
 
-                        String maPhong =
-                                model.getValueAt(
-                                        row,
-                                        0
-                                ).toString();
+                // 🌟 BƯỚC 1: Lấy số lượng người từ JTable đổ lên trước
+                String soNguoiTuTable = getValueSafe(row, 4);
+                txtSoNguoi.setText(soNguoiTuTable);
 
-                        txtMa.setText(maPhong);
+                Object[] info = new PhieuDatPhongDao().getThongTinNhanPhong(maPhong);
 
-                        txtTen.setText(
-                                model.getValueAt(
-                                        row,
-                                        2
-                                ).toString()
-                        );
+                if(info == null){
+                    info = hdDao.getThongTinThanhToan(maPhong);
+                }
 
-                        txtSDT.setText(
-                                model.getValueAt(
-                                        row,
-                                        3
-                                ).toString()
-                        );
+                txtNhan.setText(info != null && info[0] != null
+                        ? format(info[0]) : formatNow());
 
-                        Object[] info =
-                                new PhieuDatPhongDao()
-                                        .getThongTinNhanPhong(
-                                                maPhong
-                                        );
-
-                        if(info == null){
-
-                            info =
-                                    hdDao.getThongTinThanhToan(
-                                            maPhong
-                                    );
-                        }
-
-                        txtNhan.setText(
-                                info != null
-                                        && info[0] != null
-                                        ? format(info[0])
-                                        : formatNow()
-                        );
-
-                        if(info != null
-                                && info[1] != null){
-
-                            txtTra.setText(
-                                    format(info[1])
-                            );
-
-                            txtTra.setEditable(false);
-
-                            btnTra.setEnabled(false);
-
-                        }else{
-
-                            txtTra.setText("");
-
-                            txtTra.setEditable(true);
-
-                            btnTra.setEnabled(true);
-                        }
+                // 🌟 BƯỚC 2: CHỈ ghi đè từ info nếu ô nhập liệu đang trống hoặc bằng 0
+                if (txtSoNguoi.getText().isEmpty() || txtSoNguoi.getText().equals("0") || txtSoNguoi.getText().equals("1")) {
+                    if (info != null && info.length > 2 && info[2] != null) {
+                        txtSoNguoi.setText(info[2].toString().trim());
                     }
-                });
+                }
+
+                // Đảm bảo nếu sau tất cả vẫn không có dữ liệu thì để mặc định là 1
+                if (txtSoNguoi.getText().isEmpty()) {
+                    txtSoNguoi.setText("1");
+                }
+
+                if(info != null && info[1] != null){
+                    txtTra.setText(format(info[1]));
+                    txtTra.setEditable(false);
+                    btnTra.setEnabled(false);
+                }else{
+                    txtTra.setText("");
+                    txtTra.setEditable(true);
+                    btnTra.setEnabled(true);
+                }
+            }
+        });
 
         // =====================================================
         // EVENT
@@ -1375,5 +1351,13 @@ public class NhanPhongUI extends JPanel {
         txtTra.setText("");
 
         txtSoNguoi.setText("");
+    }
+    // Hàm bổ trợ đọc dữ liệu JTable tránh lỗi NullPointerException
+    private String getValueSafe(int r, int c) {
+        if (r < 0 || r >= model.getRowCount() || c < 0 || c >= model.getColumnCount()) {
+            return "";
+        }
+        Object v = model.getValueAt(r, c);
+        return v == null ? "" : v.toString().trim();
     }
 }

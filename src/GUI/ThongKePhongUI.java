@@ -4,19 +4,33 @@ import Dao.HoaDonPhongDao;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 
+// import gói io và util cơ bản (GIỮ NGUYÊN)
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-import java.awt.*;
-import java.io.FileWriter;
-import java.text.DecimalFormat;
-import java.util.Calendar;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+
+// ===== CHỈ ĐỊNH RÕ ĐƯỜNG DẪN ORG.APACHE.POI KHI KHỞI TẠO ĐỂ TRÁNH XUNG ĐỘT VỚI AWT =====
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ThongKePhongUI extends JPanel {
 
@@ -270,43 +284,163 @@ public class ThongKePhongUI extends JPanel {
                 });
             }
         }
+        tableChiTietPhong.revalidate();
+        tableChiTietPhong.repaint();
     }
 
+    // =========================================================================
+    // HÀM XUẤT BÁO CÁO PHÒNG RA FILE EXCEL (.XLSX) ĐỒNG BỘ CAO CẤP SẠCH LỖI
+    // =========================================================================
     private void exportThongKePhong() {
-        java.util.Date tuNgay = (java.util.Date) spinnerTuNgay.getValue();
-        java.util.Date denNgay = (java.util.Date) spinnerDenNgay.getValue();
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy");
+        if (modelChiTietPhong.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có dữ liệu thống kê trên bảng để kết xuất báo cáo!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        try {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Chọn vị trí lưu file thống kê dòng tiền phòng");
-            if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Chọn vị trí lưu file thống kê dòng tiền phòng");
 
-            FileWriter writer = new FileWriter(chooser.getSelectedFile() + "_ThongKePhong.csv");
+        java.text.SimpleDateFormat fileDateFormatter = new java.text.SimpleDateFormat("ddMMyyyy");
+        String txtTuNgay = fileDateFormatter.format((java.util.Date) spinnerTuNgay.getValue());
+        String txtDenNgay = fileDateFormatter.format((java.util.Date) spinnerDenNgay.getValue());
 
-            writer.write("BAO CAO THONG KE DOANH THU TINH TRANG PHONG CHI TIET\n");
-            writer.write("Giai doan bao cao:," + sdf.format(tuNgay) + " den " + sdf.format(denNgay) + "\n\n");
+        fileChooser.setSelectedFile(new java.io.File("BaoCaoDoanhThuPhong_" + txtTuNgay + "_" + txtDenNgay + ".xlsx"));
 
-            writer.write("KHOI KPI TONG HOP\n");
-            writer.write("Phong doanh thu cao nhat," + lblPhongNhieuNhat.getText() + "," + lblDoanhThuPhongCaoNhat.getText() + "\n");
-            writer.write("Hang phong doanh thu cao nhat," + lblLoaiPhongNhieuNhat.getText() + "," + lblTienLoaiPhongCao.getText() + "\n\n");
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
 
-            writer.write("DANH SACH DOANH THU DONG TIEN CHI TIET TUNG PHONG\n");
-            writer.write("Ma Phong,Luot Cu Tru,Tien Thue Phong,Tien Dich Vu,Tong Doanh Thu\n");
+        File fileToSave = fileChooser.getSelectedFile();
+        String filePath = fileToSave.getAbsolutePath();
+        if (!filePath.endsWith(".xlsx")) {
+            filePath += ".xlsx";
+        }
 
-            for (int i = 0; i < modelChiTietPhong.getRowCount(); i++) {
-                String maPhong = modelChiTietPhong.getValueAt(i, 0).toString();
-                String luotO = modelChiTietPhong.getValueAt(i, 1).toString();
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Doanh Thu Phòng");
 
-                String tTong = modelChiTietPhong.getValueAt(i, 2).toString().replaceAll("[^0-9]", "");
+            // ===== SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI ĐỂ KHỞI TẠO FONT EXCEL TRÁNH XUNG ĐỘT =====
+            org.apache.poi.ss.usermodel.Font titleExcelFont = workbook.createFont();
+            titleExcelFont.setFontName("Segoe UI");
+            titleExcelFont.setFontHeightInPoints((short) 16);
+            titleExcelFont.setBold(true);
+            CellStyle titleStyle = workbook.createCellStyle();
+            titleStyle.setFont(titleExcelFont);
 
-                writer.write(maPhong + "," + luotO + "," + tTong + "\n");
+            org.apache.poi.ss.usermodel.Font sectionExcelFont = workbook.createFont();
+            sectionExcelFont.setFontName("Segoe UI");
+            sectionExcelFont.setFontHeightInPoints((short) 12);
+            sectionExcelFont.setBold(true);
+            CellStyle sectionStyle = workbook.createCellStyle();
+            sectionStyle.setFont(sectionExcelFont);
+
+            org.apache.poi.ss.usermodel.Font headerExcelFont = workbook.createFont();
+            headerExcelFont.setFontName("Segoe UI");
+            headerExcelFont.setFontHeightInPoints((short) 11);
+            headerExcelFont.setBold(true);
+            headerExcelFont.setColor(IndexedColors.WHITE.getIndex());
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFont(headerExcelFont);
+
+            // ĐA KHÁC PHỤC LỖI METHOD: Sử dụng chuẩn phương thức setFillForegroundColor để đổi màu nền
+            headerStyle.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            org.apache.poi.ss.usermodel.Font normalExcelFont = workbook.createFont();
+            normalExcelFont.setFontName("Segoe UI");
+            normalExcelFont.setFontHeightInPoints((short) 11);
+
+            CellStyle normalStyle = workbook.createCellStyle();
+            normalStyle.setFont(normalExcelFont);
+
+            CellStyle centerStyle = workbook.createCellStyle();
+            centerStyle.setFont(normalExcelFont);
+            centerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+            CellStyle rightStyle = workbook.createCellStyle();
+            rightStyle.setFont(normalExcelFont);
+            rightStyle.setAlignment(HorizontalAlignment.RIGHT);
+
+            // Ghi tiêu đề văn bản
+            Row rowTitle = sheet.createRow(0);
+            Cell cellTitle = rowTitle.createCell(0);
+            cellTitle.setCellValue("BÁO CÁO THỐNG KÊ HIỆU SUẤT & DOANH THU PHÒNG");
+            cellTitle.setCellStyle(titleStyle);
+
+            Row rowTime = sheet.createRow(1);
+            Cell cellTime = rowTime.createCell(0);
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+            cellTime.setCellValue("Giai đoạn báo cáo: Từ ngày " + sdf.format((java.util.Date) spinnerTuNgay.getValue()) + " đến ngày " + sdf.format((java.util.Date) spinnerDenNgay.getValue()));
+            cellTime.setCellStyle(normalStyle);
+
+            // Ghi Khối KPI tổng hợp tích lũy
+            int rowIdx = 3;
+            Row rowSectionKPI = sheet.createRow(rowIdx++);
+            Cell cellKPI = rowSectionKPI.createCell(0);
+            cellKPI.setCellValue("I. KHỐI KPI TỔNG HỢP TÍCH LŨY");
+            cellKPI.setCellStyle(sectionStyle);
+
+            Row rowKPI1 = sheet.createRow(rowIdx++);
+            rowKPI1.createCell(0).setCellValue("Phòng mang lại doanh thu cao nhất:");
+            rowKPI1.createCell(1).setCellValue(lblPhongNhieuNhat.getText());
+            rowKPI1.createCell(2).setCellValue(lblDoanhThuPhongCaoNhat.getText());
+            rowKPI1.getCell(0).setCellStyle(normalStyle); rowKPI1.getCell(1).setCellStyle(sectionStyle); rowKPI1.getCell(2).setCellStyle(normalStyle);
+
+            Row rowKPI2 = sheet.createRow(rowIdx++);
+            rowKPI2.createCell(0).setCellValue("Hạng phòng đạt doanh thu đỉnh nhất:");
+            rowKPI2.createCell(1).setCellValue(lblLoaiPhongNhieuNhat.getText());
+            rowKPI2.createCell(2).setCellValue(lblTienLoaiPhongCao.getText());
+            rowKPI2.getCell(0).setCellStyle(normalStyle); rowKPI2.getCell(1).setCellStyle(sectionStyle); rowKPI2.getCell(2).setCellStyle(normalStyle);
+
+            rowIdx++; // Dòng cách trống
+
+            // Ghi tiêu đề Danh sách chi tiết
+            Row rowSectionList = sheet.createRow(rowIdx++);
+            Cell cellListTitle = rowSectionList.createCell(0);
+            cellListTitle.setCellValue("II. DANH SÁCH DOANH THU DÒNG TIỀN CHI TIẾT TUNG PHÒNG");
+            cellListTitle.setCellStyle(sectionStyle);
+
+            // Ghi tiêu đề cột
+            Row rowHeader = sheet.createRow(rowIdx++);
+            for (int c = 0; c < tableChiTietPhong.getColumnCount(); c++) {
+                Cell cell = rowHeader.createCell(c);
+                cell.setCellValue(tableChiTietPhong.getColumnName(c));
+                cell.setCellStyle(headerStyle);
             }
 
-            writer.close();
-            JOptionPane.showMessageDialog(this, "Xuất báo cáo dữ liệu phòng thành công!");
+            // Đổ dữ liệu vòng lặp JTable
+            for (int r = 0; r < modelChiTietPhong.getRowCount(); r++) {
+                Row rowData = sheet.createRow(rowIdx++);
+                for (int c = 0; c < tableChiTietPhong.getColumnCount(); c++) {
+                    Cell cell = rowData.createCell(c);
+                    Object value = modelChiTietPhong.getValueAt(r, c);
+                    cell.setCellValue(value != null ? value.toString() : "");
+
+                    if (c == 0 || c == 1) {
+                        cell.setCellStyle(centerStyle);
+                    } else if (c == 2) {
+                        cell.setCellStyle(rightStyle);
+                    } else {
+                        cell.setCellStyle(normalStyle);
+                    }
+                }
+            }
+
+            // Auto fit độ rộng khít với nội dung chữ
+            for (int c = 0; c < tableChiTietPhong.getColumnCount(); c++) {
+                sheet.autoSizeColumn(c);
+            }
+
+            // Ghi xuất luồng dữ liệu vật lý ra máy tính
+            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                workbook.write(out);
+                JOptionPane.showMessageDialog(this, "Xuất báo cáo hiệu suất phòng ra tệp Excel thành công!\nĐường dẫn tệp: " + filePath, "Thành Công", JOptionPane.INFORMATION_MESSAGE);
+            }
+
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Gặp lỗi trong quá trình xuất tệp Excel!");
+            JOptionPane.showMessageDialog(this, "Gặp lỗi trong quá trình kết xuất báo cáo Excel: " + e.getMessage(), "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }

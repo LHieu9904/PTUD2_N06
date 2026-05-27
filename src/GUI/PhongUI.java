@@ -823,7 +823,7 @@ public class PhongUI extends JPanel {
     private JTextField txtMaPhong;
     private JTextField txtTang;
 
-    private JComboBox<String> cbTrangThai;
+    private JTextField txtTrangThai;
     private JComboBox<String> cbLoai;
 
     private JComboBox<Integer> cbTangFilter;
@@ -1081,14 +1081,10 @@ public class PhongUI extends JPanel {
             }
         });
 
-        cbTrangThai = createComboBox(
-                new String[]{
-                        "Trống",
-                        "Đã đặt",
-                        "Đang thuê",
-                        "Đang dọn dẹp"
-                }
-        );
+        // Thay vì: cbTrangThai = createComboBox(new String[]{...});
+        txtTrangThai = createTextField();
+        txtTrangThai.setEditable(false); // Khóa không cho sửa
+        txtTrangThai.setBackground(new Color(240, 240, 240)); // Đổi nền xám nhẹ để nhận biết ô hiển thị
 
         cbLoai = createComboBox(new String[]{});
 
@@ -1096,7 +1092,7 @@ public class PhongUI extends JPanel {
 
         form.add(createField("Mã phòng", txtMaPhong));
         form.add(createField("Tầng", txtTang));
-        form.add(createField("Trạng thái", cbTrangThai));
+        form.add(createField("Trạng thái", txtTrangThai));
         form.add(createField("Loại phòng", cbLoai));
 
         card.add(form, BorderLayout.CENTER);
@@ -1995,7 +1991,7 @@ public class PhongUI extends JPanel {
                         txtTang.setText(String.valueOf(p.getTang()));
 
                         if (p.getTrangThai() != null) {
-                            cbTrangThai.setSelectedItem(p.getTrangThai());
+                            txtTrangThai.setText(p.getTrangThai());
                         }
 
                         if (p.getLoaiPhong() != null) {
@@ -2073,10 +2069,7 @@ public class PhongUI extends JPanel {
                             txtTang.getText()
                     );
 
-            String tt =
-                    cbTrangThai
-                            .getSelectedItem()
-                            .toString();
+            String tt = txtTrangThai.getText().trim();
 
             LoaiPhong lp =
                     dsLoai.get(
@@ -2266,7 +2259,7 @@ public class PhongUI extends JPanel {
 
         txtTang.setText("");
 
-        cbTrangThai.setSelectedIndex(0);
+        txtTrangThai.setText("");
 
         if (cbLoai.getItemCount() > 0) {
 
