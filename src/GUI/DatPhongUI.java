@@ -1187,19 +1187,19 @@ public class DatPhongUI extends JPanel {
             HoaDonPhongDao hdDao = new HoaDonPhongDao();
 
             // =====================================================
+            // STEP 1: XỬ LÝ THÔNG TIN KHÁCH HÀNG
             // =====================================================
-// STEP 1: XỬ LÝ THÔNG TIN KHÁCH HÀNG
-// =====================================================
             String sdt = tfSDT.getText().trim();
             String ten = tfHoTen.getText().trim();
-            String cccd = tfCCCD.getText().trim(); // Lấy CCCD từ UI
+            String cccd = tfCCCD.getText().trim();
+
             String maKH = khDao.getMaKHBySDT(sdt);
 
             if (maKH == null) {
-                // Khách mới: Truyền cả CCCD vào hàm insert
+                // Nếu khách mới, truyền CCCD vào (không cần dùng toán tử ? ở đây vì bạn đã có giá trị cccd)
                 maKH = khDao.insertKhach(ten, sdt, cccd);
             } else {
-                // Khách cũ: Cập nhật lại CCCD (đề phòng trường hợp trước đó khách chưa có CCCD)
+                // Nếu khách cũ, cập nhật lại CCCD (Logic tùy chọn của bạn)
                 khDao.updateCCCD(maKH, cccd);
             }
 

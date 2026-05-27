@@ -347,13 +347,16 @@ public class KhachHangDao {
         return list;
     }
     // Sửa thành: nhận thêm tham số cccd
+    // HÀM CŨ (Giữ nguyên để không phá vỡ logic các màn hình khác)
+    public String insertKhach(String hoTen, String sdt) {
+        // Gọi hàm mới với CCCD là null (hoặc giá trị rỗng)
+        return insertKhach(hoTen, sdt, null);
+    }
+
+    // HÀM MỚI (Dùng cho Nhận phòng/Đặt phòng)
     public String insertKhach(String hoTen, String sdt, String cccd) {
         String maKH = "KH" + (System.currentTimeMillis() % 100000);
-
-        String sql = """
-    INSERT INTO KhachHang (MaKH, HoTen, SDT, CCCD, GioiTinh)
-    VALUES (?, ?, ?, ?, ?)
-    """;
+        String sql = "INSERT INTO KhachHang (MaKH, HoTen, SDT, CCCD, GioiTinh) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection con = Database.getInstance().getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -361,9 +364,15 @@ public class KhachHangDao {
             ps.setString(1, maKH);
             ps.setString(2, hoTen);
             ps.setString(3, sdt);
-            ps.setString(4, cccd); // Sử dụng cccd thật từ người dùng nhập
-            ps.setInt(5, 1);       // Lưu ý: nên thay bằng tham số giới tính sau này
 
+            // Logic mới: Nếu CCCD trống hoặc null thì lưu NULL vào DB, đừng lưu "CHUA_NHAP"
+            if (cccd == null || cccd.trim().isEmpty()) {
+                ps.setNull(4, java.sql.Types.VARCHAR);
+            } else {
+                ps.setString(4, cccd);
+            }
+
+            ps.setInt(5, 1);
             ps.executeUpdate();
             return maKH;
         } catch (Exception e) {
@@ -371,6 +380,7 @@ public class KhachHangDao {
         }
         return null;
     }
+
     public KhachHang getById(String maKH) {
 
         String sql = """
