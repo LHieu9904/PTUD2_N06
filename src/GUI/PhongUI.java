@@ -2042,11 +2042,18 @@ public class PhongUI extends JPanel {
 
                                 if (updated) {
                                     JOptionPane.showMessageDialog(null, "Đã cập nhật trạng thái phòng về trống!");
+
+                                    // 1. Load lại danh sách các phòng để trạng thái thẻ phòng thay đổi (từ Đang dọn sang Trống)
                                     loadData("Tất cả", 0, null);
+
+                                    // 2. Xóa sạch các ô thông tin trên form ngay lập tức
+                                    clearForm();
+
                                 } else {
                                     JOptionPane.showMessageDialog(null, "Cập nhật thất bại!");
                                 }
                             }
+                            return;
                         }
                     }
                 }
@@ -2170,6 +2177,12 @@ public class PhongUI extends JPanel {
 
             return;
         }
+        String trangThai = txtTrangThai.getText().trim();
+
+        if ("Đang thuê".equals(trangThai)) {
+            JOptionPane.showMessageDialog(this, "Không thể sửa phòng đang có khách thuê!");
+            return;
+        }
 
         Phong p = getForm();
 
@@ -2203,6 +2216,13 @@ public class PhongUI extends JPanel {
 
         String maPhong =
                 txtMaPhong.getText().trim();
+        String trangThai = txtTrangThai.getText().trim();
+
+        if ("Đang thuê".equals(trangThai)) {
+            JOptionPane.showMessageDialog(this, "Không thể xóa phòng đang có khách thuê!");
+            return;
+        }
+
 
         if (maPhong.isEmpty()) {
 

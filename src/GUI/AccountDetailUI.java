@@ -1299,9 +1299,11 @@ public class AccountDetailUI extends JFrame {
         tkKH.addActionListener(e -> loadPanel(new ThongKeKhachHangUI()));
 
         thongKeMenu.add(tkDoanhThu);
-        thongKeMenu.add(tkPhong);
         thongKeMenu.add(tkDTNV);
-        thongKeMenu.add(tkKH);
+        if ("CV01".equals(maCV)) {
+            thongKeMenu.add(tkKH);
+            thongKeMenu.add(tkPhong);
+        }
 
         btnThongKe.addActionListener(e -> thongKeMenu.show(btnThongKe, 0, btnThongKe.getHeight()));
 
@@ -1317,9 +1319,7 @@ public class AccountDetailUI extends JFrame {
         navbar.add(btnDanhMuc);
         navbar.add(btnXuLy);
         navbar.add(btnTimKiem);
-        if ("CV01".equals(maCV)) {
-            navbar.add(btnThongKe);
-        }
+        navbar.add(btnThongKe);
         navbar.add(btnLogout);
 
         return navbar;
